@@ -2,7 +2,7 @@
   "name": "campost-billing",
   "version": "1.0.0",
   "description": "CAMPOST MANKON Billing Management System",
-  "main": "server.js",
+  "main": "public/index.html",
   "scripts": {
     "start": "node server.js"
   },

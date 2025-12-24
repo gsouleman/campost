@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMPOST MANKON - Billing Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #1a365d; --primary-blue: #2c5282; --primary-light: #4299e1;
+            --accent-gold: #d69e2e; --accent-orange: #ed8936; --success-green: #38a169;
+            --danger-red: #e53e3e; --warning-yellow: #ecc94b; --bg-cream: #faf5eb;
+            --bg-white: #ffffff; --text-dark: #1a202c; --text-gray: #4a5568;
+            --text-light: #718096; --border-color: #e2e8f0;
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1); --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Source Sans Pro', sans-serif; background: linear-gradient(135deg, var(--bg-cream) 0%, #e8e0d5 100%); min-height: 100vh; color: var(--text-dark); }
+        .header { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%); color: white; box-shadow: var(--shadow-lg); position: sticky; top: 0; z-index: 1000; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; gap: 1rem; }
+        .logo-section { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon { width: 50px; height: 50px; background: var(--accent-gold); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: var(--primary-dark); }
+        .logo-text h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; }
+        .logo-text p { font-size: 0.85rem; opacity: 0.8; letter-spacing: 2px; text-transform: uppercase; }
+        .header-info { text-align: right; font-size: 0.9rem; }
+        .db-status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; margin-top: 0.25rem; }
+        .db-status.connected { background: rgba(56, 161, 105, 0.3); color: #9ae6b4; }
+        .db-status.memory { background: rgba(236, 201, 75, 0.3); color: #faf089; }
+        .db-status.disconnected { background: rgba(229, 62, 62, 0.3); color: #feb2b2; }
+        .nav { display: flex; gap: 0; padding: 0 2rem; flex-wrap: wrap; }
+        .nav-btn { background: transparent; border: none; color: white; padding: 1rem 1.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent; }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); }
+        .nav-btn.active { background: rgba(255,255,255,0.15); border-bottom-color: var(--accent-gold); }
+        .main-content { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--bg-white); border-radius: 16px; box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 1.5rem; }
+        .card-header { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; padding: 1.25rem 1.5rem; font-family: 'Playfair Display', serif; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+        .card-header.green-header { background: linear-gradient(135deg, var(--success-green) 0%, #276749 100%); }
+        .card-body { padding: 1.5rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-white); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+        .stat-card.blue::before { background: var(--primary-blue); }
+        .stat-card.green::before { background: var(--success-green); }
+        .stat-card.orange::before { background: var(--accent-orange); }
+        .stat-card.red::before { background: var(--danger-red); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+        .stat-card.blue .stat-icon { background: rgba(66, 153, 225, 0.15); color: var(--primary-blue); }
+        .stat-card.green .stat-icon { background: rgba(56, 161, 105, 0.15); color: var(--success-green); }
+        .stat-card.orange .stat-icon { background: rgba(237, 137, 54, 0.15); color: var(--accent-orange); }
+        .stat-card.red .stat-icon { background: rgba(229, 62, 62, 0.15); color: var(--danger-red); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .stat-label { color: var(--text-gray); font-size: 0.9rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: 10px; font-size: 1rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-blue); }
+        .form-group input:read-only { background: #f7fafc; color: var(--text-gray); }
+        .form-group small { display: block; margin-top: 0.25rem; color: var(--text-light); font-size: 0.8rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; }
+        .btn-success { background: linear-gradient(135deg, var(--success-green) 0%, #276749 100%); color: white; }
+        .btn-warning { background: linear-gradient(135deg, var(--accent-orange) 0%, #c05621 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, var(--danger-red) 0%, #c53030 100%); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary-blue); color: var(--primary-blue); }
+        .btn-outline:hover { background: var(--primary-blue); color: white; }
+        .btn-group { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+        tr:hover { background: #f7fafc; }
+        .status-badge { padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status-paid { background: rgba(56, 161, 105, 0.15); color: var(--success-green); }
+        .status-partial { background: rgba(236, 201, 75, 0.2); color: #b7791f; }
+        .status-unpaid { background: rgba(229, 62, 62, 0.15); color: var(--danger-red); }
+        .status-new { background: rgba(66, 153, 225, 0.15); color: var(--primary-blue); }
+        .bill-preview { background: white; border: 2px solid var(--border-color); border-radius: 12px; padding: 2rem; max-width: 700px; margin: 0 auto; }
+        .bill-header { text-align: center; border-bottom: 2px solid var(--primary-dark); padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
+        .bill-header h2 { font-family: 'Playfair Display', serif; color: var(--primary-dark); font-size: 1.5rem; }
+        .bill-table { width: 100%; margin: 1.5rem 0; }
+        .bill-table th { background: var(--primary-dark); color: white; }
+        .bill-total-row { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); color: white; font-weight: 700; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: 16px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
+        .modal-body { padding: 2rem; }
+        .alert { padding: 1rem 1.5rem; border-radius: 10px; margin-bottom: 1rem; }
+        .alert-success { background: rgba(56, 161, 105, 0.15); color: var(--success-green); border: 1px solid var(--success-green); }
+        .alert-error { background: rgba(229, 62, 62, 0.15); color: var(--danger-red); border: 1px solid var(--danger-red); }
+        .alert-info { background: rgba(66, 153, 225, 0.15); color: var(--primary-blue); border: 1px solid var(--primary-blue); }
+        .alert-warning { background: rgba(236, 201, 75, 0.15); color: #b7791f; border: 1px solid #ecc94b; }
+        .client-info-card { background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--primary-blue); }
+        .client-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+        .client-info-item label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; }
+        .client-info-item span { font-weight: 600; display: block; font-size: 0.9rem; }
+        .highlight-box { background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%); border: 2px dashed var(--primary-blue); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .highlight-box h4 { color: var(--primary-blue); margin-bottom: 0.5rem; }
+        .new-bill-row { background: rgba(66, 153, 225, 0.08) !important; border-left: 3px solid var(--primary-blue); }
+        .amount-positive { color: var(--success-green); font-weight: 600; }
+        .amount-negative { color: var(--danger-red); font-weight: 600; }
+        @media print { .header, .nav, .btn-group, .no-print { display: none !important; } }
+        @media (max-width: 768px) { .header-top { flex-direction: column; text-align: center; } .nav-btn { padding: 0.75rem 1rem; font-size: 0.85rem; } .main-content { padding: 1rem; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-top">
+            <div class="logo-section">
+                <div class="logo-icon">CP</div>
+                <div class="logo-text">
+                    <h1>CAMPOST MANKON</h1>
+                    <p>Billing Management System</p>
+                </div>
+            </div>
+            <div class="header-info">
+                <p><strong>GHOUENZEN Soulemanou</strong></p>
+                <p>B.P 36 Mankon-Bamenda | Tel: 675299868</p>
+                <div class="db-status disconnected" id="dbStatus">Connecting...</div>
+            </div>
+        </div>
+        <nav class="nav">
+            <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-page="bills">📄 Bills</button>
+            <button class="nav-btn" data-page="newbill">➕ New Bill</button>
+            <button class="nav-btn" data-page="statement">📋 Statement</button>
+            <button class="nav-btn" data-page="payments">💰 Payments</button>
+            <button class="nav-btn" data-page="settings">⚙️ Settings</button>
+        </nav>
+    </header>
+    <main class="main-content">
+        <!-- Dashboard -->
+        <div id="dashboard" class="page active">
+            <div class="stats-grid">
+                <div class="stat-card blue"><div class="stat-icon">📄</div><div class="stat-value" id="totalBills">-</div><div class="stat-label">Total Bills</div></div>
+                <div class="stat-card orange"><div class="stat-icon">💵</div><div class="stat-value" id="totalDue">-</div><div class="stat-label">Total Due (XAF)</div></div>
+                <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="totalPaid">-</div><div class="stat-label">Total Paid (XAF)</div></div>
+                <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-value" id="totalOutstanding">-</div><div class="stat-label">Outstanding (XAF)</div></div>
+            </div>
+            <div class="card"><div class="card-header"><span>📊 Outstanding Bills</span></div><div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th></tr></thead><tbody id="recentActivityTable"><tr><td colspan="6" style="text-align:center;padding:2rem;">Loading...</td></tr></tbody></table></div></div></div>
+        </div>
+        <!-- Bills -->
+        <div id="bills" class="page">
+            <div class="card"><div class="card-header"><span>📄 View & Print Bills</span></div><div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Select Bill</label><select id="existingBillSelect"><option value="">Loading...</option></select></div>
+                    <div class="form-group"><label>Status</label><input type="text" id="selectedBillStatus" readonly></div>
+                    <div class="form-group"><label>Outstanding</label><input type="text" id="selectedBillOutstanding" readonly></div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="viewSelectedBill()">📄 View</button>
+                    <button class="btn btn-success" onclick="printCurrentBill()">🖨️ Print</button>
+                    <button class="btn btn-warning" onclick="printOutstandingBills()">📑 Print Outstanding</button>
+                </div>
+            </div></div>
+            <div class="card" id="billPreviewCard" style="display:none;"><div class="card-header"><span>🔍 Bill Preview</span><button class="btn btn-outline" onclick="window.print()">🖨️</button></div><div class="card-body"><div class="bill-preview" id="billPreview"></div></div></div>
+        </div>
+        <!-- New Bill -->
+        <div id="newbill" class="page">
+            <div class="highlight-box"><h4>➕ Generate New Bills (2026+)</h4><p>Create new quarterly bills. Historical bills (2022-2025) are pre-loaded.</p></div>
+            <div class="card"><div class="card-header green-header"><span>➕ Create New Bill</span></div><div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Quarter</label><select id="newBillPeriod"><option value="January to March">Q1</option><option value="April to June">Q2</option><option value="July to September">Q3</option><option value="October to December">Q4</option></select></div>
+                    <div class="form-group"><label>Year</label><select id="newBillYear"></select></div>
+                    <div class="form-group"><label>Amount (XAF)</label><input type="number" id="newBillAmount" value="510000"></div>
+                    <div class="form-group"><label>Bill Number</label><input type="text" id="newBillNumber" readonly></div>
+                </div>
+                <div class="btn-group"><button class="btn btn-success" onclick="createNewBill()">✅ Create</button></div>
+            </div></div>
+            <div class="card"><div class="card-header"><span>📋 New Bills (2026+)</span></div><div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Year</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="newBillsTable"><tr><td colspan="6" style="text-align:center;">No new bills</td></tr></tbody></table></div></div></div>
+        </div>
+        <!-- Statement -->
+        <div id="statement" class="page">
+            <div class="client-info-card"><div class="client-info-grid">
+                <div class="client-info-item"><label>Client</label><span>GHOUENZEN Soulemanou</span></div>
+                <div class="client-info-item"><label>Address</label><span>B.P 36 Mankon-Bamenda</span></div>
+                <div class="client-info-item"><label>Tel</label><span>675299868</span></div>
+                <div class="client-info-item"><label>Email</label><span>gsouleman@gmail.com</span></div>
+                <div class="client-info-item"><label>Account</label><span>12003 14012 10868895015 89</span></div>
+                <div class="client-info-item"><label>Date</label><span id="statementDate"></span></div>
+            </div></div>
+            <div class="stats-grid">
+                <div class="stat-card orange"><div class="stat-icon">💵</div><div class="stat-value" id="stmtTotalDue">-</div><div class="stat-label">Total Due</div></div>
+                <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="stmtTotalPaid">-</div><div class="stat-label">Total Paid</div></div>
+                <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-value" id="stmtOutstanding">-</div><div class="stat-label">Outstanding</div></div>
+            </div>
+            <div class="card"><div class="card-header"><span>📋 Statement</span><button class="btn btn-outline" onclick="exportToCSV()">📥 Export</button></div><div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Action</th></tr></thead><tbody id="statementTable"></tbody><tfoot><tr style="background:var(--primary-dark);color:white;"><td colspan="2"><strong>TOTALS</strong></td><td id="footerTotalDue">-</td><td id="footerTotalPaid">-</td><td id="footerOutstanding">-</td><td colspan="2"></td></tr></tfoot></table></div></div></div>
+        </div>
+        <!-- Payments -->
+        <div id="payments" class="page">
+            <div class="card"><div class="card-header"><span>💰 Record Payment</span></div><div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Select Bill</label><select id="paymentBillSelect"></select></div>
+                    <div class="form-group"><label>Outstanding</label><input type="text" id="currentOutstanding" readonly></div>
+                    <div class="form-group"><label>Amount</label><input type="number" id="paymentAmount"></div>
+                    <div class="form-group"><label>Date</label><input type="date" id="paymentDate"></div>
+                    <div class="form-group"><label>Reference</label><input type="text" id="paymentReference"></div>
+                </div>
+                <div class="btn-group"><button class="btn btn-success" onclick="recordPayment()">💾 Save</button><button class="btn btn-outline" onclick="clearPaymentForm()">Clear</button></div>
+            </div></div>
+            <div class="card"><div class="card-header"><span>📜 Payment History</span></div><div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Bill #</th><th>Amount</th><th>Reference</th></tr></thead><tbody id="paymentHistoryTable"></tbody></table></div></div></div>
+        </div>
+        <!-- Settings -->
+        <div id="settings" class="page">
+            <div class="card"><div class="card-header"><span>⚙️ Settings</span></div><div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Quarterly Rent</label><input type="number" id="rentAmount" value="600000"></div>
+                    <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="taxRate" value="15"></div>
+                    <div class="form-group"><label>Net Amount</label><input type="text" id="netAmount" value="510,000" readonly></div>
+                </div>
+                <div class="btn-group"><button class="btn btn-primary" onclick="saveSettings()">💾 Save</button><button class="btn btn-danger" onclick="resetData()">🗑️ Reset</button></div>
+            </div></div>
+            <div class="card"><div class="card-header"><span>📁 Database</span></div><div class="card-body">
+                <div class="alert" id="dbInfoAlert">Checking connection...</div>
+                <div class="form-group"><label>Storage Type</label><input type="text" id="dbTypeDisplay" readonly></div>
+                <div class="form-group"><label>Path</label><input type="text" id="dbPathDisplay" readonly style="font-size:0.85rem;"></div>
+            </div></div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="printModal"><div class="modal"><div class="modal-header"><h3>🖨️ Outstanding Bills</h3><button class="modal-close" onclick="closePrintModal()">×</button></div><div class="modal-body" id="printModalBody"></div></div></div>
+    <div id="alertContainer" style="position:fixed;top:100px;right:20px;z-index:3000;max-width:400px;"></div>
+
+    <script>
+        // Get API base from current page URL
+        const API_BASE = window.location.origin + '/api';
+        
+        const CONFIG = { 
+            clientName: 'GHOUENZEN Soulemanou', 
+            clientAddress: 'B.P 36 Mankon-Bamenda', 
+            clientTel: '675299868', 
+            accountNo: '12003 14012 10868895015 89', 
+            tenantName: 'CAMPOST MANKON', 
+            rentPerMonth: 200000, 
+            taxRate: 0.15
+        };
+
+        async function apiFetch(endpoint, options = {}) {
+            const response = await fetch(API_BASE + endpoint, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options
+            });
+            return await response.json();
+        }
+
+        async function getAllBills() { return await apiFetch('/bills'); }
+        async function getAllPayments() { return await apiFetch('/payments'); }
+
+        async function checkDbStatus() {
+            try {
+                const status = await apiFetch('/status');
+                const el = document.getElementById('dbStatus');
+                if (status.type === 'access') {
+                    el.textContent = '✓ MS Access';
+                    el.className = 'db-status connected';
+                } else if (status.type === 'memory') {
+                    el.textContent = '⚠ Memory Mode';
+                    el.className = 'db-status memory';
+                }
+                document.getElementById('dbTypeDisplay').value = status.type === 'access' ? 'MS Access Database' : 'In-Memory (Temporary)';
+                document.getElementById('dbPathDisplay').value = status.path || 'N/A';
+                document.getElementById('dbInfoAlert').className = status.type === 'access' ? 'alert alert-success' : 'alert alert-warning';
+                document.getElementById('dbInfoAlert').innerHTML = status.type === 'access' ? '✓ Connected to MS Access' : '⚠ Using temporary storage. Data will be lost on restart.';
+                return true;
+            } catch (err) {
+                document.getElementById('dbStatus').textContent = '✗ Offline';
+                document.getElementById('dbStatus').className = 'db-status disconnected';
+                document.getElementById('dbInfoAlert').className = 'alert alert-error';
+                document.getElementById('dbInfoAlert').innerHTML = '✗ Server not running. Start with: npm start';
+                return false;
+            }
+        }
+
+        function formatNumber(n) { return n ? n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0'; }
+        
+        function showAlert(msg, type = 'success') {
+            const c = document.getElementById('alertContainer'); 
+            const a = document.createElement('div'); 
+            a.className = `alert alert-${type}`; 
+            a.innerHTML = msg; 
+            c.appendChild(a);
+            setTimeout(() => { a.remove(); }, 3000);
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(this.getAttribute('data-page')).classList.add('active');
+                refreshCurrentPage();
+            });
+        });
+
+        function refreshCurrentPage() {
+            const activePage = document.querySelector('.page.active').id;
+            if (activePage === 'dashboard') updateDashboard();
+            else if (activePage === 'statement') updateStatement();
+            else if (activePage === 'payments') updatePaymentsPage();
+            else if (activePage === 'bills') updateBillsPage();
+            else if (activePage === 'newbill') updateNewBillPage();
+            else if (activePage === 'settings') checkDbStatus();
+        }
+
+        async function updateDashboard() {
+            try {
+                const bills = await getAllBills();
+                let due = 0, paid = 0, out = 0;
+                bills.forEach(b => { due += b.amountDue; paid += b.paidAmount; out += b.outstanding; });
+                document.getElementById('totalBills').textContent = bills.length;
+                document.getElementById('totalDue').textContent = formatNumber(due);
+                document.getElementById('totalPaid').textContent = formatNumber(paid);
+                document.getElementById('totalOutstanding').textContent = formatNumber(out);
+                const recent = bills.filter(b => b.outstanding > 0).slice(-6).reverse();
+                document.getElementById('recentActivityTable').innerHTML = recent.length ? recent.map(b => `<tr class="${b.isNew ? 'new-bill-row' : ''}"><td><strong>${b.billNumber}</strong>${b.isNew ? ' <span class="status-badge status-new">NEW</span>' : ''}</td><td>${b.period} ${b.year}</td><td>${formatNumber(b.amountDue)}</td><td class="amount-positive">${formatNumber(b.paidAmount)}</td><td class="amount-negative">${formatNumber(b.outstanding)}</td><td><span class="status-badge ${b.outstanding === 0 ? 'status-paid' : b.paidAmount > 0 ? 'status-partial' : 'status-unpaid'}">${b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid'}</span></td></tr>`).join('') : '<tr><td colspan="6" style="text-align:center;">All bills paid! 🎉</td></tr>';
+            } catch (err) {
+                document.getElementById('recentActivityTable').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger-red);">Server not running. Start with: npm start</td></tr>';
+            }
+        }
+
+        async function updateBillsPage() {
+            try {
+                const bills = await getAllBills();
+                document.getElementById('existingBillSelect').innerHTML = '<option value="">-- Select --</option>' + bills.map(b => `<option value="${b.billNumber}">${b.billNumber} - ${b.period} ${b.year}</option>`).join('');
+            } catch (err) {}
+        }
+
+        document.getElementById('existingBillSelect').addEventListener('change', async function() {
+            if (this.value) {
+                const bills = await getAllBills();
+                const b = bills.find(x => x.billNumber === this.value);
+                if (b) {
+                    document.getElementById('selectedBillStatus').value = b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid';
+                    document.getElementById('selectedBillOutstanding').value = formatNumber(b.outstanding) + ' XAF';
+                }
+            }
+        });
+
+        async function viewSelectedBill() {
+            const bn = document.getElementById('existingBillSelect').value;
+            if (!bn) { showAlert('Select a bill!', 'error'); return; }
+            const bills = await getAllBills();
+            const b = bills.find(x => x.billNumber === bn);
+            if (b) displayBillPreview(b, b.paidAmount > 0 && b.outstanding > 0);
+        }
+
+        async function updateStatement() {
+            try {
+                const bills = await getAllBills();
+                let due = 0, paid = 0, out = 0;
+                bills.forEach(b => { due += b.amountDue; paid += b.paidAmount; out += b.outstanding; });
+                document.getElementById('stmtTotalDue').textContent = formatNumber(due);
+                document.getElementById('stmtTotalPaid').textContent = formatNumber(paid);
+                document.getElementById('stmtOutstanding').textContent = formatNumber(out);
+                document.getElementById('footerTotalDue').textContent = formatNumber(due);
+                document.getElementById('footerTotalPaid').textContent = formatNumber(paid);
+                document.getElementById('footerOutstanding').textContent = formatNumber(out);
+                document.getElementById('statementDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('statementTable').innerHTML = bills.map(b => `<tr class="${b.isNew ? 'new-bill-row' : ''}"><td><strong>${b.billNumber}</strong>${b.isNew ? ' <span class="status-badge status-new">NEW</span>' : ''}</td><td>${b.period} ${b.year}</td><td>${formatNumber(b.amountDue)}</td><td class="amount-positive">${formatNumber(b.paidAmount)}</td><td class="${b.outstanding > 0 ? 'amount-negative' : ''}">${formatNumber(b.outstanding)}</td><td><span class="status-badge ${b.outstanding === 0 ? 'status-paid' : b.paidAmount > 0 ? 'status-partial' : 'status-unpaid'}">${b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid'}</span></td><td>${b.outstanding > 0 ? `<button class="btn btn-primary" style="padding:0.3rem 0.6rem;font-size:0.8rem;" onclick="viewBill('${b.billNumber}')">View</button>` : ''}</td></tr>`).join('');
+            } catch (err) {}
+        }
+
+        async function updatePaymentsPage() {
+            try {
+                const bills = await getAllBills();
+                const payments = await getAllPayments();
+                document.getElementById('paymentBillSelect').innerHTML = '<option value="">-- Select --</option>' + bills.filter(b => b.outstanding > 0).map(b => `<option value="${b.billNumber}">${b.billNumber} - ${formatNumber(b.outstanding)} XAF</option>`).join('');
+                document.getElementById('paymentHistoryTable').innerHTML = payments.length ? payments.map(p => `<tr><td>${new Date(p.date).toLocaleDateString()}</td><td>${p.billNumber}</td><td class="amount-positive">${formatNumber(p.amount)}</td><td>${p.reference || '-'}</td></tr>`).join('') : '<tr><td colspan="4" style="text-align:center;">No payments</td></tr>';
+                document.getElementById('paymentDate').valueAsDate = new Date();
+            } catch (err) {}
+        }
+
+        async function updateNewBillPage() {
+            const sel = document.getElementById('newBillYear');
+            sel.innerHTML = '';
+            for (let y = 2026; y <= 2035; y++) { sel.innerHTML += `<option value="${y}">${y}</option>`; }
+            updateNewBillNumber();
+            try {
+                const bills = await getAllBills();
+                const newBills = bills.filter(b => b.year >= 2026);
+                document.getElementById('newBillsTable').innerHTML = newBills.length ? newBills.map(b => `<tr class="new-bill-row"><td>${b.billNumber}</td><td>${b.period}</td><td>${b.year}</td><td>${formatNumber(b.amountDue)}</td><td><span class="status-badge ${b.outstanding === 0 ? 'status-paid' : 'status-unpaid'}">${b.outstanding === 0 ? 'Paid' : 'Unpaid'}</span></td><td><button class="btn btn-primary" style="padding:0.3rem 0.5rem;font-size:0.8rem;" onclick="viewBill('${b.billNumber}')">View</button> <button class="btn btn-danger" style="padding:0.3rem 0.5rem;font-size:0.8rem;" onclick="deleteBill('${b.billNumber}')">Del</button></td></tr>`).join('') : '<tr><td colspan="6" style="text-align:center;">No new bills yet</td></tr>';
+            } catch (err) {}
+        }
+
+        function updateNewBillNumber() {
+            const p = document.getElementById('newBillPeriod').value;
+            const y = document.getElementById('newBillYear').value;
+            let q = 'Q1', n = 1;
+            if (p === 'April to June') { q = 'Q2'; n = 2; }
+            else if (p === 'July to September') { q = 'Q3'; n = 3; }
+            else if (p === 'October to December') { q = 'Q4'; n = 4; }
+            document.getElementById('newBillNumber').value = `${q}-${y}-00${n}`;
+        }
+        document.getElementById('newBillPeriod').addEventListener('change', updateNewBillNumber);
+        document.getElementById('newBillYear').addEventListener('change', updateNewBillNumber);
+
+        async function createNewBill() {
+            const p = document.getElementById('newBillPeriod').value;
+            const y = parseInt(document.getElementById('newBillYear').value);
+            const amt = parseInt(document.getElementById('newBillAmount').value);
+            const bn = document.getElementById('newBillNumber').value;
+            let q = 'Q1';
+            if (p === 'April to June') q = 'Q2';
+            else if (p === 'July to September') q = 'Q3';
+            else if (p === 'October to December') q = 'Q4';
+            try {
+                await apiFetch('/bills', { method: 'POST', body: JSON.stringify({ billNumber: bn, quarter: q, year: y, period: p, amountDue: amt, paidAmount: 0, outstanding: amt, isNew: true }) });
+                showAlert(`Bill ${bn} created!`, 'success');
+                updateNewBillPage();
+                updateDashboard();
+            } catch (err) { showAlert('Error creating bill', 'error'); }
+        }
+
+        async function deleteBill(bn) {
+            if (!confirm(`Delete ${bn}?`)) return;
+            try {
+                await apiFetch(`/bills/${bn}`, { method: 'DELETE' });
+                showAlert('Deleted', 'success');
+                updateNewBillPage();
+                updateDashboard();
+            } catch (err) { showAlert('Error', 'error'); }
+        }
+
+        document.getElementById('paymentBillSelect').addEventListener('change', async function() {
+            if (this.value) {
+                const bills = await getAllBills();
+                const b = bills.find(x => x.billNumber === this.value);
+                if (b) document.getElementById('currentOutstanding').value = formatNumber(b.outstanding) + ' XAF';
+            }
+        });
+
+        function displayBillPreview(bill, showAdv = false) {
+            const rent = CONFIG.rentPerMonth * 3;
+            const tax = rent * CONFIG.taxRate;
+            const adv = showAdv ? bill.paidAmount : 0;
+            const total = rent - tax - adv;
+            const dates = { Q1: '31st March', Q2: '30th June', Q3: '30th September', Q4: '31st December' };
+            document.getElementById('billPreview').innerHTML = `
+                <div class="bill-header"><h2>RENT BILL</h2><p><strong>${CONFIG.clientName}</strong></p><p>${CONFIG.clientAddress}</p><p>Tel: ${CONFIG.clientTel} | Account: ${CONFIG.accountNo}</p></div>
+                <p><strong>To:</strong> The General Manager, Cameroon Postal Services, B.P 1441 Yaoundé.</p>
+                <p style="margin:1rem 0;"><strong>Sir,</strong> In accordance with contract de bail No.00000/9/MTP/G10 of 18th April 1991, I present the rent bill:</p>
+                <table class="bill-table"><tr><td><strong>Date:</strong></td><td>${dates[bill.quarter]} ${bill.year}</td></tr><tr><td><strong>Tenant:</strong></td><td>${CONFIG.tenantName}</td></tr><tr><td><strong>Bill #:</strong></td><td>${bill.billNumber}</td></tr></table>
+                <table class="bill-table"><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+                <tr><td>Rent for ${bill.quarter} (${bill.period})</td><td>3 mo</td><td>${formatNumber(CONFIG.rentPerMonth)}</td><td>${formatNumber(rent)}</td></tr>
+                <tr><td>Less 15% Tax</td><td></td><td></td><td>(${formatNumber(tax)})</td></tr>
+                ${showAdv && adv > 0 ? `<tr><td>Less Advance Payment</td><td></td><td></td><td>(${formatNumber(adv)})</td></tr>` : ''}
+                <tr class="bill-total-row"><td colspan="3"><strong>TOTAL DUE</strong></td><td><strong>${formatNumber(total)}</strong></td></tr>
+                </tbody></table>
+                <p style="margin-top:2rem;text-align:right;"><strong>Signature:</strong> _________________</p>`;
+            document.getElementById('billPreviewCard').style.display = 'block';
+            document.getElementById('billPreviewCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function viewBill(bn) {
+            const bills = await getAllBills();
+            const b = bills.find(x => x.billNumber === bn);
+            if (b) {
+                document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+                document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+                document.querySelector('[data-page="bills"]').classList.add('active');
+                document.getElementById('bills').classList.add('active');
+                await updateBillsPage();
+                document.getElementById('existingBillSelect').value = bn;
+                displayBillPreview(b, b.paidAmount > 0 && b.outstanding > 0);
+            }
+        }
+
+        function printCurrentBill() { if (document.getElementById('billPreviewCard').style.display === 'none') { showAlert('View a bill first!', 'error'); return; } window.print(); }
+
+        async function printOutstandingBills() {
+            const bills = await getAllBills();
+            const out = bills.filter(b => b.outstanding > 0);
+            if (!out.length) { showAlert('No outstanding bills!', 'info'); return; }
+            document.getElementById('printModalBody').innerHTML = `<div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Outstanding</th><th></th></tr></thead><tbody>${out.map(b => `<tr><td>${b.billNumber}</td><td>${b.period} ${b.year}</td><td class="amount-negative">${formatNumber(b.outstanding)}</td><td><button class="btn btn-primary" style="padding:0.3rem 0.5rem;" onclick="printSingleBill('${b.billNumber}')">Print</button></td></tr>`).join('')}</tbody></table></div>`;
+            document.getElementById('printModal').classList.add('active');
+        }
+
+        async function printSingleBill(bn) { closePrintModal(); await viewBill(bn); setTimeout(() => window.print(), 500); }
+        function closePrintModal() { document.getElementById('printModal').classList.remove('active'); }
+
+        async function recordPayment() {
+            const bn = document.getElementById('paymentBillSelect').value;
+            const amt = parseInt(document.getElementById('paymentAmount').value);
+            const date = document.getElementById('paymentDate').value;
+            const ref = document.getElementById('paymentReference').value;
+            if (!bn) { showAlert('Select bill!', 'error'); return; }
+            if (!amt || amt <= 0) { showAlert('Enter amount!', 'error'); return; }
+            try {
+                await apiFetch('/payments', { method: 'POST', body: JSON.stringify({ billNumber: bn, amount: amt, date, reference: ref }) });
+                showAlert(`${formatNumber(amt)} XAF recorded!`, 'success');
+                clearPaymentForm();
+                updatePaymentsPage();
+                updateDashboard();
+            } catch (err) { showAlert('Error', 'error'); }
+        }
+
+        function clearPaymentForm() {
+            document.getElementById('paymentBillSelect').value = '';
+            document.getElementById('currentOutstanding').value = '';
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentReference').value = '';
+            document.getElementById('paymentDate').valueAsDate = new Date();
+        }
+
+        function saveSettings() {
+            CONFIG.rentPerMonth = parseInt(document.getElementById('rentAmount').value) / 3;
+            CONFIG.taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
+            document.getElementById('netAmount').value = formatNumber(CONFIG.rentPerMonth * 3 * (1 - CONFIG.taxRate));
+            showAlert('Saved!', 'success');
+        }
+
+        async function resetData() {
+            if (!confirm('Reset ALL data?')) return;
+            try {
+                await apiFetch('/reset', { method: 'POST' });
+                showAlert('Reset complete!', 'success');
+                refreshCurrentPage();
+            } catch (err) { showAlert('Error', 'error'); }
+        }
+
+        async function exportToCSV() {
+            try {
+                const bills = await getAllBills();
+                let csv = 'Bill Number,Period,Year,Due,Paid,Outstanding,Status\n';
+                bills.forEach(b => { csv += `${b.billNumber},${b.period},${b.year},${b.amountDue},${b.paidAmount},${b.outstanding},${b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid'}\n`; });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                a.download = `CAMPOST_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                showAlert('Exported!', 'success');
+            } catch (err) { showAlert('Error', 'error'); }
+        }
+
+        async function init() {
+            await checkDbStatus();
+            await updateDashboard();
+            await updateBillsPage();
+        }
+
+        init();
+    </script>
+</body>
+</html>

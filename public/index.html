@@ -440,9 +440,9 @@
             const total = rent - tax - adv;
             const dates = { Q1: '31st March', Q2: '30th June', Q3: '30th September', Q4: '31st December' };
             document.getElementById('billPreview').innerHTML = `
-                <div class="bill-header"><p><h2><strong>${CONFIG.clientName}<h2></strong></p><p>${CONFIG.clientAddress}</p><p>Tel: ${CONFIG.clientTel} | Account: ${CONFIG.accountNo}</p></div>
-                <p><strong>To:</p></strong> <p><strong>The General Manager,</p></strong> <p><strong> Cameroon Postal Services,</p></Strong> <p><Strong> B.P 1441 Yaoundé.</p></strong>
-                <p style="margin:1rem 0;"><strong>Sir,</p> </strong> <p><strong>In accordance with contract de bail No.00000/9/MTP/G10 of 18th April 1991,</p></strong> <p><strong> I present the rent bill:</p></strong>
+                <div class="bill-header"><h2>RENT BILL</h2><p><strong>${CONFIG.clientName}</strong></p><p>${CONFIG.clientAddress}</p><p>Tel: ${CONFIG.clientTel} | Account: ${CONFIG.accountNo}</p></div>
+                <p><strong>To:</strong> The General Manager, Cameroon Postal Services, B.P 1441 Yaoundé.</p>
+                <p style="margin:1rem 0;"><strong>Sir,</strong> In accordance with contract de bail No.00000/9/MTP/G10 of 18th April 1991, I present the rent bill:</p>
                 <table class="bill-table"><tr><td><strong>Date:</strong></td><td>${dates[bill.quarter]} ${bill.year}</td></tr><tr><td><strong>Tenant:</strong></td><td>${CONFIG.tenantName}</td></tr><tr><td><strong>Bill #:</strong></td><td>${bill.billNumber}</td></tr></table>
                 <table class="bill-table"><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
                 <tr><td>Rent for ${bill.quarter} (${bill.period})</td><td>3 mo</td><td>${formatNumber(CONFIG.rentPerMonth)}</td><td>${formatNumber(rent)}</td></tr>

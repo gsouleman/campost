@@ -1,0 +1,23 @@
+# Render.com Blueprint - CAMPOST Billing System
+# This file helps Render understand how to deploy your app
+
+databases:
+  - name: campost-db
+    databaseName: campost_billing
+    user: campost_user
+    plan: free
+
+services:
+  - type: web
+    name: campost-billing
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: campost-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production

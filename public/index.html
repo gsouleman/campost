@@ -196,94 +196,8 @@
     </style>
 </head>
 <body>
-    <!-- ==================== LOGIN PAGE ==================== -->
-    <div class="login-container active" id="loginContainer">
-        <div class="login-box">
-            <div class="login-header">
-                <h1>🏢 NJIKAM SALIFU REAL ESTATE</h1>
-                <p>Property & Billing Management System</p>
-            </div>
-            <div class="login-body">
-                <div class="login-error" id="loginError"></div>
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="loginUsername" placeholder="Enter username" onkeypress="if(event.key==='Enter')doLogin()">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="if(event.key==='Enter')doLogin()">
-                </div>
-                <button class="btn btn-primary login-btn" onclick="doLogin()">🔐 Login</button>
-            </div>
-            <div class="login-footer">
-                <a onclick="showForgotPassword()">Forgot Password?</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Forgot Password Modal -->
-    <div class="modal-overlay" id="forgotPasswordModal">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header"><h3>🔑 Reset Password</h3><button class="modal-close" onclick="closeForgotPassword()">×</button></div>
-            <div class="modal-body">
-                <p style="font-size: 0.85rem; color: #718096; margin-bottom: 1rem;">Enter your email address to receive a password reset code.</p>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="forgotEmail" placeholder="Enter your email">
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="sendResetCode()">📧 Send Reset Code</button>
-                </div>
-                <div id="resetCodeSection" style="display: none; margin-top: 1rem;">
-                    <div class="form-group">
-                        <label>Reset Code</label>
-                        <input type="text" id="resetCode" placeholder="Enter code from email">
-                    </div>
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <input type="password" id="newResetPassword" placeholder="Enter new password">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm New Password</label>
-                        <input type="password" id="confirmResetPassword" placeholder="Confirm new password">
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-success" onclick="resetPasswordWithCode()">🔐 Reset Password</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Force Password Change Modal -->
-    <div class="modal-overlay" id="forcePasswordModal">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%);"><h3>🔐 Change Password Required</h3></div>
-            <div class="modal-body">
-                <p style="font-size: 0.85rem; color: #718096; margin-bottom: 1rem; background: #fffbeb; padding: 10px; border-radius: 6px;">
-                    ⚠️ You must change your password before continuing. This is required for first-time login.
-                </p>
-                <div class="form-group">
-                    <label>Current Password</label>
-                    <input type="password" id="forceCurrentPassword" placeholder="Enter current password">
-                </div>
-                <div class="form-group">
-                    <label>New Password</label>
-                    <input type="password" id="forceNewPassword" placeholder="Enter new password (min 4 characters)">
-                </div>
-                <div class="form-group">
-                    <label>Confirm New Password</label>
-                    <input type="password" id="forceConfirmPassword" placeholder="Confirm new password">
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-success" onclick="forceChangePassword()">🔐 Change Password & Continue</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== MAIN APP (Hidden until login) ==================== -->
-    <div id="mainApp" style="display: none;">
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="mainApp" style="display: block;">
     <header class="header no-print">
         <div class="header-top">
             <div class="logo-section">
@@ -294,32 +208,24 @@
                 </div>
             </div>
             <div class="header-info">
-                <div style="margin-bottom: 5px;">
-                    <strong id="loggedInUser">User</strong>
-                    <span class="user-badge" id="userRoleBadge">User</span>
-                </div>
                 <span>B.P 36 Mankon-Bamenda | 675299868</span>
-                <div style="margin-top: 5px;">
-                    <button class="btn btn-sm btn-outline" style="padding: 2px 8px; font-size: 0.65rem; border-color: white; color: white;" onclick="doLogout()">🚪 Logout</button>
-                </div>
             </div>
         </div>
         <!-- Main Navigation - shown on landing page -->
         <nav class="nav" id="mainNav">
             <button class="nav-btn active" data-page="landing">🏠 Home</button>
-            <button class="nav-btn" data-page="main-settings">⚙️ Settings</button>
         </nav>
         <!-- CAMPOST MANKON Navigation -->
         <nav class="nav module-header" id="campostNav">
             <button class="nav-btn" onclick="goToLanding()">🏠 Home</button>
             <button class="nav-btn active" data-page="campost-dashboard">📊 Dashboard</button>
             <button class="nav-btn" data-page="campost-ledger">📒 Ledger</button>
-            <button class="nav-btn admin-only" data-page="campost-expenses">💸 Expenses</button>
-            <button class="nav-btn admin-only" data-page="campost-bills">📄 Bills</button>
-            <button class="nav-btn admin-only" data-page="campost-payments">💵 Payments</button>
+            <button class="nav-btn" data-page="campost-expenses">💸 Expenses</button>
+            <button class="nav-btn" data-page="campost-bills">📄 Bills</button>
+            <button class="nav-btn" data-page="campost-payments">💵 Payments</button>
             <button class="nav-btn" data-page="campost-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
             <button class="nav-btn" data-page="campost-export">📥 Export</button>
-            <button class="nav-btn admin-only" data-page="campost-settings">⚙️ Settings</button>
+            <button class="nav-btn" data-page="campost-settings">⚙️ Settings</button>
         </nav>
         <!-- FAMILY REAL ESTATES Navigation -->
         <nav class="nav module-header" id="familyNav">
@@ -327,13 +233,13 @@
             <button class="nav-btn active" data-page="family-dashboard">📊 Dashboard</button>
             <button class="nav-btn" data-page="family-properties">🏠 Properties</button>
             <button class="nav-btn" data-page="family-income">💵 Rental Income</button>
-            <button class="nav-btn admin-only" data-page="family-bills">📄 Bills</button>
-            <button class="nav-btn admin-only" data-page="family-payments">💳 Payments</button>
-            <button class="nav-btn admin-only" data-page="family-expenses">💸 Expenses</button>
+            <button class="nav-btn" data-page="family-bills">📄 Bills</button>
+            <button class="nav-btn" data-page="family-payments">💳 Payments</button>
+            <button class="nav-btn" data-page="family-expenses">💸 Expenses</button>
             <button class="nav-btn" data-page="family-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
             <button class="nav-btn" data-page="family-ledger">📒 Ledger</button>
             <button class="nav-btn" data-page="family-export">📥 Export</button>
-            <button class="nav-btn admin-only" data-page="family-settings">⚙️ Settings</button>
+            <button class="nav-btn" data-page="family-settings">⚙️ Settings</button>
         </nav>
     </header>
 
@@ -5193,10 +5099,15 @@
             if (taxInput) taxInput.addEventListener('change', updatePropertyCalc);
         });
 
-        // Initialize
+        // Initialize - no login required
         function init() {
-            // Check for existing session - this will handle login or show login page
-            checkExistingSession();
+            // Set default admin user for full access
+            currentUser = { id: 1, username: 'admin', full_name: 'Administrator', role: 'admin' };
+            document.body.classList.add('is-admin');
+            
+            // Initialize app
+            checkDb();
+            goToLanding();
         }
 
         init();

@@ -80,6 +80,23 @@ async function initDatabase() {
             )
         `);
 
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS properties (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                location VARCHAR(255) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                status VARCHAR(50) NOT NULL,
+                rent_amount NUMERIC(12,2) DEFAULT 0,
+                rent_period VARCHAR(20) DEFAULT 'Monthly',
+                tax_rate NUMERIC(5,2) DEFAULT 15,
+                islamic_inheritance VARCHAR(10) DEFAULT 'Yes',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         await initializeDefaultData();
         dbConnected = true;
         console.log('✓ Connected to PostgreSQL database');
@@ -662,6 +679,100 @@ app.post('/api/reset', async (req, res) => {
         await pool.query('DELETE FROM categories');
         await initializeDefaultData();
         res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// PROPERTIES API ENDPOINTS
+// ==========================================
+
+// Get all properties
+app.get('/api/properties', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM properties ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get single property
+app.get('/api/properties/:id', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM properties WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Property not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Create property
+app.post('/api/properties', async (req, res) => {
+    const { name, location, type, status, rent_amount, rent_period, tax_rate, islamic_inheritance, notes } = req.body;
+    
+    // If not rented, income is zero
+    const actualRentAmount = status === 'Rented' ? (rent_amount || 0) : 0;
+    
+    try {
+        const result = await pool.query(
+            `INSERT INTO properties (name, location, type, status, rent_amount, rent_period, tax_rate, islamic_inheritance, notes)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+            [name, location, type, status, actualRentAmount, rent_period || 'Monthly', tax_rate || 15, islamic_inheritance || 'Yes', notes]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update property
+app.put('/api/properties/:id', async (req, res) => {
+    const { name, location, type, status, rent_amount, rent_period, tax_rate, islamic_inheritance, notes } = req.body;
+    
+    // If not rented, income is zero
+    const actualRentAmount = status === 'Rented' ? (rent_amount || 0) : 0;
+    
+    try {
+        const result = await pool.query(
+            `UPDATE properties SET 
+                name = $1, location = $2, type = $3, status = $4, 
+                rent_amount = $5, rent_period = $6, tax_rate = $7, 
+                islamic_inheritance = $8, notes = $9, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $10 RETURNING *`,
+            [name, location, type, status, actualRentAmount, rent_period || 'Monthly', tax_rate || 15, islamic_inheritance || 'Yes', notes, req.params.id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Property not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete property
+app.delete('/api/properties/:id', async (req, res) => {
+    try {
+        const result = await pool.query('DELETE FROM properties WHERE id = $1 RETURNING *', [req.params.id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Property not found' });
+        }
+        res.json({ success: true, deleted: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get rented properties only
+app.get('/api/properties/rented', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM properties WHERE status = 'Rented' ORDER BY name");
+        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

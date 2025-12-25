@@ -153,6 +153,7 @@
             <button class="nav-btn" data-page="bills">📄 Bills</button>
             <button class="nav-btn" data-page="payments">💵 Payments</button>
             <button class="nav-btn" data-page="inheritance">👨‍👩‍👧‍👦 Inheritance</button>
+            <button class="nav-btn" data-page="realestate">🏠 Family Real Estates</button>
             <button class="nav-btn" data-page="export">📥 Export</button>
             <button class="nav-btn" data-page="settings">⚙️ Settings</button>
         </nav>
@@ -331,8 +332,229 @@
                     <button class="btn btn-print btn-sm" onclick="exportPDF('expenses')">Expenses PDF</button>
                     <button class="btn btn-primary btn-sm" onclick="exportPDF('ledger')">Ledger PDF</button>
                     <button class="btn btn-gold btn-sm" onclick="exportPDF('heirs')">Heirs PDF</button>
+                    <button class="btn btn-success btn-sm" onclick="exportPDF('properties')">Properties PDF</button>
                 </div>
             </div></div>
+        </div>
+
+        <!-- FAMILY REAL ESTATES -->
+        <div id="realestate" class="page">
+            <div class="stats-grid">
+                <div class="stat-card green"><div class="stat-icon">🏠</div><div class="stat-value" id="reTotalProps">0</div><div class="stat-label">Total Properties</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🔑</div><div class="stat-value" id="reRented">0</div><div class="stat-label">Rented Properties</div></div>
+                <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reMonthlyIncome">0</div><div class="stat-label">Monthly Income</div></div>
+                <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="reYearlyIncome">0</div><div class="stat-label">Yearly Income</div></div>
+            </div>
+
+            <!-- Properties Tabs -->
+            <div class="tabs" style="margin-bottom: 15px;">
+                <button class="tab-btn active" onclick="showRETab('rePropertiesTab', this)">🏠 Properties</button>
+                <button class="tab-btn" onclick="showRETab('reIncomeTab', this)">💵 Rental Income</button>
+                <button class="tab-btn" onclick="showRETab('reLedgerTab', this)">📒 RE Ledger</button>
+            </div>
+
+            <!-- Properties List Tab -->
+            <div id="rePropertiesTab" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <span>🏠 Family Properties Portfolio</span>
+                        <div class="no-print">
+                            <button class="btn btn-success btn-sm" onclick="openPropertyModal()">➕ Add Property</button>
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('properties')">📥 Export PDF</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 10px;">
+                            <select id="reStatusFilter" onchange="filterProperties()" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                                <option value="">All Status</option>
+                                <option value="Rented">Rented</option>
+                                <option value="Sold">Sold</option>
+                                <option value="For sale">For Sale</option>
+                                <option value="Not to be sold">Not to be Sold</option>
+                                <option value="Shared">Shared</option>
+                                <option value="Admin issues">Admin Issues</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Property Name</th>
+                                        <th>Location</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Monthly Income</th>
+                                        <th>Islamic Inheritance</th>
+                                        <th class="no-print">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="propertiesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rental Income Tab -->
+            <div id="reIncomeTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header gold">
+                        <span>💵 Rental Income from Rented Properties</span>
+                        <button class="btn btn-print btn-sm no-print" onclick="exportPDF('rentalIncome')">📥 Export PDF</button>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.8rem; color: #718096; margin-bottom: 15px;">
+                            📌 Only properties with status <strong>"Rented"</strong> generate income. Configure rent amount, period, and tax rate below.
+                        </p>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Location</th>
+                                        <th>Rent Amount (XAF)</th>
+                                        <th>Period</th>
+                                        <th>Tax Rate (%)</th>
+                                        <th>Gross Income</th>
+                                        <th>Tax Amount</th>
+                                        <th>Net Income</th>
+                                        <th class="no-print">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rentalIncomeTable"></tbody>
+                                <tfoot id="rentalIncomeTotals"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RE Ledger Tab -->
+            <div id="reLedgerTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span>📒 Real Estate Ledger (Auto-Generated)</span>
+                        <div class="no-print">
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('reLedger')">📥 Export PDF</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">📥 Export CSV</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Property</th>
+                                        <th>Description</th>
+                                        <th>Type</th>
+                                        <th style="background: #c6f6d5;">Income</th>
+                                        <th style="background: #fed7d7;">Expense</th>
+                                        <th>Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reLedgerTable"></tbody>
+                                <tfoot id="reLedgerTotals"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Property Modal -->
+        <div class="modal-overlay" id="propertyModal">
+            <div class="modal" style="max-width: 600px;">
+                <div class="modal-header"><h3 id="propertyModalTitle">🏠 Add Property</h3><button class="modal-close" onclick="closePropertyModal()">×</button></div>
+                <div class="modal-body">
+                    <input type="hidden" id="propId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Property Name *</label>
+                            <input type="text" id="propName" placeholder="e.g., Commercial Building A">
+                        </div>
+                        <div class="form-group">
+                            <label>Location *</label>
+                            <input type="text" id="propLocation" placeholder="e.g., Bamenda, NW Region">
+                        </div>
+                        <div class="form-group">
+                            <label>Type *</label>
+                            <select id="propType">
+                                <option value="Residential">Residential</option>
+                                <option value="Commercial">Commercial</option>
+                                <option value="Land">Land</option>
+                                <option value="Industrial">Industrial</option>
+                                <option value="Mixed">Mixed Use</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status *</label>
+                            <select id="propStatus" onchange="toggleRentalFields()">
+                                <option value="Rented">Rented</option>
+                                <option value="Sold">Sold</option>
+                                <option value="For sale">For Sale</option>
+                                <option value="Not to be sold">Not to be Sold</option>
+                                <option value="Shared">Shared</option>
+                                <option value="Admin issues">Admin Issues</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Rental Fields (only for Rented status) -->
+                    <div id="rentalFields" style="background: #ebf8ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <h4 style="color: #2c5282; margin-bottom: 10px;">💰 Rental Configuration</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Rent Amount (XAF) *</label>
+                                <input type="number" id="propRentAmount" value="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Rental Period *</label>
+                                <select id="propRentPeriod">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tax Rate (%) *</label>
+                                <select id="propTaxRate">
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="10">10%</option>
+                                    <option value="15" selected>15%</option>
+                                    <option value="20">20%</option>
+                                    <option value="25">25%</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="background: #fff; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                            <div class="summary-row"><span>Gross Rent:</span><span id="propGrossRent">0 XAF</span></div>
+                            <div class="summary-row"><span>Tax Deduction:</span><span id="propTaxAmount" style="color: #e53e3e;">0 XAF</span></div>
+                            <div class="summary-row" style="font-weight: bold;"><span>Net Income:</span><span id="propNetIncome" style="color: #38a169;">0 XAF</span></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Shared per Islamic Inheritance?</label>
+                        <select id="propInheritance">
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="NA">N/A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="propNotes" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveProperty()">💾 Save Property</button>
+                        <button class="btn btn-outline" onclick="closePropertyModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- SETTINGS -->
@@ -579,6 +801,7 @@
             else if (p === 'bills') { loadBills(); updateCalcDisplays(); }
             else if (p === 'payments') loadPayments();
             else if (p === 'inheritance') loadInheritance();
+            else if (p === 'realestate') loadRealEstate();
             else if (p === 'settings') { loadSettings(); setupSettingsListeners(); checkDb(); }
         }
 
@@ -1326,6 +1549,80 @@
                     doc.save('campost_heirs.pdf');
                     showAlert('PDF exported!');
                 });
+            } else if (type === 'properties') {
+                var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FAMILY REAL ESTATE PORTFOLIO', 105, 35, { align: 'center' });
+                doc.setFontSize(9);
+                doc.text('Total Properties: ' + properties.length + ' | Rented: ' + properties.filter(function(p) { return p.status === 'Rented'; }).length, 105, 42, { align: 'center' });
+                doc.autoTable({ 
+                    startY: 48, 
+                    head: [['Property', 'Location', 'Type', 'Status', 'Income', 'Islamic Inh.']], 
+                    body: properties.map(function(p) { 
+                        return [p.name, p.location, p.type, p.status, p.status === 'Rented' ? fmt(p.rent_amount) : '0', p.islamic_inheritance || 'NA']; 
+                    }), 
+                    styles: { fontSize: 7 },
+                    headStyles: { fillColor: [44, 82, 130] }
+                });
+                doc.save('family_properties.pdf');
+                showAlert('PDF exported!');
+            } else if (type === 'rentalIncome') {
+                var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+                var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+                var totalGross = 0, totalTax = 0, totalNet = 0;
+                
+                var tableData = rentedProps.map(function(p) {
+                    var rent = parseFloat(p.rent_amount) || 0;
+                    var taxRate = parseFloat(p.tax_rate) || 0;
+                    var taxAmt = rent * taxRate / 100;
+                    var net = rent - taxAmt;
+                    totalGross += rent;
+                    totalTax += taxAmt;
+                    totalNet += net;
+                    return [p.name, p.location, fmt(rent), p.rent_period || 'Monthly', taxRate + '%', fmt(Math.round(taxAmt)), fmt(Math.round(net))];
+                });
+                tableData.push(['', '', 'TOTALS:', '', '', fmt(Math.round(totalTax)), fmt(Math.round(totalNet))]);
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RENTAL INCOME REPORT', 105, 35, { align: 'center' });
+                doc.setFontSize(9);
+                doc.text('Gross: ' + fmt(Math.round(totalGross)) + ' XAF | Tax: ' + fmt(Math.round(totalTax)) + ' XAF | Net: ' + fmt(Math.round(totalNet)) + ' XAF', 105, 42, { align: 'center' });
+                doc.autoTable({ 
+                    startY: 48, 
+                    head: [['Property', 'Location', 'Rent', 'Period', 'Tax Rate', 'Tax Amount', 'Net Income']], 
+                    body: tableData, 
+                    styles: { fontSize: 7 },
+                    headStyles: { fillColor: [214, 158, 46] }
+                });
+                doc.save('rental_income.pdf');
+                showAlert('PDF exported!');
+            } else if (type === 'reLedger') {
+                var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+                var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+                var totalIncome = 0;
+                
+                var tableData = rentedProps.map(function(p) {
+                    var rent = parseFloat(p.rent_amount) || 0;
+                    var taxRate = parseFloat(p.tax_rate) || 0;
+                    var net = rent - (rent * taxRate / 100);
+                    totalIncome += net;
+                    return [fmtDate(new Date()), p.name, 'Rental Income (' + (p.rent_period || 'Monthly') + ')', 'Income', fmt(Math.round(net)), '-', fmt(Math.round(totalIncome))];
+                });
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('REAL ESTATE LEDGER', 105, 35, { align: 'center' });
+                doc.autoTable({ 
+                    startY: 42, 
+                    head: [['Date', 'Property', 'Description', 'Type', 'Income', 'Expense', 'Balance']], 
+                    body: tableData, 
+                    styles: { fontSize: 7 },
+                    headStyles: { fillColor: [44, 82, 130] }
+                });
+                doc.save('real_estate_ledger.pdf');
+                showAlert('PDF exported!');
             }
         }
 
@@ -1399,6 +1696,369 @@
                 loadDashboard();
             });
         }
+
+        // ==========================================
+        // FAMILY REAL ESTATES MODULE
+        // ==========================================
+
+        // Show RE Tab
+        function showRETab(tabId, btn) {
+            document.querySelectorAll('#realestate .tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('#realestate .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Load Real Estate Data
+        function loadRealEstate() {
+            api('/properties').then(function(properties) {
+                // Update stats
+                var totalProps = properties.length;
+                var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+                var monthlyIncome = 0;
+                var yearlyIncome = 0;
+
+                rentedProps.forEach(function(p) {
+                    var rent = parseFloat(p.rent_amount) || 0;
+                    var taxRate = parseFloat(p.tax_rate) || 0;
+                    var netRent = rent - (rent * taxRate / 100);
+                    
+                    if (p.rent_period === 'Monthly') {
+                        monthlyIncome += netRent;
+                        yearlyIncome += netRent * 12;
+                    } else if (p.rent_period === 'Quarterly') {
+                        monthlyIncome += netRent / 3;
+                        yearlyIncome += netRent * 4;
+                    } else if (p.rent_period === 'Yearly') {
+                        monthlyIncome += netRent / 12;
+                        yearlyIncome += netRent;
+                    }
+                });
+
+                document.getElementById('reTotalProps').textContent = totalProps;
+                document.getElementById('reRented').textContent = rentedProps.length;
+                document.getElementById('reMonthlyIncome').textContent = fmt(Math.round(monthlyIncome));
+                document.getElementById('reYearlyIncome').textContent = fmt(Math.round(yearlyIncome));
+
+                renderPropertiesTable(properties);
+                renderRentalIncomeTable(rentedProps);
+                renderRELedger(properties);
+            }).catch(function() {
+                // If API fails, use localStorage
+                var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+                renderPropertiesTable(properties);
+                var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+                renderRentalIncomeTable(rentedProps);
+                renderRELedger(properties);
+                updateREStats(properties);
+            });
+        }
+
+        function updateREStats(properties) {
+            var totalProps = properties.length;
+            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+            var monthlyIncome = 0;
+            var yearlyIncome = 0;
+
+            rentedProps.forEach(function(p) {
+                var rent = parseFloat(p.rent_amount) || 0;
+                var taxRate = parseFloat(p.tax_rate) || 0;
+                var netRent = rent - (rent * taxRate / 100);
+                
+                if (p.rent_period === 'Monthly') {
+                    monthlyIncome += netRent;
+                    yearlyIncome += netRent * 12;
+                } else if (p.rent_period === 'Quarterly') {
+                    monthlyIncome += netRent / 3;
+                    yearlyIncome += netRent * 4;
+                } else if (p.rent_period === 'Yearly') {
+                    monthlyIncome += netRent / 12;
+                    yearlyIncome += netRent;
+                }
+            });
+
+            document.getElementById('reTotalProps').textContent = totalProps;
+            document.getElementById('reRented').textContent = rentedProps.length;
+            document.getElementById('reMonthlyIncome').textContent = fmt(Math.round(monthlyIncome));
+            document.getElementById('reYearlyIncome').textContent = fmt(Math.round(yearlyIncome));
+        }
+
+        // Render Properties Table
+        function renderPropertiesTable(properties) {
+            var filterStatus = document.getElementById('reStatusFilter').value;
+            var filtered = filterStatus ? properties.filter(function(p) { return p.status === filterStatus; }) : properties;
+
+            var html = filtered.map(function(p) {
+                var statusClass = p.status === 'Rented' ? 'badge-income' : p.status === 'Sold' ? 'badge-paid' : p.status === 'For sale' ? 'badge-new' : 'badge-expense';
+                var income = p.status === 'Rented' ? fmt(p.rent_amount || 0) : '0';
+                return '<tr>' +
+                    '<td><strong>' + p.name + '</strong></td>' +
+                    '<td>' + p.location + '</td>' +
+                    '<td>' + p.type + '</td>' +
+                    '<td><span class="badge ' + statusClass + '">' + p.status + '</span></td>' +
+                    '<td class="' + (p.status === 'Rented' ? 'amount-positive' : '') + '">' + income + ' XAF</td>' +
+                    '<td>' + (p.islamic_inheritance || 'NA') + '</td>' +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteProperty(' + p.id + ')">🗑️</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+
+            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="7">No properties found</td></tr>';
+        }
+
+        // Render Rental Income Table
+        function renderRentalIncomeTable(rentedProps) {
+            var totalGross = 0;
+            var totalTax = 0;
+            var totalNet = 0;
+
+            var html = rentedProps.map(function(p) {
+                var rent = parseFloat(p.rent_amount) || 0;
+                var taxRate = parseFloat(p.tax_rate) || 0;
+                var taxAmount = rent * taxRate / 100;
+                var netIncome = rent - taxAmount;
+
+                totalGross += rent;
+                totalTax += taxAmount;
+                totalNet += netIncome;
+
+                return '<tr>' +
+                    '<td><strong>' + p.name + '</strong></td>' +
+                    '<td>' + p.location + '</td>' +
+                    '<td>' + fmt(rent) + '</td>' +
+                    '<td>' + (p.rent_period || 'Monthly') + '</td>' +
+                    '<td>' + taxRate + '%</td>' +
+                    '<td>' + fmt(rent) + '</td>' +
+                    '<td class="amount-negative">-' + fmt(Math.round(taxAmount)) + '</td>' +
+                    '<td class="amount-positive">' + fmt(Math.round(netIncome)) + '</td>' +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️ Edit</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+
+            document.getElementById('rentalIncomeTable').innerHTML = html || '<tr><td colspan="9">No rented properties</td></tr>';
+            
+            document.getElementById('rentalIncomeTotals').innerHTML = 
+                '<tr style="background: #f7fafc; font-weight: bold;">' +
+                '<td colspan="5" style="text-align: right;">TOTALS:</td>' +
+                '<td>' + fmt(Math.round(totalGross)) + '</td>' +
+                '<td class="amount-negative">-' + fmt(Math.round(totalTax)) + '</td>' +
+                '<td class="amount-positive">' + fmt(Math.round(totalNet)) + '</td>' +
+                '<td></td>' +
+                '</tr>';
+        }
+
+        // Render RE Ledger
+        function renderRELedger(properties) {
+            var ledgerEntries = [];
+            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+
+            // Add rental income entries
+            rentedProps.forEach(function(p) {
+                var rent = parseFloat(p.rent_amount) || 0;
+                var taxRate = parseFloat(p.tax_rate) || 0;
+                var taxAmount = rent * taxRate / 100;
+                var netIncome = rent - taxAmount;
+
+                ledgerEntries.push({
+                    date: new Date().toISOString(),
+                    property: p.name,
+                    description: 'Rental Income (' + (p.rent_period || 'Monthly') + ')',
+                    type: 'Income',
+                    income: netIncome,
+                    expense: 0
+                });
+            });
+
+            // Sort by date
+            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+
+            var runningBalance = 0;
+            var totalIncome = 0;
+            var totalExpense = 0;
+
+            var html = ledgerEntries.map(function(entry) {
+                runningBalance += entry.income - entry.expense;
+                totalIncome += entry.income;
+                totalExpense += entry.expense;
+
+                return '<tr>' +
+                    '<td>' + fmtDate(entry.date) + '</td>' +
+                    '<td>' + entry.property + '</td>' +
+                    '<td>' + entry.description + '</td>' +
+                    '<td><span class="badge badge-income">' + entry.type + '</span></td>' +
+                    '<td class="amount-positive">' + (entry.income > 0 ? fmt(Math.round(entry.income)) : '-') + '</td>' +
+                    '<td class="amount-negative">' + (entry.expense > 0 ? fmt(Math.round(entry.expense)) : '-') + '</td>' +
+                    '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                '</tr>';
+            }).join('');
+
+            document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
+            
+            document.getElementById('reLedgerTotals').innerHTML = 
+                '<tr style="background: #f7fafc; font-weight: bold;">' +
+                '<td colspan="4" style="text-align: right;">TOTALS:</td>' +
+                '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
+                '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
+                '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                '</tr>';
+        }
+
+        // Filter Properties
+        function filterProperties() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            renderPropertiesTable(properties);
+        }
+
+        // Toggle Rental Fields
+        function toggleRentalFields() {
+            var status = document.getElementById('propStatus').value;
+            var rentalFields = document.getElementById('rentalFields');
+            if (status === 'Rented') {
+                rentalFields.style.display = 'block';
+            } else {
+                rentalFields.style.display = 'none';
+                document.getElementById('propRentAmount').value = 0;
+            }
+            updatePropertyCalc();
+        }
+
+        // Update Property Calculation
+        function updatePropertyCalc() {
+            var rent = parseFloat(document.getElementById('propRentAmount').value) || 0;
+            var taxRate = parseFloat(document.getElementById('propTaxRate').value) || 0;
+            var taxAmount = rent * taxRate / 100;
+            var netIncome = rent - taxAmount;
+
+            document.getElementById('propGrossRent').textContent = fmt(rent) + ' XAF';
+            document.getElementById('propTaxAmount').textContent = '-' + fmt(Math.round(taxAmount)) + ' XAF';
+            document.getElementById('propNetIncome').textContent = fmt(Math.round(netIncome)) + ' XAF';
+        }
+
+        // Open Property Modal
+        function openPropertyModal() {
+            document.getElementById('propertyModalTitle').textContent = '🏠 Add Property';
+            document.getElementById('propId').value = '';
+            document.getElementById('propName').value = '';
+            document.getElementById('propLocation').value = '';
+            document.getElementById('propType').value = 'Residential';
+            document.getElementById('propStatus').value = 'Rented';
+            document.getElementById('propRentAmount').value = 0;
+            document.getElementById('propRentPeriod').value = 'Monthly';
+            document.getElementById('propTaxRate').value = '15';
+            document.getElementById('propInheritance').value = 'Yes';
+            document.getElementById('propNotes').value = '';
+            toggleRentalFields();
+            document.getElementById('propertyModal').classList.add('active');
+        }
+
+        function closePropertyModal() {
+            document.getElementById('propertyModal').classList.remove('active');
+        }
+
+        // Edit Property
+        function editProperty(id) {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var p = properties.find(function(x) { return x.id === id; });
+            if (p) {
+                document.getElementById('propertyModalTitle').textContent = '🏠 Edit Property';
+                document.getElementById('propId').value = p.id;
+                document.getElementById('propName').value = p.name;
+                document.getElementById('propLocation').value = p.location;
+                document.getElementById('propType').value = p.type;
+                document.getElementById('propStatus').value = p.status;
+                document.getElementById('propRentAmount').value = p.rent_amount || 0;
+                document.getElementById('propRentPeriod').value = p.rent_period || 'Monthly';
+                document.getElementById('propTaxRate').value = p.tax_rate || '15';
+                document.getElementById('propInheritance').value = p.islamic_inheritance || 'Yes';
+                document.getElementById('propNotes').value = p.notes || '';
+                toggleRentalFields();
+                document.getElementById('propertyModal').classList.add('active');
+            }
+        }
+
+        // Save Property
+        function saveProperty() {
+            var id = document.getElementById('propId').value;
+            var name = document.getElementById('propName').value;
+            var location = document.getElementById('propLocation').value;
+            var type = document.getElementById('propType').value;
+            var status = document.getElementById('propStatus').value;
+            var rentAmount = status === 'Rented' ? parseFloat(document.getElementById('propRentAmount').value) || 0 : 0;
+            var rentPeriod = document.getElementById('propRentPeriod').value;
+            var taxRate = parseFloat(document.getElementById('propTaxRate').value) || 0;
+            var inheritance = document.getElementById('propInheritance').value;
+            var notes = document.getElementById('propNotes').value;
+
+            if (!name || !location) {
+                showAlert('Please fill required fields', 'error');
+                return;
+            }
+
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+
+            if (id) {
+                // Update existing
+                var idx = properties.findIndex(function(p) { return p.id === parseInt(id); });
+                if (idx !== -1) {
+                    properties[idx] = {
+                        id: parseInt(id),
+                        name: name,
+                        location: location,
+                        type: type,
+                        status: status,
+                        rent_amount: rentAmount,
+                        rent_period: rentPeriod,
+                        tax_rate: taxRate,
+                        islamic_inheritance: inheritance,
+                        notes: notes,
+                        updated_at: new Date().toISOString()
+                    };
+                }
+            } else {
+                // Add new
+                var newId = properties.length > 0 ? Math.max.apply(null, properties.map(function(p) { return p.id; })) + 1 : 1;
+                properties.push({
+                    id: newId,
+                    name: name,
+                    location: location,
+                    type: type,
+                    status: status,
+                    rent_amount: rentAmount,
+                    rent_period: rentPeriod,
+                    tax_rate: taxRate,
+                    islamic_inheritance: inheritance,
+                    notes: notes,
+                    created_at: new Date().toISOString()
+                });
+            }
+
+            localStorage.setItem('familyProperties', JSON.stringify(properties));
+            closePropertyModal();
+            showAlert(id ? 'Property updated!' : 'Property added!');
+            loadRealEstate();
+        }
+
+        // Delete Property
+        function deleteProperty(id) {
+            if (!confirm('Delete this property?')) return;
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            properties = properties.filter(function(p) { return p.id !== id; });
+            localStorage.setItem('familyProperties', JSON.stringify(properties));
+            showAlert('Property deleted');
+            loadRealEstate();
+        }
+
+        // Setup property form listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            var rentInput = document.getElementById('propRentAmount');
+            var taxInput = document.getElementById('propTaxRate');
+            if (rentInput) rentInput.addEventListener('input', updatePropertyCalc);
+            if (taxInput) taxInput.addEventListener('change', updatePropertyCalc);
+        });
 
         // Initialize
         function init() {

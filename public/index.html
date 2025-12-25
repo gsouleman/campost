@@ -342,18 +342,24 @@
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">🏠</div><div class="stat-value" id="reTotalProps">0</div><div class="stat-label">Total Properties</div></div>
                 <div class="stat-card blue"><div class="stat-icon">🔑</div><div class="stat-value" id="reRented">0</div><div class="stat-label">Rented Properties</div></div>
-                <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reMonthlyIncome">0</div><div class="stat-label">Monthly Income</div></div>
-                <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="reYearlyIncome">0</div><div class="stat-label">Yearly Income</div></div>
+                <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reTotalIncome">0</div><div class="stat-label">Total Income</div></div>
+                <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="reTotalExpenses">0</div><div class="stat-label">Total Expenses</div></div>
             </div>
 
-            <!-- Properties Tabs -->
-            <div class="tabs" style="margin-bottom: 15px;">
+            <!-- RE Navigation Tabs -->
+            <div class="tabs" style="margin-bottom: 15px; flex-wrap: wrap;">
                 <button class="tab-btn active" onclick="showRETab('rePropertiesTab', this)">🏠 Properties</button>
                 <button class="tab-btn" onclick="showRETab('reIncomeTab', this)">💵 Rental Income</button>
-                <button class="tab-btn" onclick="showRETab('reLedgerTab', this)">📒 RE Ledger</button>
+                <button class="tab-btn" onclick="showRETab('reBillsTab', this)">📄 Bills</button>
+                <button class="tab-btn" onclick="showRETab('rePaymentsTab', this)">💳 Payments</button>
+                <button class="tab-btn" onclick="showRETab('reExpensesTab', this)">💸 Expenses</button>
+                <button class="tab-btn" onclick="showRETab('reInheritanceTab', this)">👨‍👩‍👧‍👦 Inheritance</button>
+                <button class="tab-btn" onclick="showRETab('reLedgerTab', this)">📒 Ledger</button>
+                <button class="tab-btn" onclick="showRETab('reExportTab', this)">📥 Export</button>
+                <button class="tab-btn" onclick="showRETab('reSettingsTab', this)">⚙️ Settings</button>
             </div>
 
-            <!-- Properties List Tab -->
+            <!-- ========== PROPERTIES TAB ========== -->
             <div id="rePropertiesTab" class="tab-content active">
                 <div class="card">
                     <div class="card-header">
@@ -365,7 +371,7 @@
                     </div>
                     <div class="card-body">
                         <div style="margin-bottom: 10px;">
-                            <select id="reStatusFilter" onchange="filterProperties()" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                            <select id="reStatusFilter" onchange="filterProperties()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                                 <option value="">All Status</option>
                                 <option value="Rented">Rented</option>
                                 <option value="Sold">Sold</option>
@@ -384,8 +390,11 @@
                                         <th>Location</th>
                                         <th>Type</th>
                                         <th>Status</th>
-                                        <th>Monthly Income</th>
-                                        <th>Islamic Inheritance</th>
+                                        <th>Rent Amount</th>
+                                        <th>Period</th>
+                                        <th>Tax Rate</th>
+                                        <th>Net Income</th>
+                                        <th>Islamic Inh.</th>
                                         <th class="no-print">Actions</th>
                                     </tr>
                                 </thead>
@@ -396,16 +405,16 @@
                 </div>
             </div>
 
-            <!-- Rental Income Tab -->
+            <!-- ========== RENTAL INCOME TAB ========== -->
             <div id="reIncomeTab" class="tab-content">
                 <div class="card">
                     <div class="card-header gold">
-                        <span>💵 Rental Income from Rented Properties</span>
+                        <span>💵 Rental Income Summary</span>
                         <button class="btn btn-print btn-sm no-print" onclick="exportPDF('rentalIncome')">📥 Export PDF</button>
                     </div>
                     <div class="card-body">
-                        <p style="font-size: 0.8rem; color: #718096; margin-bottom: 15px;">
-                            📌 Only properties with status <strong>"Rented"</strong> generate income. Configure rent amount, period, and tax rate below.
+                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px; background: #fffbeb; padding: 10px; border-radius: 6px;">
+                            📌 <strong>Note:</strong> Only properties with status <strong>"Rented"</strong> have income. All other properties show Rent Amount, Period, Tax Rate, Gross Income, Tax Amount, and Net Income as <strong>0</strong>.
                         </p>
                         <div class="table-container">
                             <table>
@@ -413,13 +422,13 @@
                                     <tr>
                                         <th>Property</th>
                                         <th>Location</th>
-                                        <th>Rent Amount (XAF)</th>
+                                        <th>Status</th>
+                                        <th>Rent Amount</th>
                                         <th>Period</th>
-                                        <th>Tax Rate (%)</th>
+                                        <th>Tax Rate</th>
                                         <th>Gross Income</th>
                                         <th>Tax Amount</th>
                                         <th>Net Income</th>
-                                        <th class="no-print">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rentalIncomeTable"></tbody>
@@ -430,7 +439,195 @@
                 </div>
             </div>
 
-            <!-- RE Ledger Tab -->
+            <!-- ========== RE BILLS TAB ========== -->
+            <div id="reBillsTab" class="tab-content">
+                <div class="card no-print">
+                    <div class="card-header green"><span>➕ Create Property Bill</span></div>
+                    <div class="card-body">
+                        <input type="hidden" id="reBillId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Property *</label>
+                                <select id="reBillProperty"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Bill Date *</label>
+                                <input type="date" id="reBillDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Period *</label>
+                                <select id="reBillPeriod">
+                                    <option value="Jan-Mar">Jan-Mar (Q1)</option>
+                                    <option value="Apr-Jun">Apr-Jun (Q2)</option>
+                                    <option value="Jul-Sep">Jul-Sep (Q3)</option>
+                                    <option value="Oct-Dec">Oct-Dec (Q4)</option>
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Year *</label>
+                                <input type="number" id="reBillYear" value="2025">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount Due (XAF) *</label>
+                                <input type="number" id="reBillAmount" placeholder="Amount">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" id="reBillDesc" placeholder="Bill description">
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="saveREBill()">💾 Save Bill</button>
+                            <button class="btn btn-outline" onclick="clearREBillForm()">🔄 Clear</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>📄 Property Bills</span><button class="btn btn-print btn-sm no-print" onclick="exportPDF('reBills')">📥 Export PDF</button></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Bill #</th><th>Property</th><th>Period</th><th>Year</th><th>Amount Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
+                                <tbody id="reBillsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RE PAYMENTS TAB ========== -->
+            <div id="rePaymentsTab" class="tab-content">
+                <div class="card no-print">
+                    <div class="card-header green"><span>➕ Record Payment</span></div>
+                    <div class="card-body">
+                        <input type="hidden" id="rePayId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Select Bill *</label>
+                                <select id="rePayBill"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Payment Date *</label>
+                                <input type="date" id="rePayDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount (XAF) *</label>
+                                <input type="number" id="rePayAmount" placeholder="Payment amount">
+                            </div>
+                            <div class="form-group">
+                                <label>Reference</label>
+                                <input type="text" id="rePayRef" placeholder="Receipt/Reference number">
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="saveREPayment()">💾 Save Payment</button>
+                            <button class="btn btn-outline" onclick="clearREPaymentForm()">🔄 Clear</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>💳 Payment History</span><button class="btn btn-print btn-sm no-print" onclick="exportPDF('rePayments')">📥 Export PDF</button></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Date</th><th>Property</th><th>Bill #</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead>
+                                <tbody id="rePaymentsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RE EXPENSES TAB ========== -->
+            <div id="reExpensesTab" class="tab-content">
+                <div class="card no-print">
+                    <div class="card-header green"><span>➕ Add Property Expense</span></div>
+                    <div class="card-body">
+                        <input type="hidden" id="reExpId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Property *</label>
+                                <select id="reExpProperty"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Date *</label>
+                                <input type="date" id="reExpDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="reExpCategory">
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Repairs">Repairs</option>
+                                    <option value="Taxes">Taxes</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Insurance">Insurance</option>
+                                    <option value="Legal">Legal Fees</option>
+                                    <option value="Agent Fees">Agent Fees</option>
+                                    <option value="Inheritance Share">Inheritance Share</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Amount (XAF) *</label>
+                                <input type="number" id="reExpAmount" placeholder="Amount">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label>Description *</label>
+                                <input type="text" id="reExpDesc" placeholder="Expense description">
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="saveREExpense()">💾 Save Expense</button>
+                            <button class="btn btn-outline" onclick="clearREExpenseForm()">🔄 Clear</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>💸 Property Expenses</span><button class="btn btn-print btn-sm no-print" onclick="exportPDF('reExpenses')">📥 Export PDF</button></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Date</th><th>Property</th><th>Category</th><th>Description</th><th>Amount</th><th class="no-print">Actions</th></tr></thead>
+                                <tbody id="reExpensesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RE INHERITANCE TAB ========== -->
+            <div id="reInheritanceTab" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reInhPool">0</div><div class="stat-label">Inheritance Pool</div></div>
+                    <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value" id="reInhHeirs">0</div><div class="stat-label">Total Heirs</div></div>
+                    <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-value" id="reInhPortions">0</div><div class="stat-label">Total Portions</div></div>
+                    <div class="stat-card red"><div class="stat-icon">💵</div><div class="stat-value" id="reInhPerPortion">0</div><div class="stat-label">Per Portion</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header gold">
+                        <span>👨‍👩‍👧‍👦 Real Estate Inheritance Distribution</span>
+                        <div class="no-print">
+                            <button class="btn btn-success btn-sm" onclick="openREHeirModal()">➕ Add Heir</button>
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('reHeirs')">📥 Export PDF</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                            📌 Inheritance pool is calculated from: <strong>Total Income - Total Expenses</strong> from properties marked for Islamic Inheritance.
+                        </p>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share Amount</th><th class="no-print">Actions</th></tr></thead>
+                                <tbody id="reHeirsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RE LEDGER TAB ========== -->
             <div id="reLedgerTab" class="tab-content">
                 <div class="card">
                     <div class="card-header">
@@ -441,6 +638,9 @@
                         </div>
                     </div>
                     <div class="card-body">
+                        <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
+                            📌 <strong>Income</strong> = Payments from bills (Paid/Partial) | <strong>Expenses</strong> = All property expenses
+                        </p>
                         <div class="table-container">
                             <table>
                                 <thead>
@@ -457,6 +657,94 @@
                                 <tbody id="reLedgerTable"></tbody>
                                 <tfoot id="reLedgerTotals"></tfoot>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RE EXPORT TAB ========== -->
+            <div id="reExportTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><span>📥 Export Real Estate Data</span></div>
+                    <div class="card-body">
+                        <p style="margin-bottom: 15px; color: #718096;">Export all Real Estate data with headers.</p>
+                        <div class="btn-group" style="flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="exportAllRECSV()">📄 All CSV</button>
+                            <button class="btn btn-print" onclick="exportAllREPDF()">📑 All PDF</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>📊 Individual Exports</span></div>
+                    <div class="card-body">
+                        <div class="btn-group" style="flex-wrap: wrap; margin-bottom: 10px;">
+                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reProperties')">Properties CSV</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reBills')">Bills CSV</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportCSV('rePayments')">Payments CSV</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reExpenses')">Expenses CSV</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">Ledger CSV</button>
+                        </div>
+                        <div class="btn-group" style="flex-wrap: wrap;">
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('properties')">Properties PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('reBills')">Bills PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('rePayments')">Payments PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportPDF('reExpenses')">Expenses PDF</button>
+                            <button class="btn btn-primary btn-sm" onclick="exportPDF('reLedger')">Ledger PDF</button>
+                            <button class="btn btn-gold btn-sm" onclick="exportPDF('reHeirs')">Heirs PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== RE SETTINGS TAB ========== -->
+            <div id="reSettingsTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header gold"><span>⚙️ Real Estate Settings</span></div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Default Tax Rate (%)</label>
+                                <select id="reSettingTaxRate">
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="10">10%</option>
+                                    <option value="15" selected>15%</option>
+                                    <option value="20">20%</option>
+                                    <option value="25">25%</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Default Rental Period</label>
+                                <select id="reSettingPeriod">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Inheritance Pool %</label>
+                                <input type="number" id="reSettingInhPercent" value="100" min="0" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label>Currency</label>
+                                <select id="reSettingCurrency">
+                                    <option value="XAF">XAF (CFA Franc)</option>
+                                    <option value="USD">USD (US Dollar)</option>
+                                    <option value="EUR">EUR (Euro)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="saveRESettings()">💾 Save Settings</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header red"><span>⚠️ Data Management</span></div>
+                    <div class="card-body">
+                        <p style="margin-bottom: 15px; color: #e53e3e;">Warning: These actions cannot be undone!</p>
+                        <div class="btn-group">
+                            <button class="btn btn-danger" onclick="resetREData()">🗑️ Reset All RE Data</button>
                         </div>
                     </div>
                 </div>
@@ -553,6 +841,23 @@
                         <button class="btn btn-success" onclick="saveProperty()">💾 Save Property</button>
                         <button class="btn btn-outline" onclick="closePropertyModal()">Cancel</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RE Heir Modal -->
+        <div class="modal-overlay" id="reHeirModal">
+            <div class="modal">
+                <div class="modal-header"><h3>👤 Add/Edit Heir</h3><button class="modal-close" onclick="closeREHeirModal()">×</button></div>
+                <div class="modal-body">
+                    <input type="hidden" id="reHeirId">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Name *</label><input type="text" id="reHeirName" placeholder="Full name"></div>
+                        <div class="form-group"><label>Relationship *</label><select id="reHeirRel"><option value="Spouse">Spouse</option><option value="Child">Child</option><option value="Parent">Parent</option><option value="Sibling">Sibling</option><option value="Other">Other</option></select></div>
+                        <div class="form-group"><label>Group *</label><select id="reHeirGrp"><option value="Wives">Wives</option><option value="Sons">Sons</option><option value="Daughters">Daughters</option><option value="Parents">Parents</option><option value="Siblings">Siblings</option><option value="Others">Others</option></select></div>
+                        <div class="form-group"><label>Portions *</label><input type="number" id="reHeirPor" value="1" min="0.5" step="0.5"></div>
+                    </div>
+                    <div class="btn-group"><button class="btn btn-success" onclick="saveREHeir()">💾 Save</button><button class="btn btn-outline" onclick="closeREHeirModal()">Cancel</button></div>
                 </div>
             </div>
         </div>
@@ -1711,92 +2016,53 @@
 
         // Load Real Estate Data
         function loadRealEstate() {
-            api('/properties').then(function(properties) {
-                // Update stats
-                var totalProps = properties.length;
-                var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
-                var monthlyIncome = 0;
-                var yearlyIncome = 0;
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
 
-                rentedProps.forEach(function(p) {
-                    var rent = parseFloat(p.rent_amount) || 0;
-                    var taxRate = parseFloat(p.tax_rate) || 0;
-                    var netRent = rent - (rent * taxRate / 100);
-                    
-                    if (p.rent_period === 'Monthly') {
-                        monthlyIncome += netRent;
-                        yearlyIncome += netRent * 12;
-                    } else if (p.rent_period === 'Quarterly') {
-                        monthlyIncome += netRent / 3;
-                        yearlyIncome += netRent * 4;
-                    } else if (p.rent_period === 'Yearly') {
-                        monthlyIncome += netRent / 12;
-                        yearlyIncome += netRent;
-                    }
-                });
+            var totalIncome = 0;
+            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
 
-                document.getElementById('reTotalProps').textContent = totalProps;
-                document.getElementById('reRented').textContent = rentedProps.length;
-                document.getElementById('reMonthlyIncome').textContent = fmt(Math.round(monthlyIncome));
-                document.getElementById('reYearlyIncome').textContent = fmt(Math.round(yearlyIncome));
+            var totalExpenses = 0;
+            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
 
-                renderPropertiesTable(properties);
-                renderRentalIncomeTable(rentedProps);
-                renderRELedger(properties);
-            }).catch(function() {
-                // If API fails, use localStorage
-                var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-                renderPropertiesTable(properties);
-                var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
-                renderRentalIncomeTable(rentedProps);
-                renderRELedger(properties);
-                updateREStats(properties);
-            });
-        }
-
-        function updateREStats(properties) {
-            var totalProps = properties.length;
             var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
-            var monthlyIncome = 0;
-            var yearlyIncome = 0;
 
-            rentedProps.forEach(function(p) {
-                var rent = parseFloat(p.rent_amount) || 0;
-                var taxRate = parseFloat(p.tax_rate) || 0;
-                var netRent = rent - (rent * taxRate / 100);
-                
-                if (p.rent_period === 'Monthly') {
-                    monthlyIncome += netRent;
-                    yearlyIncome += netRent * 12;
-                } else if (p.rent_period === 'Quarterly') {
-                    monthlyIncome += netRent / 3;
-                    yearlyIncome += netRent * 4;
-                } else if (p.rent_period === 'Yearly') {
-                    monthlyIncome += netRent / 12;
-                    yearlyIncome += netRent;
-                }
-            });
-
-            document.getElementById('reTotalProps').textContent = totalProps;
+            document.getElementById('reTotalProps').textContent = properties.length;
             document.getElementById('reRented').textContent = rentedProps.length;
-            document.getElementById('reMonthlyIncome').textContent = fmt(Math.round(monthlyIncome));
-            document.getElementById('reYearlyIncome').textContent = fmt(Math.round(yearlyIncome));
+            document.getElementById('reTotalIncome').textContent = fmt(Math.round(totalIncome));
+            document.getElementById('reTotalExpenses').textContent = fmt(Math.round(totalExpenses));
+
+            renderPropertiesTable(properties);
+            renderRentalIncomeTable(properties);
         }
 
-        // Render Properties Table
+        // Render Properties Table - show ALL properties with zeros for non-rented
         function renderPropertiesTable(properties) {
             var filterStatus = document.getElementById('reStatusFilter').value;
             var filtered = filterStatus ? properties.filter(function(p) { return p.status === filterStatus; }) : properties;
 
             var html = filtered.map(function(p) {
-                var statusClass = p.status === 'Rented' ? 'badge-income' : p.status === 'Sold' ? 'badge-paid' : p.status === 'For sale' ? 'badge-new' : 'badge-expense';
-                var income = p.status === 'Rented' ? fmt(p.rent_amount || 0) : '0';
+                var isRented = p.status === 'Rented';
+                var statusClass = isRented ? 'badge-income' : p.status === 'Sold' ? 'badge-paid' : p.status === 'For sale' ? 'badge-new' : 'badge-expense';
+                
+                // Non-rented: all financial fields are 0
+                var rentAmount = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
+                var period = isRented ? (p.rent_period || 'Monthly') : '-';
+                var taxRate = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
+                var taxAmount = rentAmount * taxRate / 100;
+                var netIncome = rentAmount - taxAmount;
+
                 return '<tr>' +
                     '<td><strong>' + p.name + '</strong></td>' +
                     '<td>' + p.location + '</td>' +
                     '<td>' + p.type + '</td>' +
                     '<td><span class="badge ' + statusClass + '">' + p.status + '</span></td>' +
-                    '<td class="' + (p.status === 'Rented' ? 'amount-positive' : '') + '">' + income + ' XAF</td>' +
+                    '<td>' + fmt(rentAmount) + '</td>' +
+                    '<td>' + period + '</td>' +
+                    '<td>' + taxRate + '%</td>' +
+                    '<td class="' + (netIncome > 0 ? 'amount-positive' : '') + '">' + fmt(Math.round(netIncome)) + '</td>' +
                     '<td>' + (p.islamic_inheritance || 'NA') + '</td>' +
                     '<td class="no-print">' +
                         '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️</button> ' +
@@ -1805,18 +2071,22 @@
                 '</tr>';
             }).join('');
 
-            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="7">No properties found</td></tr>';
+            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="10">No properties found</td></tr>';
         }
 
-        // Render Rental Income Table
-        function renderRentalIncomeTable(rentedProps) {
+        // Render Rental Income Table - show ALL properties with zeros for non-rented
+        function renderRentalIncomeTable(properties) {
             var totalGross = 0;
             var totalTax = 0;
             var totalNet = 0;
 
-            var html = rentedProps.map(function(p) {
-                var rent = parseFloat(p.rent_amount) || 0;
-                var taxRate = parseFloat(p.tax_rate) || 0;
+            var html = properties.map(function(p) {
+                var isRented = p.status === 'Rented';
+                
+                // Non-rented: all zeros
+                var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
+                var taxRate = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
+                var period = isRented ? (p.rent_period || 'Monthly') : '-';
                 var taxAmount = rent * taxRate / 100;
                 var netIncome = rent - taxAmount;
 
@@ -1824,86 +2094,29 @@
                 totalTax += taxAmount;
                 totalNet += netIncome;
 
+                var statusClass = isRented ? 'badge-income' : 'badge-expense';
+
                 return '<tr>' +
                     '<td><strong>' + p.name + '</strong></td>' +
                     '<td>' + p.location + '</td>' +
+                    '<td><span class="badge ' + statusClass + '">' + p.status + '</span></td>' +
                     '<td>' + fmt(rent) + '</td>' +
-                    '<td>' + (p.rent_period || 'Monthly') + '</td>' +
+                    '<td>' + period + '</td>' +
                     '<td>' + taxRate + '%</td>' +
                     '<td>' + fmt(rent) + '</td>' +
-                    '<td class="amount-negative">-' + fmt(Math.round(taxAmount)) + '</td>' +
-                    '<td class="amount-positive">' + fmt(Math.round(netIncome)) + '</td>' +
-                    '<td class="no-print">' +
-                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️ Edit</button>' +
-                    '</td>' +
+                    '<td class="' + (taxAmount > 0 ? 'amount-negative' : '') + '">' + (taxAmount > 0 ? '-' : '') + fmt(Math.round(taxAmount)) + '</td>' +
+                    '<td class="' + (netIncome > 0 ? 'amount-positive' : '') + '">' + fmt(Math.round(netIncome)) + '</td>' +
                 '</tr>';
             }).join('');
 
-            document.getElementById('rentalIncomeTable').innerHTML = html || '<tr><td colspan="9">No rented properties</td></tr>';
+            document.getElementById('rentalIncomeTable').innerHTML = html || '<tr><td colspan="9">No properties</td></tr>';
             
             document.getElementById('rentalIncomeTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="5" style="text-align: right;">TOTALS:</td>' +
+                '<td colspan="6" style="text-align: right;">TOTALS:</td>' +
                 '<td>' + fmt(Math.round(totalGross)) + '</td>' +
                 '<td class="amount-negative">-' + fmt(Math.round(totalTax)) + '</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalNet)) + '</td>' +
-                '<td></td>' +
-                '</tr>';
-        }
-
-        // Render RE Ledger
-        function renderRELedger(properties) {
-            var ledgerEntries = [];
-            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
-
-            // Add rental income entries
-            rentedProps.forEach(function(p) {
-                var rent = parseFloat(p.rent_amount) || 0;
-                var taxRate = parseFloat(p.tax_rate) || 0;
-                var taxAmount = rent * taxRate / 100;
-                var netIncome = rent - taxAmount;
-
-                ledgerEntries.push({
-                    date: new Date().toISOString(),
-                    property: p.name,
-                    description: 'Rental Income (' + (p.rent_period || 'Monthly') + ')',
-                    type: 'Income',
-                    income: netIncome,
-                    expense: 0
-                });
-            });
-
-            // Sort by date
-            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-
-            var runningBalance = 0;
-            var totalIncome = 0;
-            var totalExpense = 0;
-
-            var html = ledgerEntries.map(function(entry) {
-                runningBalance += entry.income - entry.expense;
-                totalIncome += entry.income;
-                totalExpense += entry.expense;
-
-                return '<tr>' +
-                    '<td>' + fmtDate(entry.date) + '</td>' +
-                    '<td>' + entry.property + '</td>' +
-                    '<td>' + entry.description + '</td>' +
-                    '<td><span class="badge badge-income">' + entry.type + '</span></td>' +
-                    '<td class="amount-positive">' + (entry.income > 0 ? fmt(Math.round(entry.income)) : '-') + '</td>' +
-                    '<td class="amount-negative">' + (entry.expense > 0 ? fmt(Math.round(entry.expense)) : '-') + '</td>' +
-                    '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
-                '</tr>';
-            }).join('');
-
-            document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
-            
-            document.getElementById('reLedgerTotals').innerHTML = 
-                '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right;">TOTALS:</td>' +
-                '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
-                '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
-                '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
                 '</tr>';
         }
 
@@ -1913,23 +2126,30 @@
             renderPropertiesTable(properties);
         }
 
-        // Toggle Rental Fields
+        // Toggle Rental Fields - non-rented properties have zeros
         function toggleRentalFields() {
             var status = document.getElementById('propStatus').value;
             var rentalFields = document.getElementById('rentalFields');
-            if (status === 'Rented') {
+            var isRented = status === 'Rented';
+            
+            if (isRented) {
                 rentalFields.style.display = 'block';
             } else {
                 rentalFields.style.display = 'none';
+                // Set all to zero for non-rented
                 document.getElementById('propRentAmount').value = 0;
+                document.getElementById('propTaxRate').value = '0';
             }
             updatePropertyCalc();
         }
 
-        // Update Property Calculation
+        // Update Property Calculation - respects rented status
         function updatePropertyCalc() {
-            var rent = parseFloat(document.getElementById('propRentAmount').value) || 0;
-            var taxRate = parseFloat(document.getElementById('propTaxRate').value) || 0;
+            var status = document.getElementById('propStatus').value;
+            var isRented = status === 'Rented';
+            
+            var rent = isRented ? (parseFloat(document.getElementById('propRentAmount').value) || 0) : 0;
+            var taxRate = isRented ? (parseFloat(document.getElementById('propTaxRate').value) || 0) : 0;
             var taxAmount = rent * taxRate / 100;
             var netIncome = rent - taxAmount;
 
@@ -1959,20 +2179,21 @@
             document.getElementById('propertyModal').classList.remove('active');
         }
 
-        // Edit Property
+        // Edit Property - loads zeros for non-rented
         function editProperty(id) {
             var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
             var p = properties.find(function(x) { return x.id === id; });
             if (p) {
+                var isRented = p.status === 'Rented';
                 document.getElementById('propertyModalTitle').textContent = '🏠 Edit Property';
                 document.getElementById('propId').value = p.id;
                 document.getElementById('propName').value = p.name;
                 document.getElementById('propLocation').value = p.location;
                 document.getElementById('propType').value = p.type;
                 document.getElementById('propStatus').value = p.status;
-                document.getElementById('propRentAmount').value = p.rent_amount || 0;
+                document.getElementById('propRentAmount').value = isRented ? (p.rent_amount || 0) : 0;
                 document.getElementById('propRentPeriod').value = p.rent_period || 'Monthly';
-                document.getElementById('propTaxRate').value = p.tax_rate || '15';
+                document.getElementById('propTaxRate').value = isRented ? (p.tax_rate || '15') : '0';
                 document.getElementById('propInheritance').value = p.islamic_inheritance || 'Yes';
                 document.getElementById('propNotes').value = p.notes || '';
                 toggleRentalFields();
@@ -1987,9 +2208,12 @@
             var location = document.getElementById('propLocation').value;
             var type = document.getElementById('propType').value;
             var status = document.getElementById('propStatus').value;
-            var rentAmount = status === 'Rented' ? parseFloat(document.getElementById('propRentAmount').value) || 0 : 0;
-            var rentPeriod = document.getElementById('propRentPeriod').value;
-            var taxRate = parseFloat(document.getElementById('propTaxRate').value) || 0;
+            
+            // Non-rented properties: all financial fields are 0
+            var isRented = status === 'Rented';
+            var rentAmount = isRented ? (parseFloat(document.getElementById('propRentAmount').value) || 0) : 0;
+            var rentPeriod = isRented ? document.getElementById('propRentPeriod').value : 'Monthly';
+            var taxRate = isRented ? (parseFloat(document.getElementById('propTaxRate').value) || 0) : 0;
             var inheritance = document.getElementById('propInheritance').value;
             var notes = document.getElementById('propNotes').value;
 
@@ -2051,6 +2275,251 @@
             showAlert('Property deleted');
             loadRealEstate();
         }
+
+        // ========== RE BILLS ==========
+        function loadREBills() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+
+            document.getElementById('reBillProperty').innerHTML = '<option value="">Select Property</option>' + 
+                rentedProps.map(function(p) { return '<option value="' + p.id + '">' + p.name + '</option>'; }).join('');
+
+            if (!document.getElementById('reBillDate').value) {
+                document.getElementById('reBillDate').valueAsDate = new Date();
+            }
+
+            var html = reBills.map(function(b) {
+                var prop = properties.find(function(p) { return p.id === b.property_id; });
+                var status = b.outstanding === 0 ? 'Paid' : b.paid_amount > 0 ? 'Partial' : 'Unpaid';
+                var statusClass = status === 'Paid' ? 'badge-paid' : status === 'Partial' ? 'badge-new' : 'badge-unpaid';
+                return '<tr><td><strong>' + b.bill_number + '</strong></td><td>' + (prop ? prop.name : 'N/A') + '</td><td>' + b.period + '</td><td>' + b.year + '</td><td>' + fmt(b.amount_due) + '</td><td class="amount-positive">' + fmt(b.paid_amount || 0) + '</td><td class="' + (b.outstanding > 0 ? 'amount-negative' : '') + '">' + fmt(b.outstanding) + '</td><td><span class="badge ' + statusClass + '">' + status + '</span></td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editREBill(' + b.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteREBill(' + b.id + ')">🗑️</button></td></tr>';
+            }).join('');
+
+            document.getElementById('reBillsTable').innerHTML = html || '<tr><td colspan="9">No bills</td></tr>';
+        }
+
+        function saveREBill() {
+            var id = document.getElementById('reBillId').value;
+            var propertyId = parseInt(document.getElementById('reBillProperty').value);
+            var billDate = document.getElementById('reBillDate').value;
+            var period = document.getElementById('reBillPeriod').value;
+            var year = document.getElementById('reBillYear').value;
+            var amountDue = parseFloat(document.getElementById('reBillAmount').value) || 0;
+            var desc = document.getElementById('reBillDesc').value;
+
+            if (!propertyId || !amountDue) { showAlert('Please fill required fields', 'error'); return; }
+
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var billNumber = 'RE-' + period.substring(0,2).toUpperCase() + '-' + year + '-' + String(reBills.length + 1).padStart(3, '0');
+
+            if (id) {
+                var idx = reBills.findIndex(function(b) { return b.id === parseInt(id); });
+                if (idx !== -1) {
+                    reBills[idx].property_id = propertyId;
+                    reBills[idx].bill_date = billDate;
+                    reBills[idx].period = period;
+                    reBills[idx].year = year;
+                    reBills[idx].amount_due = amountDue;
+                    reBills[idx].outstanding = amountDue - (reBills[idx].paid_amount || 0);
+                    reBills[idx].description = desc;
+                }
+            } else {
+                reBills.push({ id: reBills.length > 0 ? Math.max.apply(null, reBills.map(function(b) { return b.id; })) + 1 : 1, bill_number: billNumber, property_id: propertyId, bill_date: billDate, period: period, year: year, amount_due: amountDue, paid_amount: 0, outstanding: amountDue, description: desc, created_at: new Date().toISOString() });
+            }
+
+            localStorage.setItem('reBills', JSON.stringify(reBills));
+            clearREBillForm();
+            showAlert(id ? 'Bill updated!' : 'Bill created!');
+            loadREBills();
+        }
+
+        function clearREBillForm() { document.getElementById('reBillId').value = ''; document.getElementById('reBillProperty').value = ''; document.getElementById('reBillAmount').value = ''; document.getElementById('reBillDesc').value = ''; }
+
+        function editREBill(id) {
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var b = reBills.find(function(x) { return x.id === id; });
+            if (b) { document.getElementById('reBillId').value = b.id; document.getElementById('reBillProperty').value = b.property_id; document.getElementById('reBillDate').value = b.bill_date; document.getElementById('reBillPeriod').value = b.period; document.getElementById('reBillYear').value = b.year; document.getElementById('reBillAmount').value = b.amount_due; document.getElementById('reBillDesc').value = b.description || ''; }
+        }
+
+        function deleteREBill(id) { if (!confirm('Delete this bill?')) return; var reBills = JSON.parse(localStorage.getItem('reBills') || '[]'); reBills = reBills.filter(function(b) { return b.id !== id; }); localStorage.setItem('reBills', JSON.stringify(reBills)); showAlert('Bill deleted'); loadREBills(); }
+
+        // ========== RE PAYMENTS ==========
+        function loadREPayments() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+
+            var unpaidBills = reBills.filter(function(b) { return b.outstanding > 0; });
+            document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill</option>' + unpaidBills.map(function(b) { var prop = properties.find(function(p) { return p.id === b.property_id; }); return '<option value="' + b.id + '">' + b.bill_number + ' - ' + (prop ? prop.name : '') + ' (' + fmt(b.outstanding) + ' due)</option>'; }).join('');
+
+            if (!document.getElementById('rePayDate').value) { document.getElementById('rePayDate').valueAsDate = new Date(); }
+
+            var html = rePayments.map(function(p) { var bill = reBills.find(function(b) { return b.id === p.bill_id; }); var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null; return '<tr><td>' + fmtDate(p.payment_date) + '</td><td>' + (prop ? prop.name : 'N/A') + '</td><td>' + (bill ? bill.bill_number : 'N/A') + '</td><td class="amount-positive">' + fmt(p.amount) + '</td><td>' + (p.reference || '-') + '</td><td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td></tr>'; }).join('');
+
+            document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
+        }
+
+        function saveREPayment() {
+            var billId = parseInt(document.getElementById('rePayBill').value);
+            var payDate = document.getElementById('rePayDate').value;
+            var amount = parseFloat(document.getElementById('rePayAmount').value) || 0;
+            var reference = document.getElementById('rePayRef').value;
+
+            if (!billId || !amount) { showAlert('Please fill required fields', 'error'); return; }
+
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+
+            var billIdx = reBills.findIndex(function(b) { return b.id === billId; });
+            if (billIdx !== -1) { reBills[billIdx].paid_amount = (reBills[billIdx].paid_amount || 0) + amount; reBills[billIdx].outstanding = reBills[billIdx].amount_due - reBills[billIdx].paid_amount; localStorage.setItem('reBills', JSON.stringify(reBills)); }
+
+            rePayments.push({ id: rePayments.length > 0 ? Math.max.apply(null, rePayments.map(function(p) { return p.id; })) + 1 : 1, bill_id: billId, payment_date: payDate, amount: amount, reference: reference, created_at: new Date().toISOString() });
+
+            localStorage.setItem('rePayments', JSON.stringify(rePayments));
+            clearREPaymentForm();
+            showAlert('Payment recorded!');
+            loadREPayments();
+            loadRealEstate();
+        }
+
+        function clearREPaymentForm() { document.getElementById('rePayId').value = ''; document.getElementById('rePayBill').value = ''; document.getElementById('rePayAmount').value = ''; document.getElementById('rePayRef').value = ''; }
+
+        function deleteREPayment(id) {
+            if (!confirm('Delete this payment?')) return;
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var payment = rePayments.find(function(p) { return p.id === id; });
+            if (payment) { var reBills = JSON.parse(localStorage.getItem('reBills') || '[]'); var billIdx = reBills.findIndex(function(b) { return b.id === payment.bill_id; }); if (billIdx !== -1) { reBills[billIdx].paid_amount -= payment.amount; reBills[billIdx].outstanding += payment.amount; localStorage.setItem('reBills', JSON.stringify(reBills)); } }
+            rePayments = rePayments.filter(function(p) { return p.id !== id; });
+            localStorage.setItem('rePayments', JSON.stringify(rePayments));
+            showAlert('Payment deleted');
+            loadREPayments();
+            loadRealEstate();
+        }
+
+        // ========== RE EXPENSES ==========
+        function loadREExpenses() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+
+            document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property</option>' + properties.map(function(p) { return '<option value="' + p.id + '">' + p.name + '</option>'; }).join('');
+
+            if (!document.getElementById('reExpDate').value) { document.getElementById('reExpDate').valueAsDate = new Date(); }
+
+            var html = reExpenses.map(function(e) { var prop = properties.find(function(p) { return p.id === e.property_id; }); var isInh = e.category === 'Inheritance Share'; return '<tr><td>' + fmtDate(e.expense_date) + '</td><td>' + (prop ? prop.name : 'General') + '</td><td>' + e.category + '</td><td>' + e.description + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button></td></tr>'; }).join('');
+
+            document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
+        }
+
+        function saveREExpense() {
+            var id = document.getElementById('reExpId').value;
+            var propertyId = parseInt(document.getElementById('reExpProperty').value) || null;
+            var expDate = document.getElementById('reExpDate').value;
+            var category = document.getElementById('reExpCategory').value;
+            var amount = parseFloat(document.getElementById('reExpAmount').value) || 0;
+            var desc = document.getElementById('reExpDesc').value;
+
+            if (!amount || !desc) { showAlert('Please fill required fields', 'error'); return; }
+
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+
+            if (id) { var idx = reExpenses.findIndex(function(e) { return e.id === parseInt(id); }); if (idx !== -1) { reExpenses[idx].property_id = propertyId; reExpenses[idx].expense_date = expDate; reExpenses[idx].category = category; reExpenses[idx].amount = amount; reExpenses[idx].description = desc; } }
+            else { reExpenses.push({ id: reExpenses.length > 0 ? Math.max.apply(null, reExpenses.map(function(e) { return e.id; })) + 1 : 1, property_id: propertyId, expense_date: expDate, category: category, amount: amount, description: desc, created_at: new Date().toISOString() }); }
+
+            localStorage.setItem('reExpenses', JSON.stringify(reExpenses));
+            clearREExpenseForm();
+            showAlert(id ? 'Expense updated!' : 'Expense added!');
+            loadREExpenses();
+            loadRealEstate();
+        }
+
+        function clearREExpenseForm() { document.getElementById('reExpId').value = ''; document.getElementById('reExpProperty').value = ''; document.getElementById('reExpAmount').value = ''; document.getElementById('reExpDesc').value = ''; }
+
+        function editREExpense(id) { var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); var e = reExpenses.find(function(x) { return x.id === id; }); if (e) { document.getElementById('reExpId').value = e.id; document.getElementById('reExpProperty').value = e.property_id || ''; document.getElementById('reExpDate').value = e.expense_date; document.getElementById('reExpCategory').value = e.category; document.getElementById('reExpAmount').value = e.amount; document.getElementById('reExpDesc').value = e.description; } }
+
+        function deleteREExpense(id) { if (!confirm('Delete this expense?')) return; var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); reExpenses = reExpenses.filter(function(e) { return e.id !== id; }); localStorage.setItem('reExpenses', JSON.stringify(reExpenses)); showAlert('Expense deleted'); loadREExpenses(); loadRealEstate(); }
+
+        // ========== RE INHERITANCE ==========
+        function loadREInheritance() {
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+
+            var totalIncome = 0; rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
+            var totalExpenses = 0; reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+
+            var inheritancePool = Math.max(0, totalIncome - totalExpenses);
+            var totalPortions = reHeirs.reduce(function(sum, h) { return sum + parseFloat(h.portions); }, 0);
+            var perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
+
+            document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool));
+            document.getElementById('reInhHeirs').textContent = reHeirs.length;
+            document.getElementById('reInhPortions').textContent = totalPortions;
+            document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion));
+
+            var html = reHeirs.map(function(h) { var shareAmount = perPortion * parseFloat(h.portions); return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(shareAmount)) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button></td></tr>'; }).join('');
+
+            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No heirs</td></tr>';
+        }
+
+        function openREHeirModal() { document.getElementById('reHeirId').value = ''; document.getElementById('reHeirName').value = ''; document.getElementById('reHeirRel').value = 'Spouse'; document.getElementById('reHeirGrp').value = 'Wives'; document.getElementById('reHeirPor').value = 1; document.getElementById('reHeirModal').classList.add('active'); }
+        function closeREHeirModal() { document.getElementById('reHeirModal').classList.remove('active'); }
+
+        function editREHeir(id) { var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); var h = reHeirs.find(function(x) { return x.id === id; }); if (h) { document.getElementById('reHeirId').value = h.id; document.getElementById('reHeirName').value = h.name; document.getElementById('reHeirRel').value = h.relationship; document.getElementById('reHeirGrp').value = h.heir_group; document.getElementById('reHeirPor').value = h.portions; document.getElementById('reHeirModal').classList.add('active'); } }
+
+        function saveREHeir() {
+            var id = document.getElementById('reHeirId').value;
+            var name = document.getElementById('reHeirName').value;
+            var rel = document.getElementById('reHeirRel').value;
+            var grp = document.getElementById('reHeirGrp').value;
+            var por = parseFloat(document.getElementById('reHeirPor').value) || 1;
+
+            if (!name) { showAlert('Please enter name', 'error'); return; }
+
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+
+            if (id) { var idx = reHeirs.findIndex(function(h) { return h.id === parseInt(id); }); if (idx !== -1) { reHeirs[idx].name = name; reHeirs[idx].relationship = rel; reHeirs[idx].heir_group = grp; reHeirs[idx].portions = por; } }
+            else { reHeirs.push({ id: reHeirs.length > 0 ? Math.max.apply(null, reHeirs.map(function(h) { return h.id; })) + 1 : 1, name: name, relationship: rel, heir_group: grp, portions: por }); }
+
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
+            closeREHeirModal();
+            showAlert(id ? 'Heir updated!' : 'Heir added!');
+            loadREInheritance();
+        }
+
+        function deleteREHeir(id) { if (!confirm('Delete this heir?')) return; var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); reHeirs = reHeirs.filter(function(h) { return h.id !== id; }); localStorage.setItem('reHeirs', JSON.stringify(reHeirs)); showAlert('Heir deleted'); loadREInheritance(); }
+
+        // ========== RE LEDGER ==========
+        function loadRELedgerFull() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+
+            var ledgerEntries = [];
+
+            rePayments.forEach(function(p) { var bill = reBills.find(function(b) { return b.id === p.bill_id; }); var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null; ledgerEntries.push({ date: p.payment_date, property: prop ? prop.name : 'N/A', description: 'Payment for ' + (bill ? bill.bill_number : 'Bill'), type: 'Income', income: p.amount, expense: 0 }); });
+
+            reExpenses.forEach(function(e) { var prop = properties.find(function(p) { return p.id === e.property_id; }); ledgerEntries.push({ date: e.expense_date, property: prop ? prop.name : 'General', description: e.description, type: e.category, income: 0, expense: e.amount }); });
+
+            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+
+            var runningBalance = 0, totalIncome = 0, totalExpense = 0;
+
+            var html = ledgerEntries.map(function(entry) { runningBalance += entry.income - entry.expense; totalIncome += entry.income; totalExpense += entry.expense; var isIncome = entry.income > 0; var isInh = entry.type === 'Inheritance Share'; return '<tr><td>' + fmtDate(entry.date) + '</td><td>' + entry.property + '</td><td>' + entry.description + '</td><td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td><td class="amount-positive">' + (entry.income > 0 ? fmt(entry.income) : '-') + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(entry.expense) : '-') + '</td><td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td></tr>'; }).join('');
+
+            document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
+            document.getElementById('reLedgerTotals').innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTALS:</td><td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td><td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td><td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td></tr>';
+        }
+
+        // ========== RE SETTINGS & EXPORT ==========
+        function saveRESettings() { var settings = { taxRate: document.getElementById('reSettingTaxRate').value, period: document.getElementById('reSettingPeriod').value, inhPercent: document.getElementById('reSettingInhPercent').value, currency: document.getElementById('reSettingCurrency').value }; localStorage.setItem('reSettings', JSON.stringify(settings)); showAlert('Settings saved!'); }
+
+        function resetREData() { if (!confirm('This will delete ALL Real Estate data. Are you sure?')) return; if (!confirm('FINAL WARNING: This cannot be undone!')) return; localStorage.removeItem('familyProperties'); localStorage.removeItem('reBills'); localStorage.removeItem('rePayments'); localStorage.removeItem('reExpenses'); localStorage.removeItem('reHeirs'); showAlert('All RE data reset'); loadRealEstate(); }
+
+        function exportAllRECSV() { var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]'); var csv = 'FAMILY REAL ESTATES\n\nPROPERTIES\nName,Location,Type,Status,Rent,Period,Tax,Net,Islamic Inh\n'; properties.forEach(function(p) { var isRented = p.status === 'Rented'; var rent = isRented ? (p.rent_amount || 0) : 0; var tax = isRented ? (p.tax_rate || 0) : 0; var net = rent - (rent * tax / 100); csv += '"' + p.name + '","' + p.location + '",' + p.type + ',' + p.status + ',' + rent + ',' + (isRented ? p.rent_period : '-') + ',' + tax + '%,' + Math.round(net) + ',' + (p.islamic_inheritance || 'NA') + '\n'; }); var blob = new Blob([csv], { type: 'text/csv' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'family_real_estates.csv'; a.click(); showAlert('CSV exported!'); }
+
+        function exportAllREPDF() { var jsPDF = window.jspdf.jsPDF; var doc = new jsPDF(); var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]'); doc.setFontSize(16); doc.text('FAMILY REAL ESTATES', 105, 15, { align: 'center' }); doc.setFontSize(10); doc.text('GHOUENZEN Soulemanou', 105, 22, { align: 'center' }); doc.autoTable({ startY: 30, head: [['Property', 'Location', 'Status', 'Rent', 'Tax', 'Net']], body: properties.map(function(p) { var isRented = p.status === 'Rented'; var rent = isRented ? (p.rent_amount || 0) : 0; var tax = isRented ? (p.tax_rate || 0) : 0; var net = rent - (rent * tax / 100); return [p.name, p.location, p.status, fmt(rent), tax + '%', fmt(Math.round(net))]; }), styles: { fontSize: 7 } }); doc.save('family_real_estates.pdf'); showAlert('PDF exported!'); }
 
         // Setup property form listeners
         document.addEventListener('DOMContentLoaded', function() {

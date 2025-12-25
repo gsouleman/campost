@@ -2005,6 +2005,19 @@
             document.querySelectorAll('#realestate .tab-btn').forEach(function(b) { b.classList.remove('active'); });
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
+            
+            // Load data for specific tabs to populate dropdowns
+            if (tabId === 'reBillsTab') {
+                loadREBills();
+            } else if (tabId === 'rePaymentsTab') {
+                loadREPayments();
+            } else if (tabId === 'reExpensesTab') {
+                loadREExpenses();
+            } else if (tabId === 'reInheritanceTab') {
+                loadREInheritance();
+            } else if (tabId === 'reLedgerTab') {
+                loadRELedgerFull();
+            }
         }
 
         // Load Real Estate Data
@@ -2029,6 +2042,11 @@
 
             renderPropertiesTable(properties);
             renderRentalIncomeTable(properties);
+            
+            // Also load tab-specific data to populate dropdowns
+            loadREBills();
+            loadREPayments();
+            loadREExpenses();
         }
 
         // Render Properties Table - show ALL properties with zeros for non-rented
@@ -2455,11 +2473,31 @@
             var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
 
-            document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property</option>' + properties.map(function(p) { return '<option value="' + p.id + '">' + p.name + '</option>'; }).join('');
+            // Populate property dropdown with all properties
+            var propOptions = properties.map(function(p) { 
+                return '<option value="' + p.id + '">' + p.name + ' (' + p.status + ' - ' + p.location + ')</option>'; 
+            }).join('');
+            document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property (Optional)</option>' + propOptions;
 
-            if (!document.getElementById('reExpDate').value) { document.getElementById('reExpDate').valueAsDate = new Date(); }
+            if (!document.getElementById('reExpDate').value) { 
+                document.getElementById('reExpDate').valueAsDate = new Date(); 
+            }
 
-            var html = reExpenses.map(function(e) { var prop = properties.find(function(p) { return p.id === e.property_id; }); var isInh = e.category === 'Inheritance Share'; return '<tr><td>' + fmtDate(e.expense_date) + '</td><td>' + (prop ? prop.name : 'General') + '</td><td>' + e.category + '</td><td>' + e.description + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button></td></tr>'; }).join('');
+            var html = reExpenses.map(function(e) { 
+                var prop = properties.find(function(p) { return p.id === e.property_id; }); 
+                var isInh = e.category === 'Inheritance Share'; 
+                return '<tr>' +
+                    '<td>' + fmtDate(e.expense_date) + '</td>' +
+                    '<td>' + (prop ? prop.name : 'General') + '</td>' +
+                    '<td>' + e.category + '</td>' +
+                    '<td>' + e.description + '</td>' +
+                    '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td>' +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button>' +
+                    '</td>' +
+                '</tr>'; 
+            }).join('');
 
             document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
         }

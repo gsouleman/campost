@@ -541,7 +541,7 @@
                         <input type="hidden" id="reExpId">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Property *</label>
+                                <label>Property (Optional)</label>
                                 <select id="reExpProperty"></select>
                             </div>
                             <div class="form-group">
@@ -564,7 +564,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Amount (XAF) *</label>
-                                <input type="number" id="reExpAmount" placeholder="Amount">
+                                <input type="number" id="reExpAmount" placeholder="Amount" min="0">
                             </div>
                             <div class="form-group" style="grid-column: span 2;">
                                 <label>Description *</label>
@@ -612,7 +612,7 @@
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share Amount</th><th class="no-print">Actions</th></tr></thead>
+                                <thead><tr><th>Name</th><th>Relationship</th><th>Gender</th><th>Portions</th><th>Share Amount</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="reHeirsTable"></tbody>
                             </table>
                         </div>
@@ -846,9 +846,40 @@
                     <input type="hidden" id="reHeirId">
                     <div class="form-grid">
                         <div class="form-group"><label>Name *</label><input type="text" id="reHeirName" placeholder="Full name"></div>
-                        <div class="form-group"><label>Relationship *</label><select id="reHeirRel"><option value="Spouse">Spouse</option><option value="Child">Child</option><option value="Parent">Parent</option><option value="Sibling">Sibling</option><option value="Other">Other</option></select></div>
-                        <div class="form-group"><label>Group *</label><select id="reHeirGrp"><option value="Wives">Wives</option><option value="Sons">Sons</option><option value="Daughters">Daughters</option><option value="Parents">Parents</option><option value="Siblings">Siblings</option><option value="Others">Others</option></select></div>
-                        <div class="form-group"><label>Portions *</label><input type="number" id="reHeirPor" value="1" min="0.5" step="0.5"></div>
+                        <div class="form-group">
+                            <label>Relationship *</label>
+                            <select id="reHeirRel" onchange="updateIslamicPortions()">
+                                <option value="Wife">Wife</option>
+                                <option value="Husband">Husband</option>
+                                <option value="Son">Son</option>
+                                <option value="Daughter">Daughter</option>
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Brother">Brother</option>
+                                <option value="Sister">Sister</option>
+                                <option value="Grandfather">Grandfather</option>
+                                <option value="Grandmother">Grandmother</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender *</label>
+                            <select id="reHeirGender" onchange="updateIslamicPortions()">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Portions (Auto-Calculated)</label>
+                            <input type="number" id="reHeirPor" value="1" min="0" step="0.125" readonly style="background: #f0f0f0;">
+                        </div>
+                    </div>
+                    <div style="background: #fffbeb; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.85rem;">
+                        <strong>📜 Islamic Inheritance Rules:</strong><br>
+                        • Sons get 2x daughters' share<br>
+                        • Wife gets 1/8 (with children) or 1/4 (no children)<br>
+                        • Husband gets 1/4 (with children) or 1/2 (no children)<br>
+                        • Parents each get 1/6 (with children)
                     </div>
                     <div class="btn-group"><button class="btn btn-success" onclick="saveREHeir()">💾 Save</button><button class="btn btn-outline" onclick="closeREHeirModal()">Cancel</button></div>
                 </div>
@@ -2504,18 +2535,50 @@
 
         function saveREExpense() {
             var id = document.getElementById('reExpId').value;
-            var propertyId = parseInt(document.getElementById('reExpProperty').value) || null;
+            var propertyId = document.getElementById('reExpProperty').value;
+            propertyId = propertyId ? parseInt(propertyId) : null;
             var expDate = document.getElementById('reExpDate').value;
             var category = document.getElementById('reExpCategory').value;
             var amount = parseFloat(document.getElementById('reExpAmount').value) || 0;
-            var desc = document.getElementById('reExpDesc').value;
+            var desc = document.getElementById('reExpDesc').value.trim();
 
-            if (!amount || !desc) { showAlert('Please fill required fields', 'error'); return; }
+            // Validate required fields
+            if (!expDate) { 
+                showAlert('Please select a date', 'error'); 
+                return; 
+            }
+            if (!amount || amount <= 0) { 
+                showAlert('Please enter a valid amount', 'error'); 
+                return; 
+            }
+            if (!desc) { 
+                showAlert('Please enter a description', 'error'); 
+                return; 
+            }
 
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
 
-            if (id) { var idx = reExpenses.findIndex(function(e) { return e.id === parseInt(id); }); if (idx !== -1) { reExpenses[idx].property_id = propertyId; reExpenses[idx].expense_date = expDate; reExpenses[idx].category = category; reExpenses[idx].amount = amount; reExpenses[idx].description = desc; } }
-            else { reExpenses.push({ id: reExpenses.length > 0 ? Math.max.apply(null, reExpenses.map(function(e) { return e.id; })) + 1 : 1, property_id: propertyId, expense_date: expDate, category: category, amount: amount, description: desc, created_at: new Date().toISOString() }); }
+            if (id) { 
+                var idx = reExpenses.findIndex(function(e) { return e.id === parseInt(id); }); 
+                if (idx !== -1) { 
+                    reExpenses[idx].property_id = propertyId; 
+                    reExpenses[idx].expense_date = expDate; 
+                    reExpenses[idx].category = category; 
+                    reExpenses[idx].amount = amount; 
+                    reExpenses[idx].description = desc; 
+                } 
+            } else { 
+                var newId = reExpenses.length > 0 ? Math.max.apply(null, reExpenses.map(function(e) { return e.id; })) + 1 : 1;
+                reExpenses.push({ 
+                    id: newId, 
+                    property_id: propertyId, 
+                    expense_date: expDate, 
+                    category: category, 
+                    amount: amount, 
+                    description: desc, 
+                    created_at: new Date().toISOString() 
+                }); 
+            }
 
             localStorage.setItem('reExpenses', JSON.stringify(reExpenses));
             clearREExpenseForm();
@@ -2530,55 +2593,250 @@
 
         function deleteREExpense(id) { if (!confirm('Delete this expense?')) return; var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); reExpenses = reExpenses.filter(function(e) { return e.id !== id; }); localStorage.setItem('reExpenses', JSON.stringify(reExpenses)); showAlert('Expense deleted'); loadREExpenses(); loadRealEstate(); }
 
-        // ========== RE INHERITANCE ==========
+        // ========== RE INHERITANCE - ISLAMIC LAW ==========
+        
+        // Calculate Islamic inheritance portions based on relationship and existing heirs
+        function updateIslamicPortions() {
+            var rel = document.getElementById('reHeirRel').value;
+            var gender = document.getElementById('reHeirGender').value;
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            
+            // Check existing heirs to determine portions
+            var hasChildren = reHeirs.some(function(h) { 
+                return h.relationship === 'Son' || h.relationship === 'Daughter'; 
+            });
+            var hasSons = reHeirs.some(function(h) { return h.relationship === 'Son'; });
+            
+            var portions = 1; // Default
+            
+            // Islamic Inheritance Rules (Faraid)
+            switch(rel) {
+                case 'Wife':
+                    // Wife gets 1/8 with children, 1/4 without children
+                    portions = hasChildren ? 0.125 : 0.25; // 1/8 or 1/4
+                    document.getElementById('reHeirGender').value = 'Female';
+                    break;
+                case 'Husband':
+                    // Husband gets 1/4 with children, 1/2 without children
+                    portions = hasChildren ? 0.25 : 0.5; // 1/4 or 1/2
+                    document.getElementById('reHeirGender').value = 'Male';
+                    break;
+                case 'Son':
+                    // Sons are residuary heirs (Asaba), get 2x daughter's share
+                    portions = 2; // 2 portions (daughters get 1)
+                    document.getElementById('reHeirGender').value = 'Male';
+                    break;
+                case 'Daughter':
+                    // Daughters get 1 portion (sons get 2)
+                    portions = 1;
+                    document.getElementById('reHeirGender').value = 'Female';
+                    break;
+                case 'Father':
+                    // Father gets 1/6 with children + residue if no sons
+                    portions = hasChildren ? (1/6) : 1; // Simplified
+                    document.getElementById('reHeirGender').value = 'Male';
+                    break;
+                case 'Mother':
+                    // Mother gets 1/6 with children or grandchildren, 1/3 without
+                    portions = hasChildren ? (1/6) : (1/3);
+                    document.getElementById('reHeirGender').value = 'Female';
+                    break;
+                case 'Brother':
+                    // Brothers are residuary if no sons/father
+                    portions = hasSons ? 0 : 2;
+                    document.getElementById('reHeirGender').value = 'Male';
+                    break;
+                case 'Sister':
+                    // Sisters get half of brothers
+                    portions = hasSons ? 0 : 1;
+                    document.getElementById('reHeirGender').value = 'Female';
+                    break;
+                case 'Grandfather':
+                    portions = hasChildren ? (1/6) : 1;
+                    document.getElementById('reHeirGender').value = 'Male';
+                    break;
+                case 'Grandmother':
+                    portions = 1/6;
+                    document.getElementById('reHeirGender').value = 'Female';
+                    break;
+                default:
+                    portions = 1;
+            }
+            
+            // Round to 3 decimal places for display
+            document.getElementById('reHeirPor').value = Math.round(portions * 1000) / 1000;
+        }
+        
         function loadREInheritance() {
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
             var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
 
-            var totalIncome = 0; rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
-            var totalExpenses = 0; reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+            var totalIncome = 0; 
+            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
+            
+            var totalExpenses = 0; 
+            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
 
             var inheritancePool = Math.max(0, totalIncome - totalExpenses);
-            var totalPortions = reHeirs.reduce(function(sum, h) { return sum + parseFloat(h.portions); }, 0);
+            
+            // Calculate total portions for Islamic distribution
+            var totalPortions = reHeirs.reduce(function(sum, h) { 
+                return sum + (parseFloat(h.portions) || 0); 
+            }, 0);
+            
+            // Per portion value
             var perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
 
             document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool));
             document.getElementById('reInhHeirs').textContent = reHeirs.length;
-            document.getElementById('reInhPortions').textContent = totalPortions;
+            document.getElementById('reInhPortions').textContent = Math.round(totalPortions * 1000) / 1000;
             document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion));
 
-            var html = reHeirs.map(function(h) { var shareAmount = perPortion * parseFloat(h.portions); return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(shareAmount)) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button></td></tr>'; }).join('');
+            var html = reHeirs.map(function(h) { 
+                var shareAmount = perPortion * (parseFloat(h.portions) || 0);
+                var portionDisplay = h.portions;
+                // Show as fraction if possible
+                if (h.portions === 0.125) portionDisplay = '1/8';
+                else if (h.portions === 0.25) portionDisplay = '1/4';
+                else if (h.portions === 0.5) portionDisplay = '1/2';
+                else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
+                else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
+                
+                return '<tr>' +
+                    '<td>' + h.name + '</td>' +
+                    '<td>' + h.relationship + '</td>' +
+                    '<td>' + (h.gender || '-') + '</td>' +
+                    '<td>' + portionDisplay + '</td>' +
+                    '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' XAF</td>' +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button>' +
+                    '</td>' +
+                '</tr>'; 
+            }).join('');
 
-            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No heirs</td></tr>';
+            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No heirs added. Add heirs to calculate Islamic inheritance distribution.</td></tr>';
         }
 
-        function openREHeirModal() { document.getElementById('reHeirId').value = ''; document.getElementById('reHeirName').value = ''; document.getElementById('reHeirRel').value = 'Spouse'; document.getElementById('reHeirGrp').value = 'Wives'; document.getElementById('reHeirPor').value = 1; document.getElementById('reHeirModal').classList.add('active'); }
-        function closeREHeirModal() { document.getElementById('reHeirModal').classList.remove('active'); }
+        function openREHeirModal() { 
+            document.getElementById('reHeirId').value = ''; 
+            document.getElementById('reHeirName').value = ''; 
+            document.getElementById('reHeirRel').value = 'Wife'; 
+            document.getElementById('reHeirGender').value = 'Female'; 
+            document.getElementById('reHeirPor').value = 0.125; 
+            updateIslamicPortions();
+            document.getElementById('reHeirModal').classList.add('active'); 
+        }
+        
+        function closeREHeirModal() { 
+            document.getElementById('reHeirModal').classList.remove('active'); 
+        }
 
-        function editREHeir(id) { var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); var h = reHeirs.find(function(x) { return x.id === id; }); if (h) { document.getElementById('reHeirId').value = h.id; document.getElementById('reHeirName').value = h.name; document.getElementById('reHeirRel').value = h.relationship; document.getElementById('reHeirGrp').value = h.heir_group; document.getElementById('reHeirPor').value = h.portions; document.getElementById('reHeirModal').classList.add('active'); } }
+        function editREHeir(id) { 
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); 
+            var h = reHeirs.find(function(x) { return x.id === id; }); 
+            if (h) { 
+                document.getElementById('reHeirId').value = h.id; 
+                document.getElementById('reHeirName').value = h.name; 
+                document.getElementById('reHeirRel').value = h.relationship; 
+                document.getElementById('reHeirGender').value = h.gender || 'Male'; 
+                document.getElementById('reHeirPor').value = h.portions; 
+                document.getElementById('reHeirModal').classList.add('active'); 
+            } 
+        }
 
         function saveREHeir() {
             var id = document.getElementById('reHeirId').value;
-            var name = document.getElementById('reHeirName').value;
+            var name = document.getElementById('reHeirName').value.trim();
             var rel = document.getElementById('reHeirRel').value;
-            var grp = document.getElementById('reHeirGrp').value;
-            var por = parseFloat(document.getElementById('reHeirPor').value) || 1;
+            var gender = document.getElementById('reHeirGender').value;
+            var por = parseFloat(document.getElementById('reHeirPor').value) || 0;
 
-            if (!name) { showAlert('Please enter name', 'error'); return; }
+            if (!name) { 
+                showAlert('Please enter heir name', 'error'); 
+                return; 
+            }
 
             var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
 
-            if (id) { var idx = reHeirs.findIndex(function(h) { return h.id === parseInt(id); }); if (idx !== -1) { reHeirs[idx].name = name; reHeirs[idx].relationship = rel; reHeirs[idx].heir_group = grp; reHeirs[idx].portions = por; } }
-            else { reHeirs.push({ id: reHeirs.length > 0 ? Math.max.apply(null, reHeirs.map(function(h) { return h.id; })) + 1 : 1, name: name, relationship: rel, heir_group: grp, portions: por }); }
+            if (id) { 
+                var idx = reHeirs.findIndex(function(h) { return h.id === parseInt(id); }); 
+                if (idx !== -1) { 
+                    reHeirs[idx].name = name; 
+                    reHeirs[idx].relationship = rel; 
+                    reHeirs[idx].gender = gender; 
+                    reHeirs[idx].portions = por; 
+                } 
+            } else { 
+                var newId = reHeirs.length > 0 ? Math.max.apply(null, reHeirs.map(function(h) { return h.id; })) + 1 : 1;
+                reHeirs.push({ 
+                    id: newId, 
+                    name: name, 
+                    relationship: rel, 
+                    gender: gender, 
+                    portions: por 
+                }); 
+            }
 
             localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
             closeREHeirModal();
             showAlert(id ? 'Heir updated!' : 'Heir added!');
+            
+            // Recalculate all heirs' portions based on new family composition
+            recalculateAllHeirPortions();
             loadREInheritance();
         }
+        
+        // Recalculate all heirs' portions when family composition changes
+        function recalculateAllHeirPortions() {
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            
+            var hasChildren = reHeirs.some(function(h) { 
+                return h.relationship === 'Son' || h.relationship === 'Daughter'; 
+            });
+            var hasSons = reHeirs.some(function(h) { return h.relationship === 'Son'; });
+            
+            reHeirs.forEach(function(h) {
+                switch(h.relationship) {
+                    case 'Wife':
+                        h.portions = hasChildren ? 0.125 : 0.25;
+                        break;
+                    case 'Husband':
+                        h.portions = hasChildren ? 0.25 : 0.5;
+                        break;
+                    case 'Mother':
+                        h.portions = hasChildren ? (1/6) : (1/3);
+                        break;
+                    case 'Father':
+                    case 'Grandfather':
+                        h.portions = hasChildren ? (1/6) : 1;
+                        break;
+                    case 'Grandmother':
+                        h.portions = 1/6;
+                        break;
+                    case 'Brother':
+                        h.portions = hasSons ? 0 : 2;
+                        break;
+                    case 'Sister':
+                        h.portions = hasSons ? 0 : 1;
+                        break;
+                    // Sons and Daughters keep their fixed ratios
+                }
+            });
+            
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
+        }
 
-        function deleteREHeir(id) { if (!confirm('Delete this heir?')) return; var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); reHeirs = reHeirs.filter(function(h) { return h.id !== id; }); localStorage.setItem('reHeirs', JSON.stringify(reHeirs)); showAlert('Heir deleted'); loadREInheritance(); }
+        function deleteREHeir(id) { 
+            if (!confirm('Delete this heir?')) return; 
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); 
+            reHeirs = reHeirs.filter(function(h) { return h.id !== id; }); 
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs)); 
+            showAlert('Heir deleted'); 
+            recalculateAllHeirPortions();
+            loadREInheritance(); 
+        }
 
         // ========== RE LEDGER ==========
         function loadRELedgerFull() {

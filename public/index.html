@@ -1558,67 +1558,14 @@
         
         // Initialize default admin user if not exists
         function initializeUsers() {
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            if (users.length === 0) {
-                // Create default admin user
-                users.push({
-                    id: 1,
-                    username: 'admin',
-                    password: '12345',
-                    email: 'admin@njikamsalifu.com',
-                    fullName: 'Administrator',
-                    role: 'admin',
-                    mustChangePassword: true,
-                    active: true,
-                    createdAt: new Date().toISOString()
-                });
-                localStorage.setItem('appUsers', JSON.stringify(users));
-            }
-            // Store reset codes
-            if (!localStorage.getItem('resetCodes')) {
-                localStorage.setItem('resetCodes', JSON.stringify({}));
-            }
-            // Initialize default heirs
-            initializeDefaultHeirs();
+            // Users are now initialized in PostgreSQL
+            // No localStorage initialization needed
         }
         
-        // Initialize default heirs from family members list
+        // Initialize default heirs - now handled by server
         function initializeDefaultHeirs() {
-            // Default family members from Excel file
-            var defaultFamilyMembers = [
-                { name: 'MODER PASMA IDRISU EPSE SALIFOU', relationship: 'Spouse', group: 'Wives', portions: 3 },
-                { name: 'MENJIKOUE ABIBA SPOUSE NJIKAM', relationship: 'Spouse', group: 'Wives', portions: 3 },
-                { name: 'SAHNATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'MOHAMAN SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'ABIBATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'ZAKARE SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'FERER ALIMATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'NTENTIE REKIATU NJIKAM', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'KAHPUI MARIAMA SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'GHOUENZEN SOULEMANOU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'NGAMENPOUYE MAIMUNATE', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'LOUMNGAM NCHINTOUO AMINATOUO', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'MENTCHA ABOUBAKAR SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'HAROUNA SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'MBALLEY ABDOU RAHAMA SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'NGAMDAMOUN IBRAHIM SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 }
-            ];
-            
-            // Initialize Family RE heirs if empty
-            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
-            if (reHeirs.length === 0) {
-                reHeirs = defaultFamilyMembers.map(function(m, idx) {
-                    return {
-                        id: idx + 1,
-                        name: m.name,
-                        relationship: m.relationship,
-                        gender: m.group === 'Sons' ? 'Male' : 'Female',
-                        group: m.group,
-                        portions: m.portions
-                    };
-                });
-                localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
-            }
+            // RE heirs are now initialized in PostgreSQL
+            // No localStorage initialization needed
         }
         
         // Current logged in user
@@ -1636,29 +1583,22 @@
                 return;
             }
             
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var user = users.find(function(u) { 
-                return u.username.toLowerCase() === username && u.password === password && u.active; 
-            });
-            
-            if (!user) {
-                errorEl.textContent = 'Invalid username or password';
+            api('/users/login', { 
+                method: 'POST', 
+                body: JSON.stringify({ username: username, password: password }) 
+            }).then(function(result) {
+                if (result.success && result.user) {
+                    currentUser = result.user;
+                    localStorage.setItem('currentSession', JSON.stringify({ userId: result.user.id, loginTime: new Date().toISOString() }));
+                    enterMainApp();
+                } else {
+                    errorEl.textContent = result.error || 'Invalid username or password';
+                    errorEl.classList.add('show');
+                }
+            }).catch(function(err) {
+                errorEl.textContent = 'Login failed: ' + err.message;
                 errorEl.classList.add('show');
-                return;
-            }
-            
-            // Login successful
-            currentUser = user;
-            localStorage.setItem('currentSession', JSON.stringify({ userId: user.id, loginTime: new Date().toISOString() }));
-            
-            // Check if password change required
-            if (user.mustChangePassword) {
-                document.getElementById('forcePasswordModal').classList.add('active');
-                return;
-            }
-            
-            // Proceed to main app
-            enterMainApp();
+            });
         }
         
         // Enter main app after successful login
@@ -1667,7 +1607,7 @@
             document.getElementById('mainApp').style.display = 'block';
             
             // Update UI with user info
-            document.getElementById('loggedInUser').textContent = currentUser.fullName || currentUser.username;
+            document.getElementById('loggedInUser').textContent = currentUser.full_name || currentUser.username;
             var badge = document.getElementById('userRoleBadge');
             badge.textContent = currentUser.role.toUpperCase();
             badge.className = 'user-badge ' + currentUser.role;
@@ -1750,11 +1690,6 @@
             var newPwd = document.getElementById('changeNewPwd').value;
             var confirmPwd = document.getElementById('changeConfirmPwd').value;
             
-            if (currentPwd !== currentUser.password) {
-                showAlert('Current password is incorrect', 'error');
-                return;
-            }
-            
             if (newPwd.length < 4) {
                 showAlert('New password must be at least 4 characters', 'error');
                 return;
@@ -1765,19 +1700,25 @@
                 return;
             }
             
-            // Update password
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var idx = users.findIndex(function(u) { return u.id === currentUser.id; });
-            if (idx !== -1) {
-                users[idx].password = newPwd;
-                localStorage.setItem('appUsers', JSON.stringify(users));
-                currentUser = users[idx];
-            }
-            
-            document.getElementById('changeCurrentPwd').value = '';
-            document.getElementById('changeNewPwd').value = '';
-            document.getElementById('changeConfirmPwd').value = '';
-            showAlert('Password changed successfully!');
+            api('/users/change-password', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    userId: currentUser.id, 
+                    currentPassword: currentPwd, 
+                    newPassword: newPwd 
+                })
+            }).then(function(result) {
+                if (result.success) {
+                    document.getElementById('changeCurrentPwd').value = '';
+                    document.getElementById('changeNewPwd').value = '';
+                    document.getElementById('changeConfirmPwd').value = '';
+                    showAlert('Password changed successfully!');
+                } else {
+                    showAlert(result.error || 'Failed to change password', 'error');
+                }
+            }).catch(function(err) {
+                showAlert('Current password is incorrect', 'error');
+            });
         }
         
         // Create new user (admin only)
@@ -1788,87 +1729,63 @@
             }
             
             var username = document.getElementById('newUserUsername').value.trim().toLowerCase();
-            var email = document.getElementById('newUserEmail').value.trim().toLowerCase();
             var fullName = document.getElementById('newUserFullName').value.trim();
             var role = document.getElementById('newUserRole').value;
             
-            if (!username || !email) {
-                showAlert('Username and email are required', 'error');
+            if (!username) {
+                showAlert('Username is required', 'error');
                 return;
             }
             
-            // Validate email
-            if (!email.includes('@') || !email.includes('.')) {
-                showAlert('Please enter a valid email address', 'error');
-                return;
-            }
-            
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            
-            // Check if username exists
-            if (users.find(function(u) { return u.username.toLowerCase() === username; })) {
-                showAlert('Username already exists', 'error');
-                return;
-            }
-            
-            // Check if email exists
-            if (users.find(function(u) { return u.email.toLowerCase() === email; })) {
-                showAlert('Email already exists', 'error');
-                return;
-            }
-            
-            // Create new user
-            var newId = users.length > 0 ? Math.max.apply(null, users.map(function(u) { return u.id; })) + 1 : 1;
-            users.push({
-                id: newId,
-                username: username,
-                password: '1234', // Default password
-                email: email,
-                fullName: fullName || username,
-                role: role,
-                mustChangePassword: true,
-                active: true,
-                createdAt: new Date().toISOString()
+            api('/users', {
+                method: 'POST',
+                body: JSON.stringify({
+                    username: username,
+                    password: '1234',
+                    fullName: fullName || username,
+                    role: role,
+                    active: true
+                })
+            }).then(function(result) {
+                if (result.error) {
+                    showAlert(result.error, 'error');
+                } else {
+                    document.getElementById('newUserUsername').value = '';
+                    document.getElementById('newUserFullName').value = '';
+                    document.getElementById('newUserRole').value = 'user';
+                    showAlert('User created successfully! Default password is 1234');
+                    loadUsersTable();
+                }
+            }).catch(function(err) {
+                showAlert('Error creating user: ' + err.message, 'error');
             });
-            
-            localStorage.setItem('appUsers', JSON.stringify(users));
-            
-            // Clear form
-            document.getElementById('newUserUsername').value = '';
-            document.getElementById('newUserEmail').value = '';
-            document.getElementById('newUserFullName').value = '';
-            document.getElementById('newUserRole').value = 'user';
-            
-            showAlert('User created successfully! Default password is 1234');
-            loadUsersTable();
         }
         
         // Load users table (admin only)
         function loadUsersTable() {
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            
-            var html = users.map(function(u) {
-                var statusClass = u.active ? 'badge-paid' : 'badge-unpaid';
-                var statusText = u.active ? 'Active' : 'Inactive';
-                var roleClass = u.role === 'admin' ? 'badge-inheritance' : 'badge-new';
-                var pwdStatus = u.mustChangePassword ? '<span class="badge badge-expense" style="margin-left:5px;">Must Change Pwd</span>' : '';
+            api('/users').then(function(users) {
+                var html = users.map(function(u) {
+                    var statusClass = u.active ? 'badge-paid' : 'badge-unpaid';
+                    var statusText = u.active ? 'Active' : 'Inactive';
+                    var roleClass = u.role === 'admin' ? 'badge-inheritance' : 'badge-new';
+                    
+                    return '<tr>' +
+                        '<td><strong>' + u.username + '</strong></td>' +
+                        '<td>' + (u.full_name || '-') + '</td>' +
+                        '<td><span class="badge ' + roleClass + '">' + u.role.toUpperCase() + '</span></td>' +
+                        '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                        '<td>' +
+                            (u.id !== currentUser.id ? 
+                                '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')">🔑 Reset Pwd</button> ' +
+                                '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ', ' + u.active + ')">' + (u.active ? '🚫 Disable' : '✅ Enable') + '</button> ' +
+                                '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.id + ')">🗑️</button>'
+                                : '<span style="color:#718096;font-size:0.75rem;">Current User</span>') +
+                        '</td>' +
+                    '</tr>';
+                }).join('');
                 
-                return '<tr>' +
-                    '<td><strong>' + u.username + '</strong>' + pwdStatus + '</td>' +
-                    '<td>' + (u.fullName || '-') + '</td>' +
-                    '<td>' + u.email + '</td>' +
-                    '<td><span class="badge ' + roleClass + '">' + u.role.toUpperCase() + '</span></td>' +
-                    '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
-                    '<td>' +
-                        (u.id !== currentUser.id ? 
-                            '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')">🔑 Reset Pwd</button> ' +
-                            '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ')">' + (u.active ? '🚫 Disable' : '✅ Enable') + '</button>'
-                            : '<span style="color:#718096;font-size:0.75rem;">Current User</span>') +
-                    '</td>' +
-                '</tr>';
-            }).join('');
-            
-            document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="6">No users</td></tr>';
+                document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="5">No users</td></tr>';
+            });
         }
         
         // Reset user password (admin only)
@@ -1876,68 +1793,46 @@
             if (currentUser.role !== 'admin') return;
             if (!confirm('Reset this user\'s password to 1234?')) return;
             
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var idx = users.findIndex(function(u) { return u.id === userId; });
-            if (idx !== -1) {
-                users[idx].password = '1234';
-                users[idx].mustChangePassword = true;
-                localStorage.setItem('appUsers', JSON.stringify(users));
-                showAlert('Password reset to 1234. User must change on next login.');
+            api('/users/' + userId, { 
+                method: 'PUT', 
+                body: JSON.stringify({ password: '1234' }) 
+            }).then(function() {
+                showAlert('Password reset to 1234');
                 loadUsersTable();
-            }
+            });
         }
         
         // Toggle user status (admin only)
-        function toggleUserStatus(userId) {
+        function toggleUserStatus(userId, currentActive) {
             if (currentUser.role !== 'admin') return;
             
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var idx = users.findIndex(function(u) { return u.id === userId; });
-            if (idx !== -1) {
-                users[idx].active = !users[idx].active;
-                localStorage.setItem('appUsers', JSON.stringify(users));
+            api('/users/' + userId, { 
+                method: 'PUT', 
+                body: JSON.stringify({ active: !currentActive }) 
+            }).then(function() {
                 showAlert('User status updated');
                 loadUsersTable();
-            }
+            });
         }
         
-        // Forgot password flow
+        // Delete user
+        function deleteUser(userId) {
+            if (currentUser.role !== 'admin') return;
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            api('/users/' + userId, { method: 'DELETE' }).then(function() {
+                showAlert('User deleted');
+                loadUsersTable();
+            });
+        }
+        
+        // Forgot password flow - simplified for demo
         function showForgotPassword() {
-            document.getElementById('forgotPasswordModal').classList.add('active');
-            document.getElementById('resetCodeSection').style.display = 'none';
-            document.getElementById('forgotEmail').value = '';
+            showAlert('Please contact an administrator to reset your password.', 'error');
         }
         
         function closeForgotPassword() {
             document.getElementById('forgotPasswordModal').classList.remove('active');
-        }
-        
-        function sendResetCode() {
-            var email = document.getElementById('forgotEmail').value.trim().toLowerCase();
-            
-            if (!email) {
-                showAlert('Please enter your email address', 'error');
-                return;
-            }
-            
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var user = users.find(function(u) { return u.email.toLowerCase() === email; });
-            
-            if (!user) {
-                showAlert('No account found with this email', 'error');
-                return;
-            }
-            
-            // Generate reset code
-            var code = Math.floor(100000 + Math.random() * 900000).toString();
-            var resetCodes = JSON.parse(localStorage.getItem('resetCodes') || '{}');
-            resetCodes[email] = { code: code, expires: Date.now() + 3600000, userId: user.id }; // 1 hour expiry
-            localStorage.setItem('resetCodes', JSON.stringify(resetCodes));
-            
-            // In real app, this would send email. For demo, show the code
-            alert('📧 Password Reset Code (In production, this would be sent to your email):\n\nCode: ' + code + '\n\nThis code expires in 1 hour.');
-            
-            document.getElementById('resetCodeSection').style.display = 'block';
         }
         
         function resetPasswordWithCode() {
@@ -3559,42 +3454,25 @@
 
         // Load Real Estate Data
         function loadRealEstate() {
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
-            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
-            var currency = settings.currency || 'XAF';
-            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
-
-            var totalIncome = 0;
-            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
-
-            var totalExpenses = 0;
-            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
-
-            // Calculate Reserved Funds (percentage of total income)
-            var reservedFunds = totalIncome * reservedPercent / 100;
+            api('/re/dashboard').then(function(data) {
+                document.getElementById('reTotalProps').textContent = data.totalProperties;
+                document.getElementById('reRented').textContent = data.rentedProperties;
+                document.getElementById('reTotalIncome').textContent = fmt(Math.round(data.totalIncome));
+                document.getElementById('reTotalExpenses').textContent = fmt(Math.round(data.totalExpenses));
+                document.getElementById('reReservedFunds').textContent = fmt(Math.round(data.reservedFunds));
+                document.getElementById('reNetBalance').textContent = fmt(Math.round(data.netBalance));
+                
+                // Check if expenses should be disabled
+                updateExpenseFormState(data.netBalance);
+            });
             
-            // Net Balance = Income - Expenses - Reserved Funds (minimum 0)
-            var netBalance = Math.max(0, totalIncome - totalExpenses - reservedFunds);
-
-            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
-
-            document.getElementById('reTotalProps').textContent = properties.length;
-            document.getElementById('reRented').textContent = rentedProps.length;
-            document.getElementById('reTotalIncome').textContent = fmt(Math.round(totalIncome));
-            document.getElementById('reTotalExpenses').textContent = fmt(Math.round(totalExpenses));
-            document.getElementById('reReservedFunds').textContent = fmt(Math.round(reservedFunds));
-            document.getElementById('reNetBalance').textContent = fmt(Math.round(netBalance));
+            // Load properties for table
+            api('/properties').then(function(properties) {
+                renderPropertiesTable(properties);
+                renderRentalIncomeTable(properties);
+            });
             
-            // Check if expenses should be disabled (net balance is zero or would go negative)
-            updateExpenseFormState(netBalance);
-
-            renderPropertiesTable(properties);
-            renderRentalIncomeTable(properties);
-            
-            // Also load tab-specific data to populate dropdowns
+            // Also load tab-specific data
             loadREBills();
             loadREPayments();
             loadREExpenses();
@@ -4020,76 +3898,49 @@
         function saveREBill() {
             var id = document.getElementById('reBillId').value;
             var propertyId = parseInt(document.getElementById('reBillProperty').value);
+            var tenantName = document.getElementById('reBillTenant') ? document.getElementById('reBillTenant').value : 'Tenant';
             var billDate = document.getElementById('reBillDate').value;
-            var period = document.getElementById('reBillPeriod').value;
-            var year = document.getElementById('reBillYear').value;
-            var grossAmount = parseFloat(document.getElementById('reBillGrossAmount').value) || 0;
-            var taxRateStr = document.getElementById('reBillTaxRate').value;
-            var taxRate = parseFloat(taxRateStr.replace('%', '')) || 0;
-            var taxAmount = grossAmount * taxRate / 100;
-            var netAmount = grossAmount - taxAmount;
-            var desc = document.getElementById('reBillDesc').value;
+            var dueDate = document.getElementById('reBillDueDate') ? document.getElementById('reBillDueDate').value : billDate;
+            var amount = parseFloat(document.getElementById('reBillAmount').value) || parseFloat(document.getElementById('reBillGrossAmount').value) || 0;
+            var notes = document.getElementById('reBillDesc').value;
 
-            if (!propertyId || !grossAmount) { showAlert('Please select property and enter amount', 'error'); return; }
+            if (!propertyId || !amount) { showAlert('Please select property and enter amount', 'error'); return; }
 
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var billNumber = 'RE-' + period.substring(0,2).toUpperCase() + '-' + year + '-' + String(reBills.length + 1).padStart(3, '0');
+            var data = {
+                propertyId: propertyId,
+                tenantName: tenantName || 'Tenant',
+                billDate: billDate,
+                dueDate: dueDate || billDate,
+                amount: amount,
+                status: 'Unpaid',
+                notes: notes
+            };
 
-            if (id) {
-                var idx = reBills.findIndex(function(b) { return b.id === parseInt(id); });
-                if (idx !== -1) {
-                    reBills[idx].property_id = propertyId;
-                    reBills[idx].bill_date = billDate;
-                    reBills[idx].period = period;
-                    reBills[idx].year = year;
-                    reBills[idx].gross_amount = grossAmount;
-                    reBills[idx].tax_rate = taxRate;
-                    reBills[idx].tax_amount = taxAmount;
-                    reBills[idx].amount_due = netAmount;
-                    reBills[idx].outstanding = netAmount - (reBills[idx].paid_amount || 0);
-                    reBills[idx].description = desc;
-                }
-            } else {
-                var newId = reBills.length > 0 ? Math.max.apply(null, reBills.map(function(b) { return b.id; })) + 1 : 1;
-                reBills.push({ 
-                    id: newId, 
-                    bill_number: billNumber, 
-                    property_id: propertyId, 
-                    bill_date: billDate, 
-                    period: period, 
-                    year: year, 
-                    gross_amount: grossAmount,
-                    tax_rate: taxRate,
-                    tax_amount: taxAmount,
-                    amount_due: netAmount, 
-                    paid_amount: 0, 
-                    outstanding: netAmount, 
-                    description: desc, 
-                    created_at: new Date().toISOString() 
-                });
-            }
-
-            localStorage.setItem('reBills', JSON.stringify(reBills));
-            clearREBillForm();
-            showAlert(id ? 'Bill updated!' : 'Bill created with net amount after ' + taxRate + '% tax!');
-            loadREBills();
+            var url = id ? '/re/bills/' + id : '/re/bills';
+            var method = id ? 'PUT' : 'POST';
+            
+            api(url, { method: method, body: JSON.stringify(data) }).then(function() {
+                clearREBillForm();
+                showAlert(id ? 'Bill updated!' : 'Bill created!');
+                loadREBills();
+                loadRealEstate();
+            });
         }
 
         function clearREBillForm() { 
             document.getElementById('reBillId').value = ''; 
             document.getElementById('reBillProperty').value = ''; 
-            document.getElementById('reBillPeriod').value = ''; 
-            document.getElementById('reBillGrossAmount').value = '';
-            document.getElementById('reBillTaxRate').value = '0%';
-            document.getElementById('reBillTaxAmount').value = '0';
-            document.getElementById('reBillAmount').value = '0'; 
+            if (document.getElementById('reBillPeriod')) document.getElementById('reBillPeriod').value = ''; 
+            if (document.getElementById('reBillGrossAmount')) document.getElementById('reBillGrossAmount').value = '';
+            if (document.getElementById('reBillTaxRate')) document.getElementById('reBillTaxRate').value = '0%';
+            if (document.getElementById('reBillTaxAmount')) document.getElementById('reBillTaxAmount').value = '0';
+            if (document.getElementById('reBillAmount')) document.getElementById('reBillAmount').value = '0'; 
             document.getElementById('reBillDesc').value = ''; 
         }
 
         function editREBill(id) {
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var b = reBills.find(function(x) { return x.id === id; });
+            api('/re/bills').then(function(reBills) {
+                var b = reBills.find(function(x) { return x.id === id; });
             if (b) { 
                 var prop = properties.find(function(p) { return p.id === b.property_id; });
                 var taxRate = b.tax_rate || (prop ? parseFloat(prop.tax_rate) : 0) || 0;
@@ -4111,73 +3962,71 @@
 
         function deleteREBill(id) { 
             if (!confirm('Delete this bill?')) return; 
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]'); 
-            reBills = reBills.filter(function(b) { return b.id !== id; }); 
-            localStorage.setItem('reBills', JSON.stringify(reBills)); 
-            showAlert('Bill deleted'); 
-            loadREBills(); 
+            api('/re/bills/' + id, { method: 'DELETE' }).then(function() {
+                showAlert('Bill deleted'); 
+                loadREBills();
+                loadRealEstate();
+            });
         }
 
         // ========== RE PAYMENTS ==========
         function loadREPayments() {
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var currency = getCurrency();
 
-            // Populate Select Bill dropdown from Bills section (only bills with outstanding > 0)
-            var unpaidBills = reBills.filter(function(b) { return b.outstanding > 0; });
-            document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
-                unpaidBills.map(function(b) { 
-                    var prop = properties.find(function(p) { return p.id === b.property_id; });
-                    var status = b.paid_amount > 0 ? 'Partial' : 'Unpaid';
-                    return '<option value="' + b.id + '" data-outstanding="' + b.outstanding + '">' + 
-                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | Outstanding: ' + fmt(b.outstanding) + ' ' + currency + ' (' + status + ')' + 
-                    '</option>'; 
-                }).join('');
+            // Populate Select Bill dropdown from Bills section (only unpaid/partial bills)
+            api('/re/bills').then(function(reBills) {
+                var unpaidBills = reBills.filter(function(b) { return b.status !== 'Paid'; });
+                document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
+                    unpaidBills.map(function(b) { 
+                        return '<option value="' + b.id + '" data-amount="' + b.amount + '">' + 
+                            'BILL-' + b.id + ' | ' + (b.property_name || 'N/A') + ' | Amount: ' + fmt(b.amount) + ' ' + currency + ' (' + b.status + ')' + 
+                        '</option>'; 
+                    }).join('');
+            });
 
             if (!document.getElementById('rePayDate').value) { 
                 document.getElementById('rePayDate').valueAsDate = new Date(); 
             }
 
-            var totalAmount = 0;
-            
-            var html = rePayments.map(function(p) { 
-                var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
-                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
-                var amount = parseFloat(p.amount) || 0;
+            api('/re/payments').then(function(rePayments) {
+                var totalAmount = 0;
                 
-                totalAmount += amount;
-                
-                return '<tr>' +
-                    '<td>' + fmtDate(p.payment_date) + '</td>' +
-                    '<td>' + (prop ? prop.name : 'N/A') + '</td>' +
-                    '<td>' + (bill ? bill.bill_number : 'N/A') + '</td>' +
-                    '<td class="amount-positive"><strong>' + fmt(Math.round(amount)) + '</strong></td>' +
-                    '<td>' + (p.reference || '-') + '</td>' +
-                    '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
-                '</tr>'; 
-            }).join('');
+                var html = rePayments.map(function(p) { 
+                    var amount = parseFloat(p.amount) || 0;
+                    totalAmount += amount;
+                    
+                    return '<tr>' +
+                        '<td>' + fmtDate(p.payment_date) + '</td>' +
+                        '<td>' + (p.property_name || 'N/A') + '</td>' +
+                        '<td>BILL-' + (p.bill_id || 'N/A') + '</td>' +
+                        '<td class="amount-positive"><strong>' + fmt(Math.round(amount)) + '</strong></td>' +
+                        '<td>' + (p.reference || '-') + '</td>' +
+                        '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
+                    '</tr>'; 
+                }).join('');
 
-            document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
-            
-            // Add totals row
-            document.getElementById('rePaymentsTotals').innerHTML = 
-                '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
-                '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
-                '<td colspan="2"></td>' +
-                '</tr>';
+                document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
+                
+                // Add totals row
+                if (document.getElementById('rePaymentsTotals')) {
+                    document.getElementById('rePaymentsTotals').innerHTML = 
+                        '<tr style="background: #f7fafc; font-weight: bold;">' +
+                        '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
+                        '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
+                        '<td colspan="2"></td>' +
+                        '</tr>';
+                }
+            });
         }
 
-        // Auto-populate amount when bill is selected (outstanding = net amount from bill)
+        // Auto-populate amount when bill is selected
         function onREBillSelect() {
             var select = document.getElementById('rePayBill');
             var selectedOption = select.options[select.selectedIndex];
             
             if (selectedOption && selectedOption.value) {
-                var outstanding = parseFloat(selectedOption.getAttribute('data-outstanding')) || 0;
-                document.getElementById('rePayAmount').value = outstanding;
+                var amount = parseFloat(selectedOption.getAttribute('data-amount')) || 0;
+                document.getElementById('rePayAmount').value = amount;
             } else {
                 document.getElementById('rePayAmount').value = '';
             }
@@ -4191,35 +4040,26 @@
 
             if (!billId || !amount) { showAlert('Please fill required fields', 'error'); return; }
 
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-
-            var billIdx = reBills.findIndex(function(b) { return b.id === billId; });
-            if (billIdx !== -1) { 
-                reBills[billIdx].paid_amount = (reBills[billIdx].paid_amount || 0) + amount; 
-                reBills[billIdx].outstanding = reBills[billIdx].amount_due - reBills[billIdx].paid_amount; 
-                localStorage.setItem('reBills', JSON.stringify(reBills)); 
-            }
-
-            var newId = rePayments.length > 0 ? Math.max.apply(null, rePayments.map(function(p) { return p.id; })) + 1 : 1;
-            rePayments.push({ 
-                id: newId, 
-                bill_id: billId, 
-                payment_date: payDate, 
-                amount: amount,
-                reference: reference, 
-                created_at: new Date().toISOString() 
+            api('/re/payments', {
+                method: 'POST',
+                body: JSON.stringify({
+                    billId: billId,
+                    amount: amount,
+                    paymentDate: payDate,
+                    paymentMethod: 'Cash',
+                    reference: reference
+                })
+            }).then(function() {
+                clearREPaymentForm();
+                showAlert('Payment recorded!');
+                loadREPayments();
+                loadREBills();
+                loadRealEstate();
             });
-
-            localStorage.setItem('rePayments', JSON.stringify(rePayments));
-            clearREPaymentForm();
-            showAlert('Payment recorded!');
-            loadREPayments();
-            loadRealEstate();
         }
 
         function clearREPaymentForm() { 
-            document.getElementById('rePayId').value = ''; 
+            if (document.getElementById('rePayId')) document.getElementById('rePayId').value = ''; 
             document.getElementById('rePayBill').value = ''; 
             document.getElementById('rePayAmount').value = ''; 
             document.getElementById('rePayRef').value = ''; 
@@ -4227,65 +4067,56 @@
 
         function deleteREPayment(id) {
             if (!confirm('Delete this payment?')) return;
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-            var payment = rePayments.find(function(p) { return p.id === id; });
-            if (payment) { 
-                var reBills = JSON.parse(localStorage.getItem('reBills') || '[]'); 
-                var billIdx = reBills.findIndex(function(b) { return b.id === payment.bill_id; }); 
-                if (billIdx !== -1) { 
-                    reBills[billIdx].paid_amount -= payment.amount; 
-                    reBills[billIdx].outstanding += payment.amount; 
-                    localStorage.setItem('reBills', JSON.stringify(reBills)); 
-                } 
-            }
-            rePayments = rePayments.filter(function(p) { return p.id !== id; });
-            localStorage.setItem('rePayments', JSON.stringify(rePayments));
-            showAlert('Payment deleted');
-            loadREPayments();
-            loadRealEstate();
+            api('/re/payments/' + id, { method: 'DELETE' }).then(function() {
+                showAlert('Payment deleted');
+                loadREPayments();
+                loadREBills();
+                loadRealEstate();
+            });
         }
 
         // ========== RE EXPENSES ==========
         function loadREExpenses() {
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
             var currency = getCurrency();
 
             // Populate property dropdown with all properties
-            var propOptions = properties.map(function(p) { 
-                return '<option value="' + p.id + '">' + p.name + ' (' + p.status + ' - ' + p.location + ')</option>'; 
-            }).join('');
-            document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property (Optional)</option>' + propOptions;
+            api('/properties').then(function(properties) {
+                var propOptions = properties.map(function(p) { 
+                    return '<option value="' + p.id + '">' + p.name + ' (' + p.status + ' - ' + p.location + ')</option>'; 
+                }).join('');
+                document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property (Optional)</option>' + propOptions;
+            });
 
             if (!document.getElementById('reExpDate').value) { 
                 document.getElementById('reExpDate').valueAsDate = new Date(); 
             }
 
-            var totalExpenses = 0;
-            var html = reExpenses.map(function(e) { 
-                var prop = properties.find(function(p) { return p.id === e.property_id; }); 
-                var isInh = e.category === 'Inheritance Share';
-                totalExpenses += parseFloat(e.amount) || 0;
-                return '<tr>' +
-                    '<td>' + fmtDate(e.expense_date) + '</td>' +
-                    '<td>' + (prop ? prop.name : 'General') + '</td>' +
-                    '<td>' + e.category + '</td>' +
-                    '<td>' + e.description + '</td>' +
-                    '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td>' +
-                    '<td class="no-print">' +
-                        '<button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> ' +
-                        '<button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button>' +
-                    '</td>' +
-                '</tr>'; 
-            }).join('');
+            api('/re/expenses').then(function(reExpenses) {
+                var totalExpenses = 0;
+                var html = reExpenses.map(function(e) { 
+                    var isInh = e.category === 'Inheritance Share';
+                    totalExpenses += parseFloat(e.amount) || 0;
+                    return '<tr>' +
+                        '<td>' + fmtDate(e.expense_date) + '</td>' +
+                        '<td>' + (e.property_name || 'General') + '</td>' +
+                        '<td>' + e.category + '</td>' +
+                        '<td>' + e.description + '</td>' +
+                        '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td>' +
+                        '<td class="no-print">' +
+                            '<button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button>' +
+                        '</td>' +
+                    '</tr>'; 
+                }).join('');
 
-            document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
-            
-            // Update expenses total if element exists
-            var expTotalEl = document.getElementById('reExpensesTotal');
-            if (expTotalEl) {
-                expTotalEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTAL (' + currency + '):</td><td class="amount-negative">-' + fmt(Math.round(totalExpenses)) + '</td><td></td></tr>';
-            }
+                document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
+                
+                // Update expenses total if element exists
+                var expTotalEl = document.getElementById('reExpensesTotal');
+                if (expTotalEl) {
+                    expTotalEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTAL (' + currency + '):</td><td class="amount-negative">-' + fmt(Math.round(totalExpenses)) + '</td><td></td></tr>';
+                }
+            });
         }
 
         function saveREExpense() {
@@ -4310,71 +4141,55 @@
                 showAlert('Please enter a description', 'error'); 
                 return; 
             }
+
+            var data = {
+                propertyId: propertyId,
+                expenseDate: expDate,
+                category: category,
+                amount: amount,
+                description: desc
+            };
+
+            var url = id ? '/re/expenses/' + id : '/re/expenses';
+            var method = id ? 'PUT' : 'POST';
             
-            // Check if net balance allows this expense (only for new expenses)
-            if (!id) {
-                var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-                var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
-                var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
-                var reservedPercent = parseFloat(settings.reservedPercent) || 10;
-                
-                var totalIncome = 0;
-                rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
-                
-                var totalExpenses = 0;
-                reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
-                
-                var reservedFunds = totalIncome * reservedPercent / 100;
-                var currentNetBalance = totalIncome - totalExpenses - reservedFunds;
-                
-                if (currentNetBalance <= 0) {
-                    showAlert('Cannot add expense: Net Balance is zero. Add more income first.', 'error');
-                    return;
-                }
-                
-                // Check if this expense would make net balance negative
-                if (amount > currentNetBalance) {
-                    showAlert('Cannot add expense: Amount (' + fmt(amount) + ') exceeds available Net Balance (' + fmt(Math.round(currentNetBalance)) + ')', 'error');
-                    return;
-                }
-            }
-
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
-
-            if (id) { 
-                var idx = reExpenses.findIndex(function(e) { return e.id === parseInt(id); }); 
-                if (idx !== -1) { 
-                    reExpenses[idx].property_id = propertyId; 
-                    reExpenses[idx].expense_date = expDate; 
-                    reExpenses[idx].category = category; 
-                    reExpenses[idx].amount = amount; 
-                    reExpenses[idx].description = desc; 
-                } 
-            } else { 
-                var newId = reExpenses.length > 0 ? Math.max.apply(null, reExpenses.map(function(e) { return e.id; })) + 1 : 1;
-                reExpenses.push({ 
-                    id: newId, 
-                    property_id: propertyId, 
-                    expense_date: expDate, 
-                    category: category, 
-                    amount: amount, 
-                    description: desc, 
-                    created_at: new Date().toISOString() 
-                }); 
-            }
-
-            localStorage.setItem('reExpenses', JSON.stringify(reExpenses));
-            clearREExpenseForm();
-            showAlert(id ? 'Expense updated!' : 'Expense added!');
-            loadREExpenses();
-            loadRealEstate();
+            api(url, { method: method, body: JSON.stringify(data) }).then(function() {
+                clearREExpenseForm();
+                showAlert(id ? 'Expense updated!' : 'Expense added!');
+                loadREExpenses();
+                loadRealEstate();
+            });
         }
 
-        function clearREExpenseForm() { document.getElementById('reExpId').value = ''; document.getElementById('reExpProperty').value = ''; document.getElementById('reExpAmount').value = ''; document.getElementById('reExpDesc').value = ''; }
+        function clearREExpenseForm() { 
+            document.getElementById('reExpId').value = ''; 
+            document.getElementById('reExpProperty').value = ''; 
+            document.getElementById('reExpAmount').value = ''; 
+            document.getElementById('reExpDesc').value = ''; 
+        }
 
-        function editREExpense(id) { var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); var e = reExpenses.find(function(x) { return x.id === id; }); if (e) { document.getElementById('reExpId').value = e.id; document.getElementById('reExpProperty').value = e.property_id || ''; document.getElementById('reExpDate').value = e.expense_date; document.getElementById('reExpCategory').value = e.category; document.getElementById('reExpAmount').value = e.amount; document.getElementById('reExpDesc').value = e.description; } }
+        function editREExpense(id) { 
+            api('/re/expenses').then(function(reExpenses) {
+                var e = reExpenses.find(function(x) { return x.id === id; }); 
+                if (e) { 
+                    document.getElementById('reExpId').value = e.id; 
+                    document.getElementById('reExpProperty').value = e.property_id || ''; 
+                    document.getElementById('reExpDate').value = e.expense_date; 
+                    document.getElementById('reExpCategory').value = e.category; 
+                    document.getElementById('reExpAmount').value = e.amount; 
+                    document.getElementById('reExpDesc').value = e.description; 
+                } 
+            });
+        }
 
-        function deleteREExpense(id) { if (!confirm('Delete this expense?')) return; var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); reExpenses = reExpenses.filter(function(e) { return e.id !== id; }); localStorage.setItem('reExpenses', JSON.stringify(reExpenses)); showAlert('Expense deleted'); loadREExpenses(); loadRealEstate(); }
+        function deleteREExpense(id) { 
+            if (!confirm('Delete this expense?')) return; 
+            api('/re/expenses/' + id, { method: 'DELETE' }).then(function() {
+                showAlert('Expense deleted'); 
+                loadREExpenses(); 
+                loadRealEstate(); 
+            });
+        }
 
         // ========== RE INHERITANCE - ISLAMIC LAW ==========
         
@@ -4451,106 +4266,86 @@
         }
         
         function loadREInheritance() {
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
-            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
             var currency = getCurrency();
-
-            // Load beneficiary selection list
-            loadREBeneficiaryList(reHeirs);
-
-            // Get selected beneficiaries
-            var selectedIds = getREBeneficiaries();
             
-            // Filter to only selected beneficiaries
-            var beneficiaries = reHeirs.filter(function(h) {
-                return selectedIds.length === 0 || selectedIds.includes(h.id);
+            // Use API to calculate inheritance
+            api('/re/inheritance/calculate').then(function(data) {
+                var beneficiaries = data.heirs || [];
+                
+                // Load beneficiary selection list with all heirs
+                api('/re/heirs').then(function(allHeirs) {
+                    loadREBeneficiaryList(allHeirs);
+                });
+
+                document.getElementById('reInhPool').textContent = fmt(Math.round(data.inheritancePool)) + ' ' + currency;
+                document.getElementById('reInhHeirs').textContent = beneficiaries.length;
+                document.getElementById('reInhPortions').textContent = Math.round(data.totalPortions * 1000) / 1000;
+                document.getElementById('reInhPerPortion').textContent = fmt(Math.round(data.perPortion)) + ' ' + currency;
+
+                // Store inheritance data for certificate printing
+                window.reInheritanceData = {
+                    inheritancePool: data.inheritancePool,
+                    totalPortions: data.totalPortions,
+                    perPortion: data.perPortion,
+                    beneficiaries: beneficiaries,
+                    currency: currency
+                };
+
+                var isAdmin = currentUser && currentUser.role === 'admin';
+                var html = beneficiaries.map(function(h) { 
+                    var shareAmount = h.shareAmount || (data.perPortion * (parseFloat(h.portions) || 0));
+                    var portionDisplay = h.portions;
+                    // Show as fraction if possible
+                    if (h.portions === 0.125) portionDisplay = '1/8';
+                    else if (h.portions === 0.25) portionDisplay = '1/4';
+                    else if (h.portions === 0.5) portionDisplay = '1/2';
+                    else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
+                    else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
+                    
+                    // Print certificate button for all users, edit/delete only for admin
+                    var actionsHtml = '<td class="no-print">' +
+                        '<button class="btn btn-gold btn-sm" onclick="printREHeirCertificate(' + h.id + ')" title="Print Certificate">📜</button> ';
+                    
+                    if (isAdmin) {
+                        actionsHtml += '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')" title="Edit">✏️</button> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')" title="Delete">🗑️</button>';
+                    }
+                    actionsHtml += '</td>';
+                    
+                    return '<tr>' +
+                        '<td>' + h.name + '</td>' +
+                        '<td>' + h.relationship + '</td>' +
+                        '<td>' + (h.gender || '-') + '</td>' +
+                        '<td>' + portionDisplay + '</td>' +
+                        '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
+                        actionsHtml +
+                    '</tr>'; 
+                }).join('');
+
+                document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No beneficiaries selected. Select heirs above to calculate Islamic inheritance distribution.</td></tr>';
             });
-
-            var totalIncome = 0; 
-            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
-            
-            var totalExpenses = 0; 
-            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
-
-            var inheritancePool = Math.max(0, totalIncome - totalExpenses);
-            
-            // Calculate total portions for selected beneficiaries only
-            var totalPortions = beneficiaries.reduce(function(sum, h) { 
-                return sum + (parseFloat(h.portions) || 0); 
-            }, 0);
-            
-            // Per portion value
-            var perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
-
-            document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool)) + ' ' + currency;
-            document.getElementById('reInhHeirs').textContent = beneficiaries.length;
-            document.getElementById('reInhPortions').textContent = Math.round(totalPortions * 1000) / 1000;
-            document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion)) + ' ' + currency;
-
-            // Store inheritance data for certificate printing
-            window.reInheritanceData = {
-                inheritancePool: inheritancePool,
-                totalPortions: totalPortions,
-                perPortion: perPortion,
-                beneficiaries: beneficiaries,
-                currency: currency
-            };
-
-            var isAdmin = currentUser && currentUser.role === 'admin';
-            var html = beneficiaries.map(function(h) { 
-                var shareAmount = perPortion * (parseFloat(h.portions) || 0);
-                var portionDisplay = h.portions;
-                // Show as fraction if possible
-                if (h.portions === 0.125) portionDisplay = '1/8';
-                else if (h.portions === 0.25) portionDisplay = '1/4';
-                else if (h.portions === 0.5) portionDisplay = '1/2';
-                else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
-                else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
-                
-                // Print certificate button for all users, edit/delete only for admin
-                var actionsHtml = '<td class="no-print">' +
-                    '<button class="btn btn-gold btn-sm" onclick="printREHeirCertificate(' + h.id + ')" title="Print Certificate">📜</button> ';
-                
-                if (isAdmin) {
-                    actionsHtml += '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')" title="Edit">✏️</button> ' +
-                        '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')" title="Delete">🗑️</button>';
-                }
-                actionsHtml += '</td>';
-                
-                return '<tr>' +
-                    '<td>' + h.name + '</td>' +
-                    '<td>' + h.relationship + '</td>' +
-                    '<td>' + (h.gender || '-') + '</td>' +
-                    '<td>' + portionDisplay + '</td>' +
-                    '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
-                    actionsHtml +
-                '</tr>'; 
-            }).join('');
-
-            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No beneficiaries selected. Select heirs above to calculate Islamic inheritance distribution.</td></tr>';
         }
         
         // Load Family RE beneficiary selection list
         function loadREBeneficiaryList(heirs) {
-            var selectedIds = getREBeneficiaries();
-            var currency = getCurrency();
-            var html = heirs.map(function(h) {
-                var isSelected = selectedIds.length === 0 || selectedIds.includes(h.id);
-                return '<div class="beneficiary-item ' + (isSelected ? 'selected' : '') + '">' +
-                    '<input type="checkbox" id="re-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleREBeneficiary(' + h.id + ', this.checked)">' +
-                    '<label for="re-ben-' + h.id + '">' + h.name + '</label>' +
-                    '<span class="heir-info">' + h.relationship + '</span>' +
-                    '<span class="heir-portions">' + h.portions + ' portions</span>' +
-                '</div>';
-            }).join('');
-            document.getElementById('reBeneficiaryList').innerHTML = html || '<p>No heirs available. Add heirs first.</p>';
+            api('/re/beneficiaries').then(function(selectedIds) {
+                var html = heirs.map(function(h) {
+                    var isSelected = selectedIds.length === 0 || selectedIds.includes(h.id);
+                    return '<div class="beneficiary-item ' + (isSelected ? 'selected' : '') + '">' +
+                        '<input type="checkbox" id="re-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleREBeneficiary(' + h.id + ', this.checked)">' +
+                        '<label for="re-ben-' + h.id + '">' + h.name + '</label>' +
+                        '<span class="heir-info">' + h.relationship + '</span>' +
+                        '<span class="heir-portions">' + h.portions + ' portions</span>' +
+                    '</div>';
+                }).join('');
+                document.getElementById('reBeneficiaryList').innerHTML = html || '<p>No heirs available. Add heirs first.</p>';
+            });
         }
         
-        // Get selected Family RE beneficiaries from localStorage
+        // Get selected Family RE beneficiaries from API
         function getREBeneficiaries() {
-            var stored = localStorage.getItem('reBeneficiaries');
-            return stored ? JSON.parse(stored) : [];
+            // This is now handled by the API
+            return [];
         }
         
         // Toggle Family RE beneficiary selection
@@ -4583,51 +4378,28 @@
             var selectedIds = Array.from(checkboxes).map(function(cb) {
                 return parseInt(cb.id.replace('re-ben-', ''));
             });
-            localStorage.setItem('reBeneficiaries', JSON.stringify(selectedIds));
-            showAlert('Beneficiary selection saved!');
-            loadREInheritance();
+            
+            api('/re/beneficiaries', {
+                method: 'POST',
+                body: JSON.stringify({ selectedIds: selectedIds })
+            }).then(function() {
+                showAlert('Beneficiary selection saved!');
+                loadREInheritance();
+            });
         }
         
         // Reset Family RE heirs to default family members
         function resetREHeirsToDefaults() {
             if (!confirm('This will delete all current heirs and reset to the default 16 family members. Continue?')) return;
             
-            // Default family members from Excel file
-            var defaultFamilyMembers = [
-                { name: 'MODER PASMA IDRISU EPSE SALIFOU', relationship: 'Spouse', group: 'Wives', portions: 3 },
-                { name: 'MENJIKOUE ABIBA SPOUSE NJIKAM', relationship: 'Spouse', group: 'Wives', portions: 3 },
-                { name: 'SAHNATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'MOHAMAN SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'ABIBATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'ZAKARE SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'FERER ALIMATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'NTENTIE REKIATU NJIKAM', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'KAHPUI MARIAMA SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'GHOUENZEN SOULEMANOU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'NGAMENPOUYE MAIMUNATE', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'LOUMNGAM NCHINTOUO AMINATOUO', relationship: 'Child', group: 'Daughters', portions: 1 },
-                { name: 'MENTCHA ABOUBAKAR SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'HAROUNA SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'MBALLEY ABDOU RAHAMA SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
-                { name: 'NGAMDAMOUN IBRAHIM SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 }
-            ];
-            
-            var reHeirs = defaultFamilyMembers.map(function(m, idx) {
-                return {
-                    id: idx + 1,
-                    name: m.name,
-                    relationship: m.relationship,
-                    gender: m.group === 'Sons' ? 'Male' : 'Female',
-                    group: m.group,
-                    portions: m.portions
-                };
+            api('/re/heirs/reset-defaults', { method: 'POST' }).then(function(result) {
+                if (result.success) {
+                    showAlert('Heirs reset to default family members (' + result.count + ' heirs)');
+                    loadREInheritance();
+                } else {
+                    showAlert('Error resetting heirs', 'error');
+                }
             });
-            
-            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
-            // Clear beneficiary selection to include all
-            localStorage.removeItem('reBeneficiaries');
-            showAlert('Heirs reset to default family members (16 heirs)');
-            loadREInheritance();
         }
         
         // Print single RE heir certificate
@@ -4754,16 +4526,17 @@
         }
 
         function editREHeir(id) { 
-            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); 
-            var h = reHeirs.find(function(x) { return x.id === id; }); 
-            if (h) { 
-                document.getElementById('reHeirId').value = h.id; 
-                document.getElementById('reHeirName').value = h.name; 
-                document.getElementById('reHeirRel').value = h.relationship; 
-                document.getElementById('reHeirGender').value = h.gender || 'Male'; 
-                document.getElementById('reHeirPor').value = h.portions; 
-                document.getElementById('reHeirModal').classList.add('active'); 
-            } 
+            api('/re/heirs').then(function(reHeirs) {
+                var h = reHeirs.find(function(x) { return x.id === id; }); 
+                if (h) { 
+                    document.getElementById('reHeirId').value = h.id; 
+                    document.getElementById('reHeirName').value = h.name; 
+                    document.getElementById('reHeirRel').value = h.relationship; 
+                    document.getElementById('reHeirGender').value = h.gender || 'Male'; 
+                    document.getElementById('reHeirPor').value = h.portions; 
+                    document.getElementById('reHeirModal').classList.add('active'); 
+                } 
+            });
         }
 
         function saveREHeir() {
@@ -4778,162 +4551,70 @@
                 return; 
             }
 
-            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            var data = {
+                name: name,
+                relationship: rel,
+                gender: gender,
+                heirGroup: gender === 'Male' ? 'Sons' : (rel === 'Wife' || rel === 'Spouse' ? 'Wives' : 'Daughters'),
+                portions: por
+            };
 
-            if (id) { 
-                var idx = reHeirs.findIndex(function(h) { return h.id === parseInt(id); }); 
-                if (idx !== -1) { 
-                    reHeirs[idx].name = name; 
-                    reHeirs[idx].relationship = rel; 
-                    reHeirs[idx].gender = gender; 
-                    reHeirs[idx].portions = por; 
-                } 
-            } else { 
-                var newId = reHeirs.length > 0 ? Math.max.apply(null, reHeirs.map(function(h) { return h.id; })) + 1 : 1;
-                reHeirs.push({ 
-                    id: newId, 
-                    name: name, 
-                    relationship: rel, 
-                    gender: gender, 
-                    portions: por 
-                }); 
-            }
+            var url = id ? '/re/heirs/' + id : '/re/heirs';
+            var method = id ? 'PUT' : 'POST';
 
-            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
-            closeREHeirModal();
-            showAlert(id ? 'Heir updated!' : 'Heir added!');
-            
-            // Recalculate all heirs' portions based on new family composition
-            recalculateAllHeirPortions();
-            loadREInheritance();
-        }
-        
-        // Recalculate all heirs' portions when family composition changes
-        function recalculateAllHeirPortions() {
-            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
-            
-            var hasChildren = reHeirs.some(function(h) { 
-                return h.relationship === 'Son' || h.relationship === 'Daughter'; 
+            api(url, { method: method, body: JSON.stringify(data) }).then(function() {
+                closeREHeirModal();
+                showAlert(id ? 'Heir updated!' : 'Heir added!');
+                loadREInheritance();
             });
-            var hasSons = reHeirs.some(function(h) { return h.relationship === 'Son'; });
-            
-            reHeirs.forEach(function(h) {
-                switch(h.relationship) {
-                    case 'Wife':
-                        h.portions = hasChildren ? 0.125 : 0.25;
-                        break;
-                    case 'Husband':
-                        h.portions = hasChildren ? 0.25 : 0.5;
-                        break;
-                    case 'Mother':
-                        h.portions = hasChildren ? (1/6) : (1/3);
-                        break;
-                    case 'Father':
-                    case 'Grandfather':
-                        h.portions = hasChildren ? (1/6) : 1;
-                        break;
-                    case 'Grandmother':
-                        h.portions = 1/6;
-                        break;
-                    case 'Brother':
-                        h.portions = hasSons ? 0 : 2;
-                        break;
-                    case 'Sister':
-                        h.portions = hasSons ? 0 : 1;
-                        break;
-                    // Sons and Daughters keep their fixed ratios
-                }
-            });
-            
-            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
         }
 
         function deleteREHeir(id) { 
             if (!confirm('Delete this heir?')) return; 
-            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); 
-            reHeirs = reHeirs.filter(function(h) { return h.id !== id; }); 
-            localStorage.setItem('reHeirs', JSON.stringify(reHeirs)); 
-            showAlert('Heir deleted'); 
-            recalculateAllHeirPortions();
-            loadREInheritance(); 
+            api('/re/heirs/' + id, { method: 'DELETE' }).then(function() {
+                showAlert('Heir deleted'); 
+                loadREInheritance(); 
+            });
         }
 
         // ========== RE LEDGER ==========
         function loadRELedgerFull() {
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
-            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
             var currency = getCurrency();
-            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
 
-            var ledgerEntries = [];
+            api('/re/ledger').then(function(ledgerEntries) {
+                var runningBalance = 0, totalIncome = 0, totalExpense = 0;
 
-            // Add payments as income - amount is already NET (tax deducted in Bills)
-            rePayments.forEach(function(p) { 
-                var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
-                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
-                var amount = parseFloat(p.amount) || 0;
-                
-                ledgerEntries.push({ 
-                    date: p.payment_date, 
-                    property: prop ? prop.name : 'N/A', 
-                    description: 'Rental Payment - ' + (bill ? bill.bill_number : 'Bill'),
-                    type: 'Income', 
-                    income: amount,
-                    expense: 0,
-                    reserved: 0
-                }); 
-            });
+                var html = ledgerEntries.map(function(entry) { 
+                    var income = parseFloat(entry.income) || 0;
+                    var expense = parseFloat(entry.expense) || 0;
+                    runningBalance = parseFloat(entry.balance) || (runningBalance + income - expense);
+                    totalIncome += income; 
+                    totalExpense += expense;
+                    
+                    var isIncome = income > 0; 
+                    var isInh = entry.type === 'Inheritance Share'; 
+                    
+                    return '<tr>' +
+                        '<td>' + fmtDate(entry.date) + '</td>' +
+                        '<td>' + (entry.property || 'N/A') + '</td>' +
+                        '<td>' + (entry.description || '') + '</td>' +
+                        '<td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
+                        '<td class="amount-positive">' + (income > 0 ? fmt(Math.round(income)) : '-') + '</td>' +
+                        '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (expense > 0 ? fmt(Math.round(expense)) : '-') + '</td>' +
+                        '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                    '</tr>'; 
+                }).join('');
 
-            // Add expenses
-            reExpenses.forEach(function(e) { 
-                var prop = properties.find(function(p) { return p.id === e.property_id; }); 
-                ledgerEntries.push({ 
-                    date: e.expense_date, 
-                    property: prop ? prop.name : 'General', 
-                    description: e.description, 
-                    type: e.category, 
-                    income: 0,
-                    expense: parseFloat(e.amount) || 0,
-                    reserved: 0
-                }); 
-            });
-
-            // Sort by date
-            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-
-            var runningBalance = 0, totalIncome = 0, totalExpense = 0;
-
-            var html = ledgerEntries.map(function(entry) { 
-                runningBalance += entry.income - entry.expense; 
-                totalIncome += entry.income; 
-                totalExpense += entry.expense;
-                
-                var isIncome = entry.income > 0; 
-                var isInh = entry.type === 'Inheritance Share'; 
-                
-                return '<tr>' +
-                    '<td>' + fmtDate(entry.date) + '</td>' +
-                    '<td>' + entry.property + '</td>' +
-                    '<td>' + entry.description + '</td>' +
-                    '<td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
-                    '<td class="amount-positive">' + (entry.income > 0 ? fmt(Math.round(entry.income)) : '-') + '</td>' +
-                    '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(Math.round(entry.expense)) : '-') + '</td>' +
+                document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
+                document.getElementById('reLedgerTotals').innerHTML = 
+                    '<tr style="background: #f7fafc; font-weight: bold;">' +
+                    '<td colspan="4" style="text-align: right;">TOTALS (' + currency + '):</td>' +
+                    '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
+                    '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
                     '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
-                '</tr>'; 
-            }).join('');
-
-            // Calculate Reserved Funds and Net Balance
-            var reservedFunds = totalIncome * reservedPercent / 100;
-            // Ensure net balance is never negative
-            var netBalance = Math.max(0, runningBalance - reservedFunds);
-
-            document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
-            document.getElementById('reLedgerTotals').innerHTML = 
-                '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right;">SUBTOTAL (' + currency + '):</td>' +
+                    '</tr>';
+            });
+        }
                 '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
                 '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
                 '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +

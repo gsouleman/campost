@@ -313,7 +313,7 @@ async function initializeDefaultData() {
         }
     }
     
-    // Initialize default users
+    // Initialize default users - only if table is empty, otherwise ensure admin exists
     const userResult = await pool.query('SELECT COUNT(*) FROM app_users');
     if (parseInt(userResult.rows[0].count) === 0) {
         await pool.query(
@@ -323,6 +323,14 @@ async function initializeDefaultData() {
         await pool.query(
             'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',
             ['user', 'user123', 'Standard User', 'user', true]
+        );
+    } else {
+        // Ensure admin user exists with correct password (in case it was deleted or password changed)
+        await pool.query(
+            `INSERT INTO app_users (username, password, full_name, role, active) 
+             VALUES ($1, $2, $3, $4, $5) 
+             ON CONFLICT (username) DO UPDATE SET password = $2`,
+            ['admin', '12345', 'Administrator', 'admin', true]
         );
     }
     

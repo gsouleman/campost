@@ -147,23 +147,24 @@ async function initializeDefaultData() {
 
     const heirResult = await pool.query('SELECT COUNT(*) FROM heirs');
     if (parseInt(heirResult.rows[0].count) === 0) {
+        // Family members from NJIKAM SALIFU estate
         const heirs = [
-            ['Wife 1', 'Spouse', 'Wives', 1.5],
-            ['Wife 2', 'Spouse', 'Wives', 1.5],
-            ['Daughter 1', 'Child', 'Daughters', 3],
-            ['Daughter 2', 'Child', 'Daughters', 3],
-            ['Daughter 3', 'Child', 'Daughters', 3],
-            ['Daughter 4', 'Child', 'Daughters', 3],
-            ['Daughter 5', 'Child', 'Daughters', 3],
-            ['Daughter 6', 'Child', 'Daughters', 3],
-            ['Daughter 7', 'Child', 'Daughters', 3],
-            ['Son 1', 'Child', 'Sons', 6],
-            ['Son 2', 'Child', 'Sons', 6],
-            ['Son 3', 'Child', 'Sons', 6],
-            ['Son 4', 'Child', 'Sons', 6],
-            ['Son 5', 'Child', 'Sons', 6],
-            ['Son 6', 'Child', 'Sons', 6],
-            ['Son 7', 'Child', 'Sons', 6]
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 3],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Wives', 3],
+            ['SAHNATU SALIFU', 'Child', 'Daughters', 1],
+            ['MOHAMAN SALIFU', 'Child', 'Sons', 2],
+            ['ABIBATU SALIFU', 'Child', 'Daughters', 1],
+            ['ZAKARE SALIFU', 'Child', 'Sons', 2],
+            ['FERER ALIMATU SALIFU', 'Child', 'Daughters', 1],
+            ['NTENTIE REKIATU NJIKAM', 'Child', 'Daughters', 1],
+            ['KAHPUI MARIAMA SALIFU', 'Child', 'Daughters', 1],
+            ['GHOUENZEN SOULEMANOU', 'Child', 'Sons', 2],
+            ['NGAMENPOUYE MAIMUNATE', 'Child', 'Daughters', 1],
+            ['LOUMNGAM NCHINTOUO AMINATOUO', 'Child', 'Daughters', 1],
+            ['MENTCHA ABOUBAKAR SALIFOU', 'Child', 'Sons', 2],
+            ['HAROUNA SALIFU', 'Child', 'Sons', 2],
+            ['MBALLEY ABDOU RAHAMA SALIFOU', 'Child', 'Sons', 2],
+            ['NGAMDAMOUN IBRAHIM SALIFOU', 'Child', 'Sons', 2]
         ];
         for (const [name, rel, group, portions] of heirs) {
             await pool.query(

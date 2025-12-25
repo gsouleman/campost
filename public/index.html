@@ -522,20 +522,8 @@
                                 <input type="date" id="rePayDate">
                             </div>
                             <div class="form-group">
-                                <label>Gross Amount (XAF) *</label>
-                                <input type="number" id="rePayAmount" placeholder="Gross payment amount" onchange="calculateNetPayment()" oninput="calculateNetPayment()">
-                            </div>
-                            <div class="form-group">
-                                <label>Tax Rate (%)</label>
-                                <input type="text" id="rePayTaxRate" readonly style="background: #f0f0f0;" value="0%">
-                            </div>
-                            <div class="form-group">
-                                <label>Tax Amount (XAF)</label>
-                                <input type="text" id="rePayTaxAmount" readonly style="background: #f0f0f0; color: #e53e3e;" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Net Amount (After Tax)</label>
-                                <input type="text" id="rePayNetAmount" readonly style="background: #c6f6d5; font-weight: bold; color: #276749;" value="0">
+                                <label>Amount (XAF) *</label>
+                                <input type="number" id="rePayAmount" placeholder="Payment amount">
                             </div>
                             <div class="form-group">
                                 <label>Reference</label>
@@ -549,14 +537,14 @@
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><span>💳 Payment History (Net After Tax)</span><button class="btn btn-print btn-sm no-print" onclick="exportREPaymentsPDF()">📥 Export PDF</button></div>
+                    <div class="card-header"><span>💳 Payment History</span><button class="btn btn-print btn-sm no-print" onclick="exportREPaymentsPDF()">📥 Export PDF</button></div>
                     <div class="card-body">
                         <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
-                            📌 All amounts shown are <strong>NET</strong> after tax deductions based on property tax rate.
+                            📌 Payment amounts match the <strong>Net Amount Due</strong> from Bills (tax already deducted in Bills).
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Date</th><th>Property</th><th>Bill #</th><th>Gross</th><th>Tax</th><th>Net Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead>
+                                <thead><tr><th>Date</th><th>Property</th><th>Bill #</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="rePaymentsTable"></tbody>
                                 <tfoot id="rePaymentsTotals"></tfoot>
                             </table>
@@ -2561,10 +2549,9 @@
             document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
                 unpaidBills.map(function(b) { 
                     var prop = properties.find(function(p) { return p.id === b.property_id; });
-                    var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
                     var status = b.paid_amount > 0 ? 'Partial' : 'Unpaid';
-                    return '<option value="' + b.id + '" data-outstanding="' + b.outstanding + '" data-taxrate="' + taxRate + '" data-propertyid="' + (prop ? prop.id : '') + '">' + 
-                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | Tax: ' + taxRate + '% | Outstanding: ' + fmt(b.outstanding) + ' XAF (' + status + ')' + 
+                    return '<option value="' + b.id + '" data-outstanding="' + b.outstanding + '">' + 
+                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | Outstanding: ' + fmt(b.outstanding) + ' XAF (' + status + ')' + 
                     '</option>'; 
                 }).join('');
 
@@ -2572,84 +2559,47 @@
                 document.getElementById('rePayDate').valueAsDate = new Date(); 
             }
 
-            var totalGross = 0, totalTax = 0, totalNet = 0;
+            var totalAmount = 0;
             
             var html = rePayments.map(function(p) { 
                 var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
                 var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                var amount = parseFloat(p.amount) || 0;
                 
-                // Calculate tax and net
-                var grossAmount = parseFloat(p.amount) || 0;
-                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
-                var taxAmount = grossAmount * taxRate / 100;
-                var netAmount = grossAmount - taxAmount;
-                
-                totalGross += grossAmount;
-                totalTax += taxAmount;
-                totalNet += netAmount;
+                totalAmount += amount;
                 
                 return '<tr>' +
                     '<td>' + fmtDate(p.payment_date) + '</td>' +
                     '<td>' + (prop ? prop.name : 'N/A') + '</td>' +
                     '<td>' + (bill ? bill.bill_number : 'N/A') + '</td>' +
-                    '<td>' + fmt(Math.round(grossAmount)) + '</td>' +
-                    '<td class="amount-negative">' + fmt(Math.round(taxAmount)) + ' (' + taxRate + '%)</td>' +
-                    '<td class="amount-positive"><strong>' + fmt(Math.round(netAmount)) + '</strong></td>' +
+                    '<td class="amount-positive"><strong>' + fmt(Math.round(amount)) + '</strong></td>' +
                     '<td>' + (p.reference || '-') + '</td>' +
                     '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
                 '</tr>'; 
             }).join('');
 
-            document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="8">No payments</td></tr>';
+            document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
             
             // Add totals row
             document.getElementById('rePaymentsTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="3" style="text-align: right;">TOTALS:</td>' +
-                '<td>' + fmt(Math.round(totalGross)) + '</td>' +
-                '<td class="amount-negative">' + fmt(Math.round(totalTax)) + '</td>' +
-                '<td class="amount-positive">' + fmt(Math.round(totalNet)) + '</td>' +
+                '<td colspan="3" style="text-align: right;">TOTAL:</td>' +
+                '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
                 '<td colspan="2"></td>' +
                 '</tr>';
         }
 
-        // Auto-populate amount and tax rate when bill is selected
+        // Auto-populate amount when bill is selected (outstanding = net amount from bill)
         function onREBillSelect() {
             var select = document.getElementById('rePayBill');
             var selectedOption = select.options[select.selectedIndex];
             
             if (selectedOption && selectedOption.value) {
                 var outstanding = parseFloat(selectedOption.getAttribute('data-outstanding')) || 0;
-                var taxRate = parseFloat(selectedOption.getAttribute('data-taxrate')) || 0;
-                
                 document.getElementById('rePayAmount').value = outstanding;
-                document.getElementById('rePayTaxRate').value = taxRate + '%';
-                
-                // Calculate tax and net
-                var taxAmount = outstanding * taxRate / 100;
-                var netAmount = outstanding - taxAmount;
-                
-                document.getElementById('rePayTaxAmount').value = fmt(Math.round(taxAmount));
-                document.getElementById('rePayNetAmount').value = fmt(Math.round(netAmount)) + ' XAF';
             } else {
                 document.getElementById('rePayAmount').value = '';
-                document.getElementById('rePayTaxRate').value = '0%';
-                document.getElementById('rePayTaxAmount').value = '0';
-                document.getElementById('rePayNetAmount').value = '0';
             }
-        }
-        
-        // Calculate net payment when amount changes
-        function calculateNetPayment() {
-            var grossAmount = parseFloat(document.getElementById('rePayAmount').value) || 0;
-            var taxRateStr = document.getElementById('rePayTaxRate').value;
-            var taxRate = parseFloat(taxRateStr.replace('%', '')) || 0;
-            
-            var taxAmount = grossAmount * taxRate / 100;
-            var netAmount = grossAmount - taxAmount;
-            
-            document.getElementById('rePayTaxAmount').value = fmt(Math.round(taxAmount));
-            document.getElementById('rePayNetAmount').value = fmt(Math.round(netAmount)) + ' XAF';
         }
 
         function saveREPayment() {
@@ -2675,14 +2625,14 @@
                 id: newId, 
                 bill_id: billId, 
                 payment_date: payDate, 
-                amount: amount, // Store gross amount
+                amount: amount,
                 reference: reference, 
                 created_at: new Date().toISOString() 
             });
 
             localStorage.setItem('rePayments', JSON.stringify(rePayments));
             clearREPaymentForm();
-            showAlert('Payment recorded! Net amount after tax will be calculated automatically.');
+            showAlert('Payment recorded!');
             loadREPayments();
             loadRealEstate();
         }
@@ -2691,9 +2641,6 @@
             document.getElementById('rePayId').value = ''; 
             document.getElementById('rePayBill').value = ''; 
             document.getElementById('rePayAmount').value = ''; 
-            document.getElementById('rePayTaxRate').value = '0%';
-            document.getElementById('rePayTaxAmount').value = '0';
-            document.getElementById('rePayNetAmount').value = '0';
             document.getElementById('rePayRef').value = ''; 
         }
 
@@ -3065,25 +3012,18 @@
 
             var ledgerEntries = [];
 
-            // Add payments as income - calculate NET income after tax
+            // Add payments as income - amount is already NET (tax deducted in Bills)
             rePayments.forEach(function(p) { 
                 var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
                 var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
-                
-                // Get tax rate from property to calculate net income
-                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
-                var grossAmount = parseFloat(p.amount) || 0;
-                var taxAmount = grossAmount * taxRate / 100;
-                var netIncome = grossAmount - taxAmount;
+                var amount = parseFloat(p.amount) || 0;
                 
                 ledgerEntries.push({ 
                     date: p.payment_date, 
                     property: prop ? prop.name : 'N/A', 
-                    description: 'Rental Payment - ' + (bill ? bill.bill_number : 'Bill') + ' (Tax: ' + taxRate + '%)',
+                    description: 'Rental Payment - ' + (bill ? bill.bill_number : 'Bill'),
                     type: 'Income', 
-                    income: netIncome,
-                    grossIncome: grossAmount,
-                    taxDeducted: taxAmount,
+                    income: amount,
                     expense: 0 
                 }); 
             });
@@ -3097,8 +3037,6 @@
                     description: e.description, 
                     type: e.category, 
                     income: 0,
-                    grossIncome: 0,
-                    taxDeducted: 0,
                     expense: parseFloat(e.amount) || 0 
                 }); 
             });
@@ -3106,13 +3044,12 @@
             // Sort by date
             ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
 
-            var runningBalance = 0, totalIncome = 0, totalExpense = 0, totalTax = 0;
+            var runningBalance = 0, totalIncome = 0, totalExpense = 0;
 
             var html = ledgerEntries.map(function(entry) { 
                 runningBalance += entry.income - entry.expense; 
                 totalIncome += entry.income; 
                 totalExpense += entry.expense;
-                totalTax += entry.taxDeducted || 0;
                 
                 var isIncome = entry.income > 0; 
                 var isInh = entry.type === 'Inheritance Share'; 
@@ -3131,7 +3068,7 @@
             document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
             document.getElementById('reLedgerTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right;">TOTALS (Net after ' + fmt(Math.round(totalTax)) + ' tax):</td>' +
+                '<td colspan="4" style="text-align: right;">TOTALS:</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
                 '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
                 '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
@@ -3258,37 +3195,29 @@
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-            doc.text('* Net amounts shown after tax deductions', 105, 27, { align: 'center' });
+            doc.text('* Payment amounts are Net (tax already deducted in Bills)', 105, 27, { align: 'center' });
             doc.line(20, 30, 190, 30);
             
-            var totalGross = 0, totalTax = 0, totalNet = 0;
+            var totalAmount = 0;
             
             var tableData = rePayments.map(function(p) {
                 var bill = reBills.find(function(b) { return b.id === p.bill_id; });
                 var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
-                
-                var gross = parseFloat(p.amount) || 0;
-                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
-                var taxAmt = gross * taxRate / 100;
-                var net = gross - taxAmt;
-                
-                totalGross += gross;
-                totalTax += taxAmt;
-                totalNet += net;
-                
-                return [fmtDate(p.payment_date), prop ? prop.name : 'N/A', bill ? bill.bill_number : 'N/A', fmt(Math.round(gross)), taxRate + '%', fmt(Math.round(taxAmt)), fmt(Math.round(net)), p.reference || '-'];
+                var amount = parseFloat(p.amount) || 0;
+                totalAmount += amount;
+                return [fmtDate(p.payment_date), prop ? prop.name : 'N/A', bill ? bill.bill_number : 'N/A', fmt(Math.round(amount)), p.reference || '-'];
             });
             
             doc.autoTable({
                 startY: 35,
-                head: [['Date', 'Property', 'Bill #', 'Gross', 'Tax %', 'Tax Amt', 'Net', 'Reference']],
+                head: [['Date', 'Property', 'Bill #', 'Amount', 'Reference']],
                 body: tableData,
-                styles: { fontSize: 7 },
+                styles: { fontSize: 8 },
                 headStyles: { fillColor: [66, 153, 225] }
             });
             
             doc.setFontSize(10);
-            doc.text('Totals - Gross: ' + fmt(Math.round(totalGross)) + ' | Tax: ' + fmt(Math.round(totalTax)) + ' | Net: ' + fmt(Math.round(totalNet)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
+            doc.text('Total Payments: ' + fmt(Math.round(totalAmount)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
             
             doc.save('re_payments_' + new Date().toISOString().split('T')[0] + '.pdf');
             showAlert('Payments PDF exported!');

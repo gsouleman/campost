@@ -447,23 +447,16 @@
                         <input type="hidden" id="reBillId">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Property *</label>
-                                <select id="reBillProperty"></select>
+                                <label>Property (Rented Only) *</label>
+                                <select id="reBillProperty" onchange="onREPropertySelect()"></select>
                             </div>
                             <div class="form-group">
                                 <label>Bill Date *</label>
                                 <input type="date" id="reBillDate">
                             </div>
                             <div class="form-group">
-                                <label>Period *</label>
-                                <select id="reBillPeriod">
-                                    <option value="Jan-Mar">Jan-Mar (Q1)</option>
-                                    <option value="Apr-Jun">Apr-Jun (Q2)</option>
-                                    <option value="Jul-Sep">Jul-Sep (Q3)</option>
-                                    <option value="Oct-Dec">Oct-Dec (Q4)</option>
-                                    <option value="Monthly">Monthly</option>
-                                    <option value="Yearly">Yearly</option>
-                                </select>
+                                <label>Period (from Property) *</label>
+                                <input type="text" id="reBillPeriod" readonly placeholder="Select property first">
                             </div>
                             <div class="form-group">
                                 <label>Year *</label>
@@ -505,8 +498,8 @@
                         <input type="hidden" id="rePayId">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Select Bill *</label>
-                                <select id="rePayBill"></select>
+                                <label>Select Bill (from Bills) *</label>
+                                <select id="rePayBill" onchange="onREBillSelect()"></select>
                             </div>
                             <div class="form-group">
                                 <label>Payment Date *</label>
@@ -2282,8 +2275,11 @@
             var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
 
-            document.getElementById('reBillProperty').innerHTML = '<option value="">Select Property</option>' + 
-                rentedProps.map(function(p) { return '<option value="' + p.id + '">' + p.name + '</option>'; }).join('');
+            // Populate property dropdown with rented properties only, showing period
+            document.getElementById('reBillProperty').innerHTML = '<option value="">Select Rented Property</option>' + 
+                rentedProps.map(function(p) { 
+                    return '<option value="' + p.id + '" data-period="' + (p.rent_period || 'Monthly') + '" data-rent="' + (p.rent_amount || 0) + '">' + p.name + ' (' + (p.rent_period || 'Monthly') + ' - ' + fmt(p.rent_amount || 0) + ' XAF)</option>'; 
+                }).join('');
 
             if (!document.getElementById('reBillDate').value) {
                 document.getElementById('reBillDate').valueAsDate = new Date();
@@ -2297,6 +2293,23 @@
             }).join('');
 
             document.getElementById('reBillsTable').innerHTML = html || '<tr><td colspan="9">No bills</td></tr>';
+        }
+
+        // Auto-populate period and amount when property is selected
+        function onREPropertySelect() {
+            var select = document.getElementById('reBillProperty');
+            var selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                var period = selectedOption.getAttribute('data-period') || 'Monthly';
+                var rent = selectedOption.getAttribute('data-rent') || 0;
+                
+                document.getElementById('reBillPeriod').value = period;
+                document.getElementById('reBillAmount').value = rent;
+            } else {
+                document.getElementById('reBillPeriod').value = '';
+                document.getElementById('reBillAmount').value = '';
+            }
         }
 
         function saveREBill() {
@@ -2334,7 +2347,13 @@
             loadREBills();
         }
 
-        function clearREBillForm() { document.getElementById('reBillId').value = ''; document.getElementById('reBillProperty').value = ''; document.getElementById('reBillAmount').value = ''; document.getElementById('reBillDesc').value = ''; }
+        function clearREBillForm() { 
+            document.getElementById('reBillId').value = ''; 
+            document.getElementById('reBillProperty').value = ''; 
+            document.getElementById('reBillPeriod').value = ''; 
+            document.getElementById('reBillAmount').value = ''; 
+            document.getElementById('reBillDesc').value = ''; 
+        }
 
         function editREBill(id) {
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
@@ -2350,14 +2369,48 @@
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
 
+            // Populate Select Bill dropdown from Bills section (only bills with outstanding > 0)
             var unpaidBills = reBills.filter(function(b) { return b.outstanding > 0; });
-            document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill</option>' + unpaidBills.map(function(b) { var prop = properties.find(function(p) { return p.id === b.property_id; }); return '<option value="' + b.id + '">' + b.bill_number + ' - ' + (prop ? prop.name : '') + ' (' + fmt(b.outstanding) + ' due)</option>'; }).join('');
+            document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
+                unpaidBills.map(function(b) { 
+                    var prop = properties.find(function(p) { return p.id === b.property_id; }); 
+                    var status = b.paid_amount > 0 ? 'Partial' : 'Unpaid';
+                    return '<option value="' + b.id + '" data-outstanding="' + b.outstanding + '">' + 
+                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | ' + b.period + ' ' + b.year + ' | Outstanding: ' + fmt(b.outstanding) + ' XAF (' + status + ')' + 
+                    '</option>'; 
+                }).join('');
 
-            if (!document.getElementById('rePayDate').value) { document.getElementById('rePayDate').valueAsDate = new Date(); }
+            if (!document.getElementById('rePayDate').value) { 
+                document.getElementById('rePayDate').valueAsDate = new Date(); 
+            }
 
-            var html = rePayments.map(function(p) { var bill = reBills.find(function(b) { return b.id === p.bill_id; }); var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null; return '<tr><td>' + fmtDate(p.payment_date) + '</td><td>' + (prop ? prop.name : 'N/A') + '</td><td>' + (bill ? bill.bill_number : 'N/A') + '</td><td class="amount-positive">' + fmt(p.amount) + '</td><td>' + (p.reference || '-') + '</td><td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td></tr>'; }).join('');
+            var html = rePayments.map(function(p) { 
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null; 
+                return '<tr>' +
+                    '<td>' + fmtDate(p.payment_date) + '</td>' +
+                    '<td>' + (prop ? prop.name : 'N/A') + '</td>' +
+                    '<td>' + (bill ? bill.bill_number : 'N/A') + '</td>' +
+                    '<td class="amount-positive">' + fmt(p.amount) + '</td>' +
+                    '<td>' + (p.reference || '-') + '</td>' +
+                    '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
+                '</tr>'; 
+            }).join('');
 
             document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
+        }
+
+        // Auto-populate amount when bill is selected
+        function onREBillSelect() {
+            var select = document.getElementById('rePayBill');
+            var selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                var outstanding = selectedOption.getAttribute('data-outstanding') || 0;
+                document.getElementById('rePayAmount').value = outstanding;
+            } else {
+                document.getElementById('rePayAmount').value = '';
+            }
         }
 
         function saveREPayment() {

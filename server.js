@@ -671,6 +671,46 @@ app.get('/api/export/all', async (req, res) => {
 });
 
 // ============== RESET & STATUS ==============
+
+// Reset heirs to default family members
+app.post('/api/heirs/reset-defaults', async (req, res) => {
+    try {
+        // Delete all existing heirs
+        await pool.query('DELETE FROM heirs');
+        
+        // Insert default family members from NJIKAM SALIFU estate
+        const heirs = [
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 3],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Wives', 3],
+            ['SAHNATU SALIFU', 'Child', 'Daughters', 1],
+            ['MOHAMAN SALIFU', 'Child', 'Sons', 2],
+            ['ABIBATU SALIFU', 'Child', 'Daughters', 1],
+            ['ZAKARE SALIFU', 'Child', 'Sons', 2],
+            ['FERER ALIMATU SALIFU', 'Child', 'Daughters', 1],
+            ['NTENTIE REKIATU NJIKAM', 'Child', 'Daughters', 1],
+            ['KAHPUI MARIAMA SALIFU', 'Child', 'Daughters', 1],
+            ['GHOUENZEN SOULEMANOU', 'Child', 'Sons', 2],
+            ['NGAMENPOUYE MAIMUNATE', 'Child', 'Daughters', 1],
+            ['LOUMNGAM NCHINTOUO AMINATOUO', 'Child', 'Daughters', 1],
+            ['MENTCHA ABOUBAKAR SALIFOU', 'Child', 'Sons', 2],
+            ['HAROUNA SALIFU', 'Child', 'Sons', 2],
+            ['MBALLEY ABDOU RAHAMA SALIFOU', 'Child', 'Sons', 2],
+            ['NGAMDAMOUN IBRAHIM SALIFOU', 'Child', 'Sons', 2]
+        ];
+        
+        for (const [name, rel, group, portions] of heirs) {
+            await pool.query(
+                'INSERT INTO heirs (name, relationship, heir_group, portions) VALUES ($1, $2, $3, $4)',
+                [name, rel, group, portions]
+            );
+        }
+        
+        res.json({ success: true, message: 'Heirs reset to default family members', count: heirs.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/reset', async (req, res) => {
     try {
         await pool.query('DELETE FROM payments');

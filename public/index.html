@@ -683,6 +683,7 @@
                     <div>
                         <button class="btn btn-outline btn-sm" onclick="selectAllCampostBeneficiaries(true)">Select All</button>
                         <button class="btn btn-outline btn-sm" onclick="selectAllCampostBeneficiaries(false)">Deselect All</button>
+                        <button class="btn btn-warning btn-sm" onclick="resetCampostHeirsToDefaults()">🔄 Reset to Defaults</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -1053,6 +1054,7 @@
                         <div>
                             <button class="btn btn-outline btn-sm" onclick="selectAllREBeneficiaries(true)">Select All</button>
                             <button class="btn btn-outline btn-sm" onclick="selectAllREBeneficiaries(false)">Deselect All</button>
+                            <button class="btn btn-warning btn-sm" onclick="resetREHeirsToDefaults()">🔄 Reset to Defaults</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -3081,6 +3083,24 @@
             showAlert('Beneficiary selection saved!');
             loadInheritance();
         }
+        
+        // Reset CAMPOST heirs to default family members
+        function resetCampostHeirsToDefaults() {
+            if (!confirm('This will delete all current heirs and reset to the default 16 family members. Continue?')) return;
+            
+            api('/heirs/reset-defaults', { method: 'POST' }).then(function(result) {
+                if (result.success) {
+                    // Clear beneficiary selection to include all
+                    localStorage.removeItem('campostBeneficiaries');
+                    showAlert('Heirs reset to default family members (' + result.count + ' heirs)');
+                    loadInheritance();
+                } else {
+                    showAlert('Error resetting heirs', 'error');
+                }
+            }).catch(function(err) {
+                showAlert('Error: ' + err.message, 'error');
+            });
+        }
 
         function openHeirModal() { document.getElementById('heirModal').classList.add('active'); }
         function closeHeirModal() {
@@ -4550,6 +4570,48 @@
             });
             localStorage.setItem('reBeneficiaries', JSON.stringify(selectedIds));
             showAlert('Beneficiary selection saved!');
+            loadREInheritance();
+        }
+        
+        // Reset Family RE heirs to default family members
+        function resetREHeirsToDefaults() {
+            if (!confirm('This will delete all current heirs and reset to the default 16 family members. Continue?')) return;
+            
+            // Default family members from Excel file
+            var defaultFamilyMembers = [
+                { name: 'MODER PASMA IDRISU EPSE SALIFOU', relationship: 'Spouse', group: 'Wives', portions: 3 },
+                { name: 'MENJIKOUE ABIBA SPOUSE NJIKAM', relationship: 'Spouse', group: 'Wives', portions: 3 },
+                { name: 'SAHNATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'MOHAMAN SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'ABIBATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'ZAKARE SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'FERER ALIMATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'NTENTIE REKIATU NJIKAM', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'KAHPUI MARIAMA SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'GHOUENZEN SOULEMANOU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'NGAMENPOUYE MAIMUNATE', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'LOUMNGAM NCHINTOUO AMINATOUO', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'MENTCHA ABOUBAKAR SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'HAROUNA SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'MBALLEY ABDOU RAHAMA SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'NGAMDAMOUN IBRAHIM SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 }
+            ];
+            
+            var reHeirs = defaultFamilyMembers.map(function(m, idx) {
+                return {
+                    id: idx + 1,
+                    name: m.name,
+                    relationship: m.relationship,
+                    gender: m.group === 'Sons' ? 'Male' : 'Female',
+                    group: m.group,
+                    portions: m.portions
+                };
+            });
+            
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
+            // Clear beneficiary selection to include all
+            localStorage.removeItem('reBeneficiaries');
+            showAlert('Heirs reset to default family members (16 heirs)');
             loadREInheritance();
         }
 

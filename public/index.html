@@ -1583,10 +1583,13 @@
                 return;
             }
             
-            api('/users/login', { 
-                method: 'POST', 
+            fetch(API + '/users/login', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: username, password: password }) 
-            }).then(function(result) {
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
                 if (result.success && result.user) {
                     currentUser = result.user;
                     localStorage.setItem('currentSession', JSON.stringify({ userId: result.user.id, loginTime: new Date().toISOString() }));
@@ -1596,7 +1599,7 @@
                     errorEl.classList.add('show');
                 }
             }).catch(function(err) {
-                errorEl.textContent = 'Login failed: ' + err.message;
+                errorEl.textContent = 'Login failed: ' + (err.error || err.message || 'Connection error');
                 errorEl.classList.add('show');
             });
         }
@@ -2100,7 +2103,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 method: opts.method || 'GET',
                 body: opts.body
-            }).then(function(res) { return res.json(); });
+            }).then(function(res) { 
+                return res.json().then(function(data) {
+                    if (!res.ok) {
+                        return Promise.reject(data);
+                    }
+                    return data;
+                });
+            });
         }
 
         // Tabs

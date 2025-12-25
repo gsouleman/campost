@@ -148,6 +148,7 @@
         </div>
         <nav class="nav">
             <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-page="ledger">📒 Ledger</button>
             <button class="nav-btn" data-page="expenses">💸 Expenses</button>
             <button class="nav-btn" data-page="bills">📄 Bills</button>
             <button class="nav-btn" data-page="payments">💵 Payments</button>
@@ -161,22 +162,56 @@
         <!-- DASHBOARD -->
         <div id="dashboard" class="page active">
             <div class="stats-grid">
-                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="dashPaid">0</div><div class="stat-label">Total Bills Paid</div></div>
+                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="dashIncome">0</div><div class="stat-label">Total Income</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="dashExp">0</div><div class="stat-label">Total Expenses</div></div>
                 <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserve Funds</div></div>
                 <div class="stat-card gold"><div class="stat-icon">👨‍👩‍👧‍👦</div><div class="stat-value" id="dashInh">0</div><div class="stat-label">Inheritance Pool</div></div>
             </div>
-            <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('dashLedgerTab', this)">📒 Ledger</button>
-                <button class="tab-btn" onclick="showTab('dashBillsTab', this)">📄 Bills</button>
+            <div class="card">
+                <div class="card-header"><span>📊 Financial Summary</span></div>
+                <div class="card-body">
+                    <div class="summary-row"><span>Total Income (Bills Paid):</span><span class="amount-positive" id="dashIncomeSum">0 XAF</span></div>
+                    <div class="summary-row"><span>Total Expenses:</span><span class="amount-negative" id="dashExpSum">0 XAF</span></div>
+                    <div class="summary-row" style="font-size: 1rem;"><span><strong>Reserve Funds (Income - Expenses):</strong></span><span id="dashReserveSum" style="font-weight: bold;">0 XAF</span></div>
+                    <div class="summary-row"><span>Inheritance Pool (from distributions):</span><span class="amount-gold" id="dashInhSum">0 XAF</span></div>
+                </div>
             </div>
-            <div id="dashLedgerTab" class="tab-content active">
-                <div class="card"><div class="card-header"><span>📒 Transaction Ledger</span></div>
-                <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr></thead><tbody id="dashLedger"></tbody></table></div></div></div>
+        </div>
+
+        <!-- LEDGER -->
+        <div id="ledger" class="page">
+            <div class="stats-grid">
+                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income</div></div>
+                <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="ledgerExpense">0</div><div class="stat-label">Total Expenses</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerBalance">0</div><div class="stat-label">Balance (Reserve)</div></div>
             </div>
-            <div id="dashBillsTab" class="tab-content">
-                <div class="card"><div class="card-header"><span>📄 All Bills (Click to View Invoice)</span></div>
-                <div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th></tr></thead><tbody id="dashBills"></tbody></table></div></div></div>
+            <div class="card">
+                <div class="card-header">
+                    <span>📒 Ledger (Auto-Generated)</span>
+                    <div class="no-print">
+                        <button class="btn btn-print btn-sm" onclick="exportPDF('ledger')">📥 Export PDF</button>
+                        <button class="btn btn-outline btn-sm" onclick="exportCSV('ledger')">📥 Export CSV</button>
+                        <button class="btn btn-print btn-sm" onclick="printPage('ledger')">🖨️ Print</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Income (Credit)</th>
+                                    <th>Expense (Debit)</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerTable"></tbody>
+                            <tfoot id="ledgerTotals"></tfoot>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -291,6 +326,7 @@
                     <button class="btn btn-print btn-sm" onclick="exportPDF('bills')">Bills PDF</button>
                     <button class="btn btn-print btn-sm" onclick="exportPDF('payments')">Payments PDF</button>
                     <button class="btn btn-print btn-sm" onclick="exportPDF('expenses')">Expenses PDF</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportPDF('ledger')">Ledger PDF</button>
                     <button class="btn btn-gold btn-sm" onclick="exportPDF('heirs')">Heirs PDF</button>
                 </div>
             </div></div>
@@ -535,6 +571,7 @@
 
         function loadPage(p) {
             if (p === 'dashboard') loadDashboard();
+            else if (p === 'ledger') loadLedger();
             else if (p === 'expenses') loadExpenses();
             else if (p === 'bills') { loadBills(); updateCalcDisplays(); }
             else if (p === 'payments') loadPayments();
@@ -544,22 +581,123 @@
 
         // Dashboard
         function loadDashboard() {
-            api('/summary').then(function(s) {
-                document.getElementById('dashPaid').textContent = fmt(s.totalBillsPaid);
-                document.getElementById('dashExp').textContent = fmt(s.totalExpenses);
-                document.getElementById('dashReserve').textContent = fmt(s.reserveFunds);
-                document.getElementById('dashInh').textContent = fmt(s.inheritanceAmount);
+            // Get total income from payments (bills paid)
+            api('/payments').then(function(payments) {
+                var totalIncome = 0;
+                payments.forEach(function(p) {
+                    totalIncome += p.amount;
+                });
+                document.getElementById('dashIncome').textContent = fmt(totalIncome);
+                document.getElementById('dashIncomeSum').textContent = fmt(totalIncome) + ' XAF';
+                
+                // Get expenses
+                api('/expenses').then(function(expenses) {
+                    var totalExpenses = 0;
+                    expenses.forEach(function(e) {
+                        totalExpenses += e.amount;
+                    });
+                    document.getElementById('dashExp').textContent = fmt(totalExpenses);
+                    document.getElementById('dashExpSum').textContent = fmt(totalExpenses) + ' XAF';
+                    
+                    // Calculate reserve funds = Income - Expenses
+                    var reserveFunds = totalIncome - totalExpenses;
+                    document.getElementById('dashReserve').textContent = fmt(reserveFunds);
+                    document.getElementById('dashReserveSum').textContent = fmt(reserveFunds) + ' XAF';
+                    if (reserveFunds < 0) {
+                        document.getElementById('dashReserveSum').className = 'amount-negative';
+                    } else {
+                        document.getElementById('dashReserveSum').className = 'amount-positive';
+                    }
+                });
             });
-            api('/ledger').then(function(ledger) {
-                document.getElementById('dashLedger').innerHTML = ledger.map(function(t) {
-                    var isInh = t.category_name === 'Inheritance Share';
-                    return '<tr><td>' + fmtDate(t.date) + '</td><td>' + t.description.substring(0, 40) + '</td><td>' + t.category_name + '</td><td class="' + (t.amount >= 0 ? 'amount-positive' : isInh ? 'amount-gold' : 'amount-negative') + '">' + (t.amount >= 0 ? '+' : '') + fmt(t.amount) + '</td><td><span class="badge ' + (isInh ? 'badge-inheritance' : 'badge-' + t.type.toLowerCase()) + '">' + t.type + '</span></td></tr>';
-                }).join('') || '<tr><td colspan="5">No data</td></tr>';
+            
+            // Get inheritance amount
+            api('/inheritance/calculate').then(function(d) {
+                document.getElementById('dashInh').textContent = fmt(d.inheritanceAmount);
+                document.getElementById('dashInhSum').textContent = fmt(d.inheritanceAmount) + ' XAF';
             });
-            api('/bills').then(function(bills) {
-                document.getElementById('dashBills').innerHTML = bills.map(function(b) {
-                    return '<tr class="clickable" onclick="viewBill(\'' + b.billNumber + '\')"><td><strong>' + b.billNumber + '</strong></td><td>' + b.period + ' ' + b.year + '</td><td>' + fmt(b.amountDue) + '</td><td class="amount-positive">' + fmt(b.paidAmount) + '</td><td class="' + (b.outstanding > 0 ? 'amount-negative' : '') + '">' + fmt(b.outstanding) + '</td><td><span class="badge badge-' + (b.outstanding === 0 ? 'paid' : b.paidAmount > 0 ? 'partial' : 'unpaid') + '">' + (b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid') + '</span></td></tr>';
-                }).join('');
+        }
+
+        // Ledger - combines income (payments) and expenses
+        function loadLedger() {
+            Promise.all([api('/payments'), api('/expenses')]).then(function(results) {
+                var payments = results[0];
+                var expenses = results[1];
+                
+                // Combine into ledger entries
+                var ledgerEntries = [];
+                
+                // Add payments as income
+                payments.forEach(function(p) {
+                    ledgerEntries.push({
+                        date: p.date,
+                        description: 'Payment for ' + p.billNumber + ' (' + p.period + ' ' + p.year + ')',
+                        type: 'Income',
+                        income: p.amount,
+                        expense: 0,
+                        reference: p.reference
+                    });
+                });
+                
+                // Add expenses
+                expenses.forEach(function(e) {
+                    ledgerEntries.push({
+                        date: e.date,
+                        description: e.description,
+                        type: e.categoryName,
+                        income: 0,
+                        expense: e.amount,
+                        category: e.categoryName
+                    });
+                });
+                
+                // Sort by date
+                ledgerEntries.sort(function(a, b) {
+                    return new Date(a.date) - new Date(b.date);
+                });
+                
+                // Calculate running balance and totals
+                var runningBalance = 0;
+                var totalIncome = 0;
+                var totalExpense = 0;
+                
+                var tableHtml = '';
+                ledgerEntries.forEach(function(entry) {
+                    if (entry.income > 0) {
+                        runningBalance += entry.income;
+                        totalIncome += entry.income;
+                    }
+                    if (entry.expense > 0) {
+                        runningBalance -= entry.expense;
+                        totalExpense += entry.expense;
+                    }
+                    
+                    var isInheritance = entry.type === 'Inheritance Share';
+                    tableHtml += '<tr>' +
+                        '<td>' + fmtDate(entry.date) + '</td>' +
+                        '<td>' + entry.description + '</td>' +
+                        '<td><span class="badge ' + (entry.income > 0 ? 'badge-income' : isInheritance ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
+                        '<td class="amount-positive">' + (entry.income > 0 ? fmt(entry.income) : '-') + '</td>' +
+                        '<td class="' + (isInheritance ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(entry.expense) : '-') + '</td>' +
+                        '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(runningBalance) + '</td>' +
+                        '</tr>';
+                });
+                
+                document.getElementById('ledgerTable').innerHTML = tableHtml || '<tr><td colspan="6">No transactions</td></tr>';
+                
+                // Totals footer
+                document.getElementById('ledgerTotals').innerHTML = 
+                    '<tr style="background: #f7fafc; font-weight: bold;">' +
+                    '<td colspan="3" style="text-align: right;">TOTALS:</td>' +
+                    '<td class="amount-positive">' + fmt(totalIncome) + '</td>' +
+                    '<td class="amount-negative">' + fmt(totalExpense) + '</td>' +
+                    '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(runningBalance) + '</td>' +
+                    '</tr>';
+                
+                // Update stats
+                document.getElementById('ledgerIncome').textContent = fmt(totalIncome);
+                document.getElementById('ledgerExpense').textContent = fmt(totalExpense);
+                document.getElementById('ledgerBalance').textContent = fmt(runningBalance);
             });
         }
 
@@ -1002,9 +1140,25 @@
                     download(csv, 'campost_expenses.csv');
                 });
             } else if (type === 'ledger') {
-                api('/ledger').then(function(d) {
-                    var csv = h + 'Date,Description,Category,Amount,Type\n';
-                    d.forEach(function(t) { csv += t.date + ',"' + t.description + '",' + t.category_name + ',' + t.amount + ',' + t.type + '\n'; });
+                Promise.all([api('/payments'), api('/expenses')]).then(function(results) {
+                    var payments = results[0];
+                    var expenses = results[1];
+                    var csv = h + 'Date,Description,Type,Income,Expense,Balance\n';
+                    
+                    var ledgerEntries = [];
+                    payments.forEach(function(p) {
+                        ledgerEntries.push({ date: p.date, description: 'Payment: ' + p.billNumber, type: 'Income', income: p.amount, expense: 0 });
+                    });
+                    expenses.forEach(function(e) {
+                        ledgerEntries.push({ date: e.date, description: e.description, type: e.categoryName, income: 0, expense: e.amount });
+                    });
+                    ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+                    
+                    var balance = 0;
+                    ledgerEntries.forEach(function(entry) {
+                        balance += entry.income - entry.expense;
+                        csv += entry.date + ',"' + entry.description + '",' + entry.type + ',' + entry.income + ',' + entry.expense + ',' + balance + '\n';
+                    });
                     download(csv, 'campost_ledger.csv');
                 });
             }
@@ -1062,6 +1216,79 @@
                     doc.text('EXPENSES REPORT', 105, 35, { align: 'center' });
                     doc.autoTable({ startY: 40, head: [['Date', 'Description', 'Category', 'Amount']], body: d.map(function(e) { return [fmtDate(e.date), e.description.substring(0, 35), e.categoryName, fmt(e.amount)]; }), styles: { fontSize: 8 } });
                     doc.save('campost_expenses.pdf');
+                    showAlert('PDF exported!');
+                });
+            } else if (type === 'ledger') {
+                Promise.all([api('/payments'), api('/expenses')]).then(function(results) {
+                    var payments = results[0];
+                    var expenses = results[1];
+                    
+                    // Build ledger entries
+                    var ledgerEntries = [];
+                    payments.forEach(function(p) {
+                        ledgerEntries.push({
+                            date: p.date,
+                            description: 'Payment: ' + p.billNumber,
+                            type: 'Income',
+                            income: p.amount,
+                            expense: 0
+                        });
+                    });
+                    expenses.forEach(function(e) {
+                        ledgerEntries.push({
+                            date: e.date,
+                            description: e.description.substring(0, 30),
+                            type: e.categoryName,
+                            income: 0,
+                            expense: e.amount
+                        });
+                    });
+                    
+                    // Sort by date
+                    ledgerEntries.sort(function(a, b) {
+                        return new Date(a.date) - new Date(b.date);
+                    });
+                    
+                    // Calculate running balance
+                    var runningBalance = 0;
+                    var totalIncome = 0;
+                    var totalExpense = 0;
+                    var tableData = ledgerEntries.map(function(entry) {
+                        if (entry.income > 0) {
+                            runningBalance += entry.income;
+                            totalIncome += entry.income;
+                        }
+                        if (entry.expense > 0) {
+                            runningBalance -= entry.expense;
+                            totalExpense += entry.expense;
+                        }
+                        return [
+                            fmtDate(entry.date),
+                            entry.description,
+                            entry.type,
+                            entry.income > 0 ? fmt(entry.income) : '-',
+                            entry.expense > 0 ? fmt(entry.expense) : '-',
+                            fmt(runningBalance)
+                        ];
+                    });
+                    
+                    // Add totals row
+                    tableData.push(['', '', 'TOTALS:', fmt(totalIncome), fmt(totalExpense), fmt(runningBalance)]);
+                    
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('LEDGER REPORT', 105, 35, { align: 'center' });
+                    doc.setFontSize(9);
+                    doc.text('Total Income: ' + fmt(totalIncome) + ' XAF | Total Expenses: ' + fmt(totalExpense) + ' XAF | Balance: ' + fmt(runningBalance) + ' XAF', 105, 42, { align: 'center' });
+                    doc.autoTable({ 
+                        startY: 48, 
+                        head: [['Date', 'Description', 'Type', 'Income', 'Expense', 'Balance']], 
+                        body: tableData, 
+                        styles: { fontSize: 7 },
+                        headStyles: { fillColor: [44, 82, 130] },
+                        footStyles: { fillColor: [247, 250, 252], textColor: [0, 0, 0], fontStyle: 'bold' }
+                    });
+                    doc.save('campost_ledger.pdf');
                     showAlert('PDF exported!');
                 });
             } else if (type === 'heirs') {

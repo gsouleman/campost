@@ -9,13 +9,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
-            --primary-dark: #1a365d; --primary-blue: #2c5282; --primary-light: #4299e1;
-            --accent-gold: #d69e2e; --accent-orange: #ed8936; --success-green: #38a169;
-            --danger-red: #e53e3e; --bg-cream: #faf5eb; --bg-white: #ffffff;
-            --text-dark: #1a202c; --text-gray: #4a5568; --border-color: #e2e8f0; --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --primary-dark: #1a365d;
+            --primary-blue: #2c5282;
+            --primary-light: #4299e1;
+            --accent-gold: #d69e2e;
+            --accent-orange: #ed8936;
+            --success-green: #38a169;
+            --danger-red: #e53e3e;
+            --bg-cream: #faf5eb;
+            --bg-white: #ffffff;
+            --text-dark: #1a202c;
+            --text-gray: #4a5568;
+            --border-color: #e2e8f0;
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Source Sans Pro', sans-serif; background: linear-gradient(135deg, var(--bg-cream) 0%, #e8e0d5 100%); min-height: 100vh; color: var(--text-dark); }
+        
+        /* Header */
         .header { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%); color: white; position: sticky; top: 0; z-index: 1000; }
         .header-top { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
         .logo-section { display: flex; align-items: center; gap: 0.75rem; }
@@ -26,19 +37,27 @@
         .db-status { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 10px; font-size: 0.6rem; margin-top: 0.1rem; }
         .db-status.connected { background: rgba(56,161,105,0.3); color: #9ae6b4; }
         .db-status.disconnected { background: rgba(229,62,62,0.3); color: #feb2b2; }
+        
+        /* Navigation */
         .nav { display: flex; padding: 0 0.5rem; flex-wrap: wrap; overflow-x: auto; border-top: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: transparent; border: none; color: white; padding: 0.5rem 0.7rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
         .nav-btn:hover { background: rgba(255,255,255,0.1); }
         .nav-btn.active { background: rgba(255,255,255,0.15); border-bottom-color: var(--accent-gold); }
+        
+        /* Main Content */
         .main-content { max-width: 1400px; margin: 0 auto; padding: 1rem; }
         .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Cards */
         .card { background: var(--bg-white); border-radius: 10px; box-shadow: var(--shadow-md); margin-bottom: 1rem; overflow: hidden; }
         .card-header { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; padding: 0.75rem 1rem; font-family: 'Playfair Display', serif; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
         .card-header.green { background: linear-gradient(135deg, var(--success-green) 0%, #276749 100%); }
         .card-header.gold { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); }
         .card-body { padding: 1rem; }
+        
+        /* Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
         .stat-card { background: var(--bg-white); border-radius: 8px; padding: 0.75rem; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
         .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
@@ -50,12 +69,16 @@
         .stat-icon { font-size: 1.1rem; margin-bottom: 0.2rem; }
         .stat-value { font-size: 1rem; font-weight: 700; margin-bottom: 0.1rem; }
         .stat-label { color: var(--text-gray); font-size: 0.65rem; }
+        
+        /* Forms */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
         .form-group { margin-bottom: 0.75rem; }
         .form-group label { display: block; margin-bottom: 0.25rem; font-weight: 600; font-size: 0.75rem; }
         .form-group input, .form-group select { width: 100%; padding: 0.4rem 0.6rem; border: 2px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-blue); }
         .form-group input:read-only { background: #f7fafc; }
+        
+        /* Buttons */
         .btn { padding: 0.4rem 0.8rem; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; }
         .btn-primary { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; }
         .btn-success { background: linear-gradient(135deg, var(--success-green) 0%, #276749 100%); color: white; }
@@ -66,6 +89,8 @@
         .btn-gold { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); color: white; }
         .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
         .btn-group { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+        
+        /* Tables */
         .table-container { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border-color); }
         table { width: 100%; border-collapse: collapse; min-width: 400px; }
         th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; }
@@ -73,6 +98,8 @@
         tr:hover { background: #f7fafc; }
         tr.clickable { cursor: pointer; }
         tr.clickable:hover { background: rgba(66,153,225,0.1); }
+        
+        /* Badges */
         .badge { padding: 0.15rem 0.35rem; border-radius: 8px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; }
         .badge-income { background: rgba(56,161,105,0.15); color: var(--success-green); }
         .badge-expense { background: rgba(229,62,62,0.15); color: var(--danger-red); }
@@ -81,18 +108,26 @@
         .badge-partial { background: rgba(236,201,75,0.2); color: #b7791f; }
         .badge-unpaid { background: rgba(229,62,62,0.15); color: var(--danger-red); }
         .badge-new { background: rgba(66,153,225,0.15); color: var(--primary-blue); }
+        
+        /* Amount colors */
         .amount-positive { color: var(--success-green); font-weight: 600; }
         .amount-negative { color: var(--danger-red); font-weight: 600; }
         .amount-gold { color: var(--accent-gold); font-weight: 600; }
+        
+        /* Alerts */
         .alert { padding: 0.6rem 0.9rem; border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.8rem; }
         .alert-success { background: rgba(56,161,105,0.15); color: var(--success-green); border: 1px solid var(--success-green); }
         .alert-error { background: rgba(229,62,62,0.15); color: var(--danger-red); border: 1px solid var(--danger-red); }
+        
+        /* Modals */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; }
         .modal-overlay.active { display: flex; }
         .modal { background: white; border-radius: 10px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
         .modal-header { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; padding: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
         .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
         .modal-body { padding: 1.25rem; }
+        
+        /* Bill details */
         .bill-detail { border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
         .bill-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px dashed var(--border-color); }
         .bill-detail-header h2 { font-family: 'Playfair Display', serif; color: var(--primary-dark); }
@@ -100,18 +135,26 @@
         .bill-info-item { text-align: center; padding: 0.5rem; background: #f7fafc; border-radius: 6px; }
         .bill-info-item label { font-size: 0.65rem; color: var(--text-gray); display: block; }
         .bill-info-item strong { font-size: 0.9rem; color: var(--text-dark); }
+        
+        /* Heir groups */
         .heir-group { background: #f7fafc; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
         .heir-group h4 { color: var(--primary-blue); margin-bottom: 0.3rem; display: flex; justify-content: space-between; font-size: 0.9rem; }
         .summary-row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dashed var(--border-color); font-size: 0.8rem; }
         .summary-row:last-child { border-bottom: none; font-weight: 700; }
+        
+        /* Highlight box */
         .highlight-box { background: linear-gradient(135deg, rgba(214,158,46,0.15) 0%, rgba(237,137,54,0.15) 100%); border: 2px solid var(--accent-gold); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
         .highlight-box h3 { color: var(--accent-gold); font-size: 1.3rem; }
         .highlight-box p { font-size: 0.75rem; color: var(--text-gray); }
+        
+        /* Tabs */
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 1rem; }
         .tab-btn { background: none; border: none; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
         .tab-btn.active { border-bottom-color: var(--primary-blue); color: var(--primary-blue); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        
+        /* Print */
         @media print { body { background: white !important; } .no-print { display: none !important; } }
         @media (max-width: 768px) { .header-top { flex-direction: column; text-align: center; } .main-content { padding: 0.5rem; } }
     </style>
@@ -150,16 +193,34 @@
                 <div class="stat-card gold"><div class="stat-icon">👨‍👩‍👧‍👦</div><div class="stat-value" id="dashInh">0</div><div class="stat-label">Inheritance Pool</div></div>
             </div>
             <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('dashLedgerTab')">📒 Ledger</button>
-                <button class="tab-btn" onclick="showTab('dashBillsTab')">📄 Bills</button>
+                <button class="tab-btn active" onclick="showTab('dashLedgerTab', this)">📒 Ledger</button>
+                <button class="tab-btn" onclick="showTab('dashBillsTab', this)">📄 Bills</button>
             </div>
             <div id="dashLedgerTab" class="tab-content active">
-                <div class="card"><div class="card-header"><span>📒 Transaction Ledger</span></div>
-                <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr></thead><tbody id="dashLedger"></tbody></table></div></div></div>
+                <div class="card">
+                    <div class="card-header"><span>📒 Transaction Ledger</span></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr></thead>
+                                <tbody id="dashLedger"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="dashBillsTab" class="tab-content">
-                <div class="card"><div class="card-header"><span>📄 All Bills (Click to View)</span></div>
-                <div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th></tr></thead><tbody id="dashBills"></tbody></table></div></div></div>
+                <div class="card">
+                    <div class="card-header"><span>📄 All Bills (Click to View)</span></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th></tr></thead>
+                                <tbody id="dashBills"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -175,11 +236,26 @@
                         <div class="form-group"><label>Category</label><select id="expCat"></select></div>
                         <div class="form-group"><label>Amount (XAF)</label><input type="number" id="expAmt" placeholder="Amount"></div>
                     </div>
-                    <div class="btn-group"><button class="btn btn-success" onclick="saveExpense()">💾 Save</button><button class="btn btn-outline" onclick="clearExpenseForm()">🔄 Clear</button></div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveExpense()">💾 Save</button>
+                        <button class="btn btn-outline" onclick="clearExpenseForm()">🔄 Clear</button>
+                    </div>
                 </div>
             </div>
-            <div class="card"><div class="card-header"><span>💸 Expenses</span><button class="btn btn-print btn-sm no-print" onclick="printPage('expenses')">🖨️ Print</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="expTable"></tbody></table></div></div></div>
+            <div class="card">
+                <div class="card-header">
+                    <span>💸 Expenses</span>
+                    <button class="btn btn-print btn-sm no-print" onclick="printPage('expenses')">🖨️ Print</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead>
+                            <tbody id="expTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- BILLS -->
@@ -187,7 +263,8 @@
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Bill</span></div>
                 <div class="card-body">
-                    <input type="hidden" id="billEditMode"><input type="hidden" id="billOldNumber">
+                    <input type="hidden" id="billEditMode">
+                    <input type="hidden" id="billOldNumber">
                     <div class="form-grid">
                         <div class="form-group"><label>Quarter</label><select id="billQ"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select></div>
                         <div class="form-group"><label>Year</label><select id="billY"></select></div>
@@ -195,11 +272,26 @@
                         <div class="form-group"><label>Amount (XAF)</label><input type="number" id="billAmt" value="510000"></div>
                         <div class="form-group"><label>Bill Number</label><input type="text" id="billNum" readonly></div>
                     </div>
-                    <div class="btn-group"><button class="btn btn-success" onclick="saveBill()">💾 Save</button><button class="btn btn-outline" onclick="clearBillForm()">🔄 Clear</button></div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveBill()">💾 Save</button>
+                        <button class="btn btn-outline" onclick="clearBillForm()">🔄 Clear</button>
+                    </div>
                 </div>
             </div>
-            <div class="card"><div class="card-header"><span>📄 All Bills</span><button class="btn btn-print btn-sm no-print" onclick="printPage('bills')">🖨️ Print</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th class="no-print">Actions</th></tr></thead><tbody id="billTable"></tbody></table></div></div></div>
+            <div class="card">
+                <div class="card-header">
+                    <span>📄 All Bills</span>
+                    <button class="btn btn-print btn-sm no-print" onclick="printPage('bills')">🖨️ Print</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
+                            <tbody id="billTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- PAYMENTS -->
@@ -215,11 +307,26 @@
                         <div class="form-group"><label>Date</label><input type="date" id="payDate"></div>
                         <div class="form-group"><label>Reference</label><input type="text" id="payRef" placeholder="Receipt #"></div>
                     </div>
-                    <div class="btn-group"><button class="btn btn-success" onclick="savePayment()">💾 Save</button><button class="btn btn-outline" onclick="clearPaymentForm()">🔄 Clear</button></div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="savePayment()">💾 Save</button>
+                        <button class="btn btn-outline" onclick="clearPaymentForm()">🔄 Clear</button>
+                    </div>
                 </div>
             </div>
-            <div class="card"><div class="card-header"><span>💵 Payments</span><button class="btn btn-print btn-sm no-print" onclick="printPage('payments')">🖨️ Print</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Bill #</th><th>Period</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead><tbody id="payTable"></tbody></table></div></div></div>
+            <div class="card">
+                <div class="card-header">
+                    <span>💵 Payments</span>
+                    <button class="btn btn-print btn-sm no-print" onclick="printPage('payments')">🖨️ Print</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Date</th><th>Bill #</th><th>Period</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead>
+                            <tbody id="payTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- INHERITANCE -->
@@ -235,62 +342,84 @@
                 <div class="stat-card gold"><div class="stat-icon">📊</div><div class="stat-value" id="inhPer">0</div><div class="stat-label">Per Portion</div></div>
             </div>
             <div class="card">
-                <div class="card-header gold"><span>👨‍👩‍👧‍👦 Heirs (<span id="inhPortions">24</span> portions)</span>
-                <div class="no-print">
-                    <button class="btn btn-outline btn-sm" onclick="openHeirModal()">➕ Add</button>
-                    <button class="btn btn-gold btn-sm" onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button>
-                </div>
+                <div class="card-header gold">
+                    <span>👨‍👩‍👧‍👦 Heirs (<span id="inhPortions">24</span> portions)</span>
+                    <div class="no-print">
+                        <button class="btn btn-outline btn-sm" onclick="openHeirModal()">➕ Add</button>
+                        <button class="btn btn-gold btn-sm" onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button>
+                    </div>
                 </div>
                 <div class="card-body" id="heirGroups"></div>
             </div>
-            <div class="card"><div class="card-header"><span>📋 Heir Shares</span><button class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print Summary</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share (XAF)</th><th class="no-print">Actions</th></tr></thead><tbody id="heirTable"></tbody></table></div></div></div>
+            <div class="card">
+                <div class="card-header">
+                    <span>📋 Heir Shares</span>
+                    <button class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print Summary</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share (XAF)</th><th class="no-print">Actions</th></tr></thead>
+                            <tbody id="heirTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- EXPORT -->
         <div id="export" class="page">
-            <div class="card"><div class="card-header"><span>📥 Export All Data</span></div>
-            <div class="card-body">
-                <p style="margin-bottom:1rem;font-size:0.85rem;">Export with CAMPOST MANKON header.</p>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="exportAllCSV()">📄 All CSV</button>
-                    <button class="btn btn-print" onclick="exportAllPDF()">📑 All PDF</button>
+            <div class="card">
+                <div class="card-header"><span>📥 Export All Data</span></div>
+                <div class="card-body">
+                    <p style="margin-bottom:1rem;font-size:0.85rem;">Export with CAMPOST MANKON header.</p>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="exportAllCSV()">📄 All CSV</button>
+                        <button class="btn btn-print" onclick="exportAllPDF()">📑 All PDF</button>
+                    </div>
                 </div>
-            </div></div>
-            <div class="card"><div class="card-header"><span>📊 Individual Exports</span></div>
-            <div class="card-body">
-                <div class="btn-group">
-                    <button class="btn btn-outline btn-sm" onclick="exportCSV('bills')">Bills CSV</button>
-                    <button class="btn btn-outline btn-sm" onclick="exportCSV('payments')">Payments CSV</button>
-                    <button class="btn btn-outline btn-sm" onclick="exportCSV('expenses')">Expenses CSV</button>
-                    <button class="btn btn-outline btn-sm" onclick="exportCSV('ledger')">Ledger CSV</button>
+            </div>
+            <div class="card">
+                <div class="card-header"><span>📊 Individual Exports</span></div>
+                <div class="card-body">
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm" onclick="exportCSV('bills')">Bills CSV</button>
+                        <button class="btn btn-outline btn-sm" onclick="exportCSV('payments')">Payments CSV</button>
+                        <button class="btn btn-outline btn-sm" onclick="exportCSV('expenses')">Expenses CSV</button>
+                        <button class="btn btn-outline btn-sm" onclick="exportCSV('ledger')">Ledger CSV</button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-print btn-sm" onclick="exportPDF('bills')">Bills PDF</button>
+                        <button class="btn btn-print btn-sm" onclick="exportPDF('payments')">Payments PDF</button>
+                        <button class="btn btn-print btn-sm" onclick="exportPDF('expenses')">Expenses PDF</button>
+                        <button class="btn btn-gold btn-sm" onclick="exportPDF('heirs')">Heirs PDF</button>
+                    </div>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-print btn-sm" onclick="exportPDF('bills')">Bills PDF</button>
-                    <button class="btn btn-print btn-sm" onclick="exportPDF('payments')">Payments PDF</button>
-                    <button class="btn btn-print btn-sm" onclick="exportPDF('expenses')">Expenses PDF</button>
-                    <button class="btn btn-gold btn-sm" onclick="exportPDF('heirs')">Heirs PDF</button>
-                </div>
-            </div></div>
+            </div>
         </div>
 
         <!-- SETTINGS -->
         <div id="settings" class="page">
-            <div class="card"><div class="card-header"><span>⚙️ Settings</span></div>
-            <div class="card-body">
-                <div class="alert" id="settingsAlert">Checking...</div>
-                <div class="btn-group">
-                    <button class="btn btn-outline" onclick="checkDb()">🔄 Refresh</button>
-                    <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset All</button>
+            <div class="card">
+                <div class="card-header"><span>⚙️ Settings</span></div>
+                <div class="card-body">
+                    <div class="alert" id="settingsAlert">Checking...</div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline" onclick="checkDb()">🔄 Refresh</button>
+                        <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset All</button>
+                    </div>
                 </div>
-            </div></div>
+            </div>
         </div>
     </main>
 
     <!-- Bill Modal -->
     <div class="modal-overlay" id="billModal">
         <div class="modal">
-            <div class="modal-header"><h3>📄 Bill Details</h3><button class="modal-close" onclick="closeBillModal()">×</button></div>
+            <div class="modal-header">
+                <h3>📄 Bill Details</h3>
+                <button class="modal-close" onclick="closeBillModal()">×</button>
+            </div>
             <div class="modal-body" id="billModalBody"></div>
         </div>
     </div>
@@ -298,7 +427,10 @@
     <!-- Heir Modal -->
     <div class="modal-overlay" id="heirModal">
         <div class="modal">
-            <div class="modal-header"><h3>👤 Heir</h3><button class="modal-close" onclick="closeHeirModal()">×</button></div>
+            <div class="modal-header">
+                <h3>👤 Heir</h3>
+                <button class="modal-close" onclick="closeHeirModal()">×</button>
+            </div>
             <div class="modal-body">
                 <input type="hidden" id="heirId">
                 <div class="form-group"><label>Name</label><input type="text" id="heirName"></div>
@@ -310,26 +442,49 @@
         </div>
     </div>
 
-    <!-- Heir Certificate Modal -->
-    <div class="modal-overlay" id="certModal">
-        <div class="modal">
-            <div class="modal-header"><h3>📜 Heir Share Certificate</h3><button class="modal-close" onclick="closeCertModal()">×</button></div>
-            <div class="modal-body" id="certModalBody"></div>
-        </div>
-    </div>
-
     <div id="alertBox" style="position:fixed;top:60px;right:10px;z-index:3000;max-width:280px;"></div>
 
     <script>
+        // ========== UTILITIES ==========
         const API = window.location.origin + '/api';
-        const fmt = n => n ? Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0';
-        const fmtDate = d => new Date(d).toLocaleDateString();
-        const today = () => new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        const showAlert = (msg, type='success') => { const el = document.createElement('div'); el.className = `alert alert-${type}`; el.innerHTML = msg; document.getElementById('alertBox').appendChild(el); setTimeout(() => el.remove(), 2500); };
-        const api = async (url, opts={}) => (await fetch(API + url, { headers: {'Content-Type':'application/json'}, ...opts })).json();
+        
+        function fmt(n) {
+            return n ? Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0';
+        }
+        
+        function fmtDate(d) {
+            return new Date(d).toLocaleDateString();
+        }
+        
+        function today() {
+            return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        function showAlert(msg, type = 'success') {
+            const el = document.createElement('div');
+            el.className = 'alert alert-' + type;
+            el.innerHTML = msg;
+            document.getElementById('alertBox').appendChild(el);
+            setTimeout(() => el.remove(), 2500);
+        }
+        
+        async function api(url, opts = {}) {
+            const res = await fetch(API + url, {
+                headers: { 'Content-Type': 'application/json' },
+                ...opts
+            });
+            return res.json();
+        }
 
-        function showTab(tabId) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(tabId).classList.add('active'); event.target.classList.add('active'); }
+        // ========== TABS ==========
+        function showTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
 
+        // ========== NAVIGATION ==========
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -340,70 +495,272 @@
             });
         });
 
-        function loadPage(p) { if(p==='dashboard')loadDashboard(); else if(p==='expenses')loadExpenses(); else if(p==='bills')loadBills(); else if(p==='payments')loadPayments(); else if(p==='inheritance')loadInheritance(); else if(p==='settings')checkDb(); }
+        function loadPage(p) {
+            if (p === 'dashboard') loadDashboard();
+            else if (p === 'expenses') loadExpenses();
+            else if (p === 'bills') loadBills();
+            else if (p === 'payments') loadPayments();
+            else if (p === 'inheritance') loadInheritance();
+            else if (p === 'settings') checkDb();
+        }
 
+        // ========== DASHBOARD ==========
         async function loadDashboard() {
-            const s = await api('/summary'), bills = await api('/bills'), ledger = await api('/ledger');
+            const s = await api('/summary');
+            const bills = await api('/bills');
+            const ledger = await api('/ledger');
+            
             document.getElementById('dashPaid').textContent = fmt(s.totalBillsPaid);
             document.getElementById('dashExp').textContent = fmt(s.totalExpenses);
             document.getElementById('dashReserve').textContent = fmt(s.reserveFunds);
             document.getElementById('dashInh').textContent = fmt(s.inheritanceAmount);
-            document.getElementById('dashLedger').innerHTML = ledger.map(t => { const isInh = t.category_name === 'Inheritance Share'; return `<tr><td>${fmtDate(t.date)}</td><td>${t.description.substring(0,40)}</td><td>${t.category_name}</td><td class="${t.amount >= 0 ? 'amount-positive' : isInh ? 'amount-gold' : 'amount-negative'}">${t.amount >= 0 ? '+' : ''}${fmt(t.amount)}</td><td><span class="badge ${isInh ? 'badge-inheritance' : 'badge-' + t.type.toLowerCase()}">${t.type}</span></td></tr>`; }).join('') || '<tr><td colspan="5">No data</td></tr>';
-            document.getElementById('dashBills').innerHTML = bills.map(b => `<tr class="clickable" onclick="viewBill('${b.billNumber}')"><td><strong>${b.billNumber}</strong></td><td>${b.period} ${b.year}</td><td>${fmt(b.amountDue)}</td><td class="amount-positive">${fmt(b.paidAmount)}</td><td class="${b.outstanding > 0 ? 'amount-negative' : ''}">${fmt(b.outstanding)}</td><td><span class="badge badge-${b.outstanding === 0 ? 'paid' : b.paidAmount > 0 ? 'partial' : 'unpaid'}">${b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid'}</span></td></tr>`).join('');
+            
+            document.getElementById('dashLedger').innerHTML = ledger.map(t => {
+                const isInh = t.category_name === 'Inheritance Share';
+                return '<tr><td>' + fmtDate(t.date) + '</td><td>' + t.description.substring(0, 40) + '</td><td>' + t.category_name + '</td><td class="' + (t.amount >= 0 ? 'amount-positive' : isInh ? 'amount-gold' : 'amount-negative') + '">' + (t.amount >= 0 ? '+' : '') + fmt(t.amount) + '</td><td><span class="badge ' + (isInh ? 'badge-inheritance' : 'badge-' + t.type.toLowerCase()) + '">' + t.type + '</span></td></tr>';
+            }).join('') || '<tr><td colspan="5">No data</td></tr>';
+            
+            document.getElementById('dashBills').innerHTML = bills.map(b => {
+                return '<tr class="clickable" onclick="viewBill(\'' + b.billNumber + '\')"><td><strong>' + b.billNumber + '</strong></td><td>' + b.period + ' ' + b.year + '</td><td>' + fmt(b.amountDue) + '</td><td class="amount-positive">' + fmt(b.paidAmount) + '</td><td class="' + (b.outstanding > 0 ? 'amount-negative' : '') + '">' + fmt(b.outstanding) + '</td><td><span class="badge badge-' + (b.outstanding === 0 ? 'paid' : b.paidAmount > 0 ? 'partial' : 'unpaid') + '">' + (b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid') + '</span></td></tr>';
+            }).join('');
         }
 
+        // ========== EXPENSES ==========
         async function loadExpenses() {
             const cats = await api('/categories');
-            document.getElementById('expCat').innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            if (!document.getElementById('expDate').value) document.getElementById('expDate').valueAsDate = new Date();
+            document.getElementById('expCat').innerHTML = cats.map(c => '<option value="' + c.id + '">' + c.name + '</option>').join('');
+            if (!document.getElementById('expDate').value) {
+                document.getElementById('expDate').valueAsDate = new Date();
+            }
+            
             const expenses = await api('/expenses');
-            document.getElementById('expTable').innerHTML = expenses.map(e => { const isInh = e.categoryName === 'Inheritance Share'; return `<tr><td>${fmtDate(e.date)}</td><td>${e.description}</td><td>${e.categoryName}</td><td class="${isInh ? 'amount-gold' : 'amount-negative'}">-${fmt(e.amount)}</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editExpense(${e.id})">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteExpense(${e.id})">🗑️</button></td></tr>`; }).join('') || '<tr><td colspan="5">No expenses</td></tr>';
+            document.getElementById('expTable').innerHTML = expenses.map(e => {
+                const isInh = e.categoryName === 'Inheritance Share';
+                return '<tr><td>' + fmtDate(e.date) + '</td><td>' + e.description + '</td><td>' + e.categoryName + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editExpense(' + e.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteExpense(' + e.id + ')">🗑️</button></td></tr>';
+            }).join('') || '<tr><td colspan="5">No expenses</td></tr>';
         }
 
-        async function editExpense(id) { const e = (await api('/expenses')).find(x => x.id === id); if(e){ document.getElementById('expId').value = id; document.getElementById('expDate').value = e.date.split('T')[0]; document.getElementById('expDesc').value = e.description; document.getElementById('expCat').value = e.categoryId; document.getElementById('expAmt').value = e.amount; } }
-        async function saveExpense() { const id = document.getElementById('expId').value, data = { date: document.getElementById('expDate').value, description: document.getElementById('expDesc').value, categoryId: document.getElementById('expCat').value, amount: parseInt(document.getElementById('expAmt').value) }; if(!data.date||!data.description||!data.amount){showAlert('Fill all fields','error');return;} if(id){await api(`/expenses/${id}`,{method:'PUT',body:JSON.stringify(data)});showAlert('Updated!');}else{await api('/expenses',{method:'POST',body:JSON.stringify(data)});showAlert('Saved!');} clearExpenseForm();loadExpenses();loadDashboard(); }
-        async function deleteExpense(id) { if(!confirm('Delete?'))return; await api(`/expenses/${id}`,{method:'DELETE'}); showAlert('Deleted'); loadExpenses(); }
-        function clearExpenseForm() { document.getElementById('expId').value=''; document.getElementById('expDesc').value=''; document.getElementById('expAmt').value=''; }
+        async function editExpense(id) {
+            const expenses = await api('/expenses');
+            const e = expenses.find(x => x.id === id);
+            if (e) {
+                document.getElementById('expId').value = id;
+                document.getElementById('expDate').value = e.date.split('T')[0];
+                document.getElementById('expDesc').value = e.description;
+                document.getElementById('expCat').value = e.categoryId;
+                document.getElementById('expAmt').value = e.amount;
+            }
+        }
 
+        async function saveExpense() {
+            const id = document.getElementById('expId').value;
+            const data = {
+                date: document.getElementById('expDate').value,
+                description: document.getElementById('expDesc').value,
+                categoryId: document.getElementById('expCat').value,
+                amount: parseInt(document.getElementById('expAmt').value)
+            };
+            if (!data.date || !data.description || !data.amount) {
+                showAlert('Fill all fields', 'error');
+                return;
+            }
+            if (id) {
+                await api('/expenses/' + id, { method: 'PUT', body: JSON.stringify(data) });
+                showAlert('Updated!');
+            } else {
+                await api('/expenses', { method: 'POST', body: JSON.stringify(data) });
+                showAlert('Saved!');
+            }
+            clearExpenseForm();
+            loadExpenses();
+            loadDashboard();
+        }
+
+        async function deleteExpense(id) {
+            if (!confirm('Delete?')) return;
+            await api('/expenses/' + id, { method: 'DELETE' });
+            showAlert('Deleted');
+            loadExpenses();
+        }
+
+        function clearExpenseForm() {
+            document.getElementById('expId').value = '';
+            document.getElementById('expDesc').value = '';
+            document.getElementById('expAmt').value = '';
+        }
+
+        // ========== BILLS ==========
         async function loadBills() {
             const yearSel = document.getElementById('billY');
-            if(yearSel.options.length===0){ for(let y=2022;y<=2035;y++)yearSel.innerHTML+=`<option value="${y}">${y}</option>`; yearSel.value=new Date().getFullYear(); }
+            if (yearSel.options.length === 0) {
+                for (let y = 2022; y <= 2035; y++) {
+                    yearSel.innerHTML += '<option value="' + y + '">' + y + '</option>';
+                }
+                yearSel.value = new Date().getFullYear();
+            }
             updateBillNumber();
+            
             const bills = await api('/bills');
-            document.getElementById('billTable').innerHTML = bills.map(b => `<tr class="clickable" onclick="viewBill('${b.billNumber}')"><td><strong>${b.billNumber}</strong>${b.isNew?' <span class="badge badge-new">NEW</span>':''}</td><td>${b.period} ${b.year}</td><td>${fmt(b.amountDue)}</td><td class="amount-positive">${fmt(b.paidAmount)}</td><td class="${b.outstanding>0?'amount-negative':''}">${fmt(b.outstanding)}</td><td><span class="badge badge-${b.outstanding===0?'paid':b.paidAmount>0?'partial':'unpaid'}">${b.outstanding===0?'Paid':b.paidAmount>0?'Partial':'Unpaid'}</span></td><td class="no-print" onclick="event.stopPropagation()"><button class="btn btn-warning btn-sm" onclick="editBill('${b.billNumber}')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteBill('${b.billNumber}')">🗑️</button></td></tr>`).join('');
+            document.getElementById('billTable').innerHTML = bills.map(b => {
+                return '<tr class="clickable" onclick="viewBill(\'' + b.billNumber + '\')"><td><strong>' + b.billNumber + '</strong>' + (b.isNew ? ' <span class="badge badge-new">NEW</span>' : '') + '</td><td>' + b.period + ' ' + b.year + '</td><td>' + fmt(b.amountDue) + '</td><td class="amount-positive">' + fmt(b.paidAmount) + '</td><td class="' + (b.outstanding > 0 ? 'amount-negative' : '') + '">' + fmt(b.outstanding) + '</td><td><span class="badge badge-' + (b.outstanding === 0 ? 'paid' : b.paidAmount > 0 ? 'partial' : 'unpaid') + '">' + (b.outstanding === 0 ? 'Paid' : b.paidAmount > 0 ? 'Partial' : 'Unpaid') + '</span></td><td class="no-print" onclick="event.stopPropagation()"><button class="btn btn-warning btn-sm" onclick="editBill(\'' + b.billNumber + '\')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteBill(\'' + b.billNumber + '\')">🗑️</button></td></tr>';
+            }).join('');
         }
 
-        function updateBillNumber() { const q=document.getElementById('billQ').value, y=document.getElementById('billY').value, n=q==='Q1'?1:q==='Q2'?2:q==='Q3'?3:4; document.getElementById('billNum').value=`${q}-${y}-00${n}`; }
+        function updateBillNumber() {
+            const q = document.getElementById('billQ').value;
+            const y = document.getElementById('billY').value;
+            const n = q === 'Q1' ? 1 : q === 'Q2' ? 2 : q === 'Q3' ? 3 : 4;
+            document.getElementById('billNum').value = q + '-' + y + '-00' + n;
+        }
+        
         document.getElementById('billQ').addEventListener('change', updateBillNumber);
         document.getElementById('billY').addEventListener('change', updateBillNumber);
 
-        async function editBill(bn) { const b=(await api('/bills')).find(x=>x.billNumber===bn); if(b){ document.getElementById('billEditMode').value='edit'; document.getElementById('billOldNumber').value=bn; document.getElementById('billQ').value=b.quarter; document.getElementById('billY').value=b.year; document.getElementById('billP').value=b.period; document.getElementById('billAmt').value=b.amountDue; updateBillNumber(); } }
-        async function saveBill() { const em=document.getElementById('billEditMode').value, old=document.getElementById('billOldNumber').value, q=document.getElementById('billQ').value, y=parseInt(document.getElementById('billY').value), p=document.getElementById('billP').value, a=parseInt(document.getElementById('billAmt').value), bn=document.getElementById('billNum').value; if(em==='edit'){await api(`/bills/${old}`,{method:'PUT',body:JSON.stringify({quarter:q,year:y,period:p,amountDue:a})});showAlert('Updated!');}else{await api('/bills',{method:'POST',body:JSON.stringify({billNumber:bn,quarter:q,year:y,period:p,amountDue:a,paidAmount:0,outstanding:a,isNew:true})});showAlert('Created!');} clearBillForm();loadBills();loadDashboard(); }
-        async function deleteBill(bn) { if(!confirm(`Delete ${bn}?`))return; await api(`/bills/${bn}`,{method:'DELETE'}); showAlert('Deleted'); loadBills();loadDashboard(); }
-        function clearBillForm() { document.getElementById('billEditMode').value=''; document.getElementById('billOldNumber').value=''; document.getElementById('billY').value=new Date().getFullYear(); updateBillNumber(); }
+        async function editBill(bn) {
+            const bills = await api('/bills');
+            const b = bills.find(x => x.billNumber === bn);
+            if (b) {
+                document.getElementById('billEditMode').value = 'edit';
+                document.getElementById('billOldNumber').value = bn;
+                document.getElementById('billQ').value = b.quarter;
+                document.getElementById('billY').value = b.year;
+                document.getElementById('billP').value = b.period;
+                document.getElementById('billAmt').value = b.amountDue;
+                updateBillNumber();
+            }
+        }
+
+        async function saveBill() {
+            const em = document.getElementById('billEditMode').value;
+            const old = document.getElementById('billOldNumber').value;
+            const q = document.getElementById('billQ').value;
+            const y = parseInt(document.getElementById('billY').value);
+            const p = document.getElementById('billP').value;
+            const a = parseInt(document.getElementById('billAmt').value);
+            const bn = document.getElementById('billNum').value;
+            
+            if (em === 'edit') {
+                await api('/bills/' + old, { method: 'PUT', body: JSON.stringify({ quarter: q, year: y, period: p, amountDue: a }) });
+                showAlert('Updated!');
+            } else {
+                await api('/bills', { method: 'POST', body: JSON.stringify({ billNumber: bn, quarter: q, year: y, period: p, amountDue: a, paidAmount: 0, outstanding: a, isNew: true }) });
+                showAlert('Created!');
+            }
+            clearBillForm();
+            loadBills();
+            loadDashboard();
+        }
+
+        async function deleteBill(bn) {
+            if (!confirm('Delete ' + bn + '?')) return;
+            await api('/bills/' + bn, { method: 'DELETE' });
+            showAlert('Deleted');
+            loadBills();
+            loadDashboard();
+        }
+
+        function clearBillForm() {
+            document.getElementById('billEditMode').value = '';
+            document.getElementById('billOldNumber').value = '';
+            document.getElementById('billY').value = new Date().getFullYear();
+            updateBillNumber();
+        }
 
         async function viewBill(bn) {
-            const b = await api(`/bills/${bn}`);
-            document.getElementById('billModalBody').innerHTML = `<div class="bill-detail"><div class="bill-detail-header"><div><h2>CAMPOST MANKON</h2><p style="font-size:0.75rem;color:#666;">B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div style="text-align:right;"><strong style="font-size:1.1rem;">${b.billNumber}</strong><br><span class="badge badge-${b.outstanding===0?'paid':b.paidAmount>0?'partial':'unpaid'}">${b.outstanding===0?'PAID':b.paidAmount>0?'PARTIAL':'UNPAID'}</span></div></div><div class="bill-info-grid"><div class="bill-info-item"><label>Period</label><strong>${b.period}</strong></div><div class="bill-info-item"><label>Year</label><strong>${b.year}</strong></div><div class="bill-info-item"><label>Due</label><strong>${fmt(b.amountDue)}</strong></div><div class="bill-info-item"><label>Paid</label><strong class="amount-positive">${fmt(b.paidAmount)}</strong></div><div class="bill-info-item"><label>Outstanding</label><strong class="${b.outstanding>0?'amount-negative':''}">${fmt(b.outstanding)}</strong></div></div></div><h4 style="margin:1rem 0 0.5rem;">💵 Payments</h4><div class="table-container"><table><thead><tr><th>Date</th><th>Amount</th><th>Reference</th></tr></thead><tbody>${b.payments&&b.payments.length>0?b.payments.map(p=>`<tr><td>${fmtDate(p.date)}</td><td class="amount-positive">${fmt(p.amount)}</td><td>${p.reference||'-'}</td></tr>`).join(''):'<tr><td colspan="3">No payments</td></tr>'}</tbody></table></div><div class="btn-group"><button class="btn btn-primary" onclick="printBillDetail('${bn}')">🖨️ Print</button><button class="btn btn-outline" onclick="closeBillModal()">Close</button></div>`;
+            const b = await api('/bills/' + bn);
+            let paymentsHtml = '<tr><td colspan="3">No payments</td></tr>';
+            if (b.payments && b.payments.length > 0) {
+                paymentsHtml = b.payments.map(p => '<tr><td>' + fmtDate(p.date) + '</td><td class="amount-positive">' + fmt(p.amount) + '</td><td>' + (p.reference || '-') + '</td></tr>').join('');
+            }
+            
+            document.getElementById('billModalBody').innerHTML = '<div class="bill-detail"><div class="bill-detail-header"><div><h2>CAMPOST MANKON</h2><p style="font-size:0.75rem;color:#666;">B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div style="text-align:right;"><strong style="font-size:1.1rem;">' + b.billNumber + '</strong><br><span class="badge badge-' + (b.outstanding === 0 ? 'paid' : b.paidAmount > 0 ? 'partial' : 'unpaid') + '">' + (b.outstanding === 0 ? 'PAID' : b.paidAmount > 0 ? 'PARTIAL' : 'UNPAID') + '</span></div></div><div class="bill-info-grid"><div class="bill-info-item"><label>Period</label><strong>' + b.period + '</strong></div><div class="bill-info-item"><label>Year</label><strong>' + b.year + '</strong></div><div class="bill-info-item"><label>Due</label><strong>' + fmt(b.amountDue) + '</strong></div><div class="bill-info-item"><label>Paid</label><strong class="amount-positive">' + fmt(b.paidAmount) + '</strong></div><div class="bill-info-item"><label>Outstanding</label><strong class="' + (b.outstanding > 0 ? 'amount-negative' : '') + '">' + fmt(b.outstanding) + '</strong></div></div></div><h4 style="margin:1rem 0 0.5rem;">💵 Payments</h4><div class="table-container"><table><thead><tr><th>Date</th><th>Amount</th><th>Reference</th></tr></thead><tbody>' + paymentsHtml + '</tbody></table></div><div class="btn-group"><button class="btn btn-primary" onclick="printBillDetail(\'' + bn + '\')">🖨️ Print</button><button class="btn btn-outline" onclick="closeBillModal()">Close</button></div>';
             document.getElementById('billModal').classList.add('active');
         }
-        function closeBillModal() { document.getElementById('billModal').classList.remove('active'); }
-        function printBillDetail(bn) { const c=document.getElementById('billModalBody').innerHTML; const w=window.open('','_blank'); w.document.write(`<html><head><title>Bill ${bn}</title><style>body{font-family:Arial,sans-serif;padding:20px;}.bill-detail{border:2px solid #333;padding:20px;}.bill-detail-header{display:flex;justify-content:space-between;border-bottom:2px dashed #ccc;padding-bottom:15px;margin-bottom:15px;}.bill-info-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}.bill-info-item{text-align:center;padding:10px;background:#f5f5f5;border-radius:5px;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}.amount-positive{color:green;}.amount-negative{color:red;}.badge{padding:3px 8px;border-radius:10px;font-size:12px;}.badge-paid{background:#d4edda;color:#155724;}.badge-partial{background:#fff3cd;color:#856404;}.badge-unpaid{background:#f8d7da;color:#721c24;}.btn-group{display:none;}</style></head><body>${c}</body></html>`); w.document.close(); w.print(); }
 
-        async function loadPayments() {
-            const bills = await api('/bills');
-            document.getElementById('payBill').innerHTML = '<option value="">-- Select --</option>' + bills.map(b => `<option value="${b.billNumber}">${b.billNumber} - ${b.period} ${b.year} (${fmt(b.outstanding)} due)</option>`).join('');
-            if (!document.getElementById('payDate').value) document.getElementById('payDate').valueAsDate = new Date();
-            const payments = await api('/payments');
-            document.getElementById('payTable').innerHTML = payments.map(p => `<tr><td>${fmtDate(p.date)}</td><td>${p.billNumber}</td><td>${p.period} ${p.year}</td><td class="amount-positive">+${fmt(p.amount)}</td><td>${p.reference||'-'}</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editPayment(${p.id})">✏️</button> <button class="btn btn-danger btn-sm" onclick="deletePayment(${p.id})">🗑️</button></td></tr>`).join('') || '<tr><td colspan="6">No payments</td></tr>';
+        function closeBillModal() {
+            document.getElementById('billModal').classList.remove('active');
         }
 
-        document.getElementById('payBill').addEventListener('change', async function() { if(this.value){ const b=(await api('/bills')).find(x=>x.billNumber===this.value); if(b)document.getElementById('payOut').value=fmt(b.outstanding)+' XAF'; } });
-        async function editPayment(id) { const p=await api(`/payments/${id}`); document.getElementById('payId').value=id; document.getElementById('payBill').value=p.billNumber; document.getElementById('payAmt').value=p.amount; document.getElementById('payDate').value=p.date.split('T')[0]; document.getElementById('payRef').value=p.reference||''; }
-        async function savePayment() { const id=document.getElementById('payId').value, data={billNumber:document.getElementById('payBill').value,amount:parseInt(document.getElementById('payAmt').value),date:document.getElementById('payDate').value,reference:document.getElementById('payRef').value}; if(!data.billNumber||!data.amount){showAlert('Fill required fields','error');return;} if(id){await api(`/payments/${id}`,{method:'PUT',body:JSON.stringify(data)});showAlert('Updated!');}else{await api('/payments',{method:'POST',body:JSON.stringify(data)});showAlert('Saved!');} clearPaymentForm();loadPayments();loadBills();loadDashboard(); }
-        async function deletePayment(id) { if(!confirm('Delete?'))return; await api(`/payments/${id}`,{method:'DELETE'}); showAlert('Deleted'); loadPayments();loadBills();loadDashboard(); }
-        function clearPaymentForm() { document.getElementById('payId').value=''; document.getElementById('payBill').value=''; document.getElementById('payOut').value=''; document.getElementById('payAmt').value=''; document.getElementById('payRef').value=''; }
+        function printBillDetail(bn) {
+            const c = document.getElementById('billModalBody').innerHTML;
+            const w = window.open('', '_blank');
+            w.document.write('<html><head><title>Bill ' + bn + '</title><style>body{font-family:Arial,sans-serif;padding:20px;}.bill-detail{border:2px solid #333;padding:20px;}.bill-detail-header{display:flex;justify-content:space-between;border-bottom:2px dashed #ccc;padding-bottom:15px;margin-bottom:15px;}.bill-info-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}.bill-info-item{text-align:center;padding:10px;background:#f5f5f5;border-radius:5px;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}.amount-positive{color:green;}.amount-negative{color:red;}.badge{padding:3px 8px;border-radius:10px;font-size:12px;}.badge-paid{background:#d4edda;color:#155724;}.badge-partial{background:#fff3cd;color:#856404;}.badge-unpaid{background:#f8d7da;color:#721c24;}.btn-group{display:none;}</style></head><body>' + c + '</body></html>');
+            w.document.close();
+            w.print();
+        }
 
+        // ========== PAYMENTS ==========
+        async function loadPayments() {
+            const bills = await api('/bills');
+            document.getElementById('payBill').innerHTML = '<option value="">-- Select --</option>' + bills.map(b => '<option value="' + b.billNumber + '">' + b.billNumber + ' - ' + b.period + ' ' + b.year + ' (' + fmt(b.outstanding) + ' due)</option>').join('');
+            if (!document.getElementById('payDate').value) {
+                document.getElementById('payDate').valueAsDate = new Date();
+            }
+            
+            const payments = await api('/payments');
+            document.getElementById('payTable').innerHTML = payments.map(p => '<tr><td>' + fmtDate(p.date) + '</td><td>' + p.billNumber + '</td><td>' + p.period + ' ' + p.year + '</td><td class="amount-positive">+' + fmt(p.amount) + '</td><td>' + (p.reference || '-') + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editPayment(' + p.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deletePayment(' + p.id + ')">🗑️</button></td></tr>').join('') || '<tr><td colspan="6">No payments</td></tr>';
+        }
+
+        document.getElementById('payBill').addEventListener('change', async function() {
+            if (this.value) {
+                const bills = await api('/bills');
+                const b = bills.find(x => x.billNumber === this.value);
+                if (b) document.getElementById('payOut').value = fmt(b.outstanding) + ' XAF';
+            }
+        });
+
+        async function editPayment(id) {
+            const p = await api('/payments/' + id);
+            document.getElementById('payId').value = id;
+            document.getElementById('payBill').value = p.billNumber;
+            document.getElementById('payAmt').value = p.amount;
+            document.getElementById('payDate').value = p.date.split('T')[0];
+            document.getElementById('payRef').value = p.reference || '';
+        }
+
+        async function savePayment() {
+            const id = document.getElementById('payId').value;
+            const data = {
+                billNumber: document.getElementById('payBill').value,
+                amount: parseInt(document.getElementById('payAmt').value),
+                date: document.getElementById('payDate').value,
+                reference: document.getElementById('payRef').value
+            };
+            if (!data.billNumber || !data.amount) {
+                showAlert('Fill required fields', 'error');
+                return;
+            }
+            if (id) {
+                await api('/payments/' + id, { method: 'PUT', body: JSON.stringify(data) });
+                showAlert('Updated!');
+            } else {
+                await api('/payments', { method: 'POST', body: JSON.stringify(data) });
+                showAlert('Saved!');
+            }
+            clearPaymentForm();
+            loadPayments();
+            loadBills();
+            loadDashboard();
+        }
+
+        async function deletePayment(id) {
+            if (!confirm('Delete?')) return;
+            await api('/payments/' + id, { method: 'DELETE' });
+            showAlert('Deleted');
+            loadPayments();
+            loadBills();
+            loadDashboard();
+        }
+
+        function clearPaymentForm() {
+            document.getElementById('payId').value = '';
+            document.getElementById('payBill').value = '';
+            document.getElementById('payOut').value = '';
+            document.getElementById('payAmt').value = '';
+            document.getElementById('payRef').value = '';
+        }
+
+        // ========== INHERITANCE ==========
         async function loadInheritance() {
             const d = await api('/inheritance/calculate');
             document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
@@ -412,26 +769,78 @@
             document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
             document.getElementById('inhPortions').textContent = d.totalPortions;
             document.getElementById('inhPer').textContent = fmt(d.sharePerPortion);
+            
             let html = '';
-            for (const [g, i] of Object.entries(d.groupSummary)) {
-                html += `<div class="heir-group"><h4>${g} <span>${i.count}</span></h4><div class="summary-row"><span>Per heir:</span><span>${fmt(Math.round(i.totalShare/i.count))} XAF</span></div><div class="summary-row"><span>Total:</span><span>${fmt(Math.round(i.totalShare))} XAF</span></div></div>`;
+            for (const g in d.groupSummary) {
+                const i = d.groupSummary[g];
+                html += '<div class="heir-group"><h4>' + g + ' <span>' + i.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(i.totalShare / i.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(i.totalShare)) + ' XAF</span></div></div>';
             }
             document.getElementById('heirGroups').innerHTML = html || '<p>No heirs</p>';
-            document.getElementById('heirTable').innerHTML = d.heirs.map(h => `<tr><td>${h.name}</td><td>${h.relationship}</td><td>${h.heir_group}</td><td>${h.portions}</td><td class="amount-positive">${fmt(Math.round(h.shareAmount))}</td><td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(${h.id})">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(${h.id})">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(${h.id})">🗑️</button></td></tr>`).join('') || '<tr><td colspan="6">No heirs</td></tr>';
+            
+            document.getElementById('heirTable').innerHTML = d.heirs.map(h => '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td><td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td></tr>').join('') || '<tr><td colspan="6">No heirs</td></tr>';
         }
 
-        function openHeirModal() { document.getElementById('heirModal').classList.add('active'); }
-        function closeHeirModal() { document.getElementById('heirModal').classList.remove('active'); document.getElementById('heirId').value=''; document.getElementById('heirName').value=''; }
-        async function editHeir(id) { const h=(await api('/heirs')).find(x=>x.id===id); if(h){ document.getElementById('heirId').value=id; document.getElementById('heirName').value=h.name; document.getElementById('heirRel').value=h.relationship; document.getElementById('heirGrp').value=h.heir_group; document.getElementById('heirPor').value=h.portions; openHeirModal(); } }
-        async function saveHeir() { const id=document.getElementById('heirId').value, data={name:document.getElementById('heirName').value,relationship:document.getElementById('heirRel').value,heirGroup:document.getElementById('heirGrp').value,portions:parseFloat(document.getElementById('heirPor').value)}; if(!data.name){showAlert('Enter name','error');return;} if(id){await api(`/heirs/${id}`,{method:'PUT',body:JSON.stringify(data)});showAlert('Updated!');}else{await api('/heirs',{method:'POST',body:JSON.stringify(data)});showAlert('Added!');} closeHeirModal();loadInheritance(); }
-        async function deleteHeir(id) { if(!confirm('Delete?'))return; await api(`/heirs/${id}`,{method:'DELETE'}); showAlert('Deleted'); loadInheritance(); }
+        function openHeirModal() {
+            document.getElementById('heirModal').classList.add('active');
+        }
 
-        // Print individual heir certificate
+        function closeHeirModal() {
+            document.getElementById('heirModal').classList.remove('active');
+            document.getElementById('heirId').value = '';
+            document.getElementById('heirName').value = '';
+        }
+
+        async function editHeir(id) {
+            const heirs = await api('/heirs');
+            const h = heirs.find(x => x.id === id);
+            if (h) {
+                document.getElementById('heirId').value = id;
+                document.getElementById('heirName').value = h.name;
+                document.getElementById('heirRel').value = h.relationship;
+                document.getElementById('heirGrp').value = h.heir_group;
+                document.getElementById('heirPor').value = h.portions;
+                openHeirModal();
+            }
+        }
+
+        async function saveHeir() {
+            const id = document.getElementById('heirId').value;
+            const data = {
+                name: document.getElementById('heirName').value,
+                relationship: document.getElementById('heirRel').value,
+                heirGroup: document.getElementById('heirGrp').value,
+                portions: parseFloat(document.getElementById('heirPor').value)
+            };
+            if (!data.name) {
+                showAlert('Enter name', 'error');
+                return;
+            }
+            if (id) {
+                await api('/heirs/' + id, { method: 'PUT', body: JSON.stringify(data) });
+                showAlert('Updated!');
+            } else {
+                await api('/heirs', { method: 'POST', body: JSON.stringify(data) });
+                showAlert('Added!');
+            }
+            closeHeirModal();
+            loadInheritance();
+        }
+
+        async function deleteHeir(id) {
+            if (!confirm('Delete?')) return;
+            await api('/heirs/' + id, { method: 'DELETE' });
+            showAlert('Deleted');
+            loadInheritance();
+        }
+
+        // ========== HEIR CERTIFICATES ==========
         async function printHeirCertificate(heirId) {
             const d = await api('/inheritance/calculate');
             const h = d.heirs.find(x => x.id === heirId);
-            if (!h) { showAlert('Heir not found', 'error'); return; }
-            
+            if (!h) {
+                showAlert('Heir not found', 'error');
+                return;
+            }
             const certHtml = generateCertificateHTML(h, d);
             const w = window.open('', '_blank');
             w.document.write(certHtml);
@@ -439,36 +848,14 @@
             w.print();
         }
 
-        // Print all heir certificates
         async function printAllHeirCertificates() {
             const d = await api('/inheritance/calculate');
-            if (d.heirs.length === 0) { showAlert('No heirs to print', 'error'); return; }
+            if (d.heirs.length === 0) {
+                showAlert('No heirs to print', 'error');
+                return;
+            }
             
-            let allCerts = `<html><head><title>Heir Certificates</title><style>
-                @page { size: A5; margin: 10mm; }
-                body { font-family: 'Georgia', serif; margin: 0; padding: 0; }
-                .certificate { page-break-after: always; padding: 15mm; border: 3px double #1a365d; margin: 5mm; height: calc(100vh - 30mm); box-sizing: border-box; display: flex; flex-direction: column; }
-                .certificate:last-child { page-break-after: auto; }
-                .cert-header { text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 10px; margin-bottom: 15px; }
-                .cert-header h1 { color: #1a365d; font-size: 20px; margin: 0; }
-                .cert-header p { color: #666; font-size: 11px; margin: 5px 0 0; }
-                .cert-title { text-align: center; margin: 15px 0; }
-                .cert-title h2 { color: #d69e2e; font-size: 18px; border-bottom: 1px solid #d69e2e; display: inline-block; padding-bottom: 5px; }
-                .cert-body { flex: 1; }
-                .heir-name { text-align: center; font-size: 24px; color: #1a365d; font-weight: bold; margin: 20px 0; padding: 10px; background: linear-gradient(135deg, rgba(214,158,46,0.1), rgba(237,137,54,0.1)); border-radius: 8px; }
-                .cert-details { margin: 15px 0; }
-                .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #ccc; font-size: 12px; }
-                .detail-row:last-child { border-bottom: none; }
-                .detail-label { color: #666; }
-                .detail-value { font-weight: bold; color: #1a365d; }
-                .share-amount { text-align: center; margin: 20px 0; padding: 15px; background: #1a365d; color: white; border-radius: 8px; }
-                .share-amount label { font-size: 11px; display: block; opacity: 0.8; }
-                .share-amount strong { font-size: 28px; color: #d69e2e; }
-                .cert-footer { text-align: center; margin-top: auto; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; color: #666; }
-                .signature-line { margin-top: 30px; display: flex; justify-content: space-between; }
-                .sig-block { text-align: center; width: 40%; }
-                .sig-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; font-size: 10px; }
-            </style></head><body>`;
+            let allCerts = '<html><head><title>Heir Certificates</title><style>@page{size:A5;margin:10mm;}body{font-family:Georgia,serif;margin:0;padding:0;}.certificate{page-break-after:always;padding:15mm;border:3px double #1a365d;margin:5mm;}.certificate:last-child{page-break-after:auto;}.cert-header{text-align:center;border-bottom:2px solid #d69e2e;padding-bottom:10px;margin-bottom:15px;}.cert-header h1{color:#1a365d;font-size:20px;margin:0;}.cert-header p{color:#666;font-size:11px;margin:5px 0 0;}.cert-title{text-align:center;margin:15px 0;}.cert-title h2{color:#d69e2e;font-size:18px;border-bottom:1px solid #d69e2e;display:inline-block;padding-bottom:5px;}.heir-name{text-align:center;font-size:24px;color:#1a365d;font-weight:bold;margin:20px 0;padding:10px;background:linear-gradient(135deg,rgba(214,158,46,0.1),rgba(237,137,54,0.1));border-radius:8px;}.cert-details{margin:15px 0;}.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dotted #ccc;font-size:12px;}.detail-row:last-child{border-bottom:none;}.detail-label{color:#666;}.detail-value{font-weight:bold;color:#1a365d;}.share-amount{text-align:center;margin:20px 0;padding:15px;background:#1a365d;color:white;border-radius:8px;}.share-amount label{font-size:11px;display:block;opacity:0.8;}.share-amount strong{font-size:28px;color:#d69e2e;}.cert-footer{text-align:center;margin-top:auto;padding-top:15px;border-top:1px solid #ddd;font-size:10px;color:#666;}.signature-line{margin-top:30px;display:flex;justify-content:space-between;}.sig-block{text-align:center;width:40%;}.sig-line{border-top:1px solid #333;margin-top:40px;padding-top:5px;font-size:10px;}</style></head><body>';
             
             d.heirs.forEach(h => {
                 allCerts += generateCertificateBody(h, d);
@@ -483,125 +870,231 @@
         }
 
         function generateCertificateHTML(h, d) {
-            return `<html><head><title>Certificate - ${h.name}</title><style>
-                body { font-family: 'Georgia', serif; margin: 0; padding: 20mm; }
-                .certificate { padding: 20mm; border: 3px double #1a365d; }
-                .cert-header { text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 15px; margin-bottom: 20px; }
-                .cert-header h1 { color: #1a365d; font-size: 24px; margin: 0; }
-                .cert-header p { color: #666; font-size: 12px; margin: 5px 0 0; }
-                .cert-title { text-align: center; margin: 20px 0; }
-                .cert-title h2 { color: #d69e2e; font-size: 20px; border-bottom: 1px solid #d69e2e; display: inline-block; padding-bottom: 5px; }
-                .heir-name { text-align: center; font-size: 28px; color: #1a365d; font-weight: bold; margin: 25px 0; padding: 15px; background: linear-gradient(135deg, rgba(214,158,46,0.1), rgba(237,137,54,0.1)); border-radius: 10px; }
-                .cert-details { margin: 20px 0; }
-                .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted #ccc; }
-                .detail-label { color: #666; }
-                .detail-value { font-weight: bold; color: #1a365d; }
-                .share-amount { text-align: center; margin: 25px 0; padding: 20px; background: #1a365d; color: white; border-radius: 10px; }
-                .share-amount label { font-size: 12px; display: block; opacity: 0.8; }
-                .share-amount strong { font-size: 32px; color: #d69e2e; }
-                .cert-footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 11px; color: #666; }
-                .signature-line { margin-top: 40px; display: flex; justify-content: space-between; }
-                .sig-block { text-align: center; width: 40%; }
-                .sig-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; font-size: 11px; }
-            </style></head><body>${generateCertificateBody(h, d)}</body></html>`;
+            return '<html><head><title>Certificate - ' + h.name + '</title><style>body{font-family:Georgia,serif;margin:0;padding:20mm;}.certificate{padding:20mm;border:3px double #1a365d;}.cert-header{text-align:center;border-bottom:2px solid #d69e2e;padding-bottom:15px;margin-bottom:20px;}.cert-header h1{color:#1a365d;font-size:24px;margin:0;}.cert-header p{color:#666;font-size:12px;margin:5px 0 0;}.cert-title{text-align:center;margin:20px 0;}.cert-title h2{color:#d69e2e;font-size:20px;border-bottom:1px solid #d69e2e;display:inline-block;padding-bottom:5px;}.heir-name{text-align:center;font-size:28px;color:#1a365d;font-weight:bold;margin:25px 0;padding:15px;background:linear-gradient(135deg,rgba(214,158,46,0.1),rgba(237,137,54,0.1));border-radius:10px;}.cert-details{margin:20px 0;}.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dotted #ccc;}.detail-label{color:#666;}.detail-value{font-weight:bold;color:#1a365d;}.share-amount{text-align:center;margin:25px 0;padding:20px;background:#1a365d;color:white;border-radius:10px;}.share-amount label{font-size:12px;display:block;opacity:0.8;}.share-amount strong{font-size:32px;color:#d69e2e;}.cert-footer{text-align:center;margin-top:30px;padding-top:15px;border-top:1px solid #ddd;font-size:11px;color:#666;}.signature-line{margin-top:40px;display:flex;justify-content:space-between;}.sig-block{text-align:center;width:40%;}.sig-line{border-top:1px solid #333;margin-top:50px;padding-top:5px;font-size:11px;}</style></head><body>' + generateCertificateBody(h, d) + '</body></html>';
         }
 
         function generateCertificateBody(h, d) {
-            return `<div class="certificate">
-                <div class="cert-header">
-                    <h1>CAMPOST MANKON</h1>
-                    <p>GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p>
-                </div>
-                <div class="cert-title">
-                    <h2>📜 INHERITANCE SHARE CERTIFICATE</h2>
-                </div>
-                <div class="cert-body">
-                    <p style="text-align:center;color:#666;font-size:12px;">This certifies that the following heir is entitled to receive their share of the inheritance distribution:</p>
-                    <div class="heir-name">${h.name}</div>
-                    <div class="cert-details">
-                        <div class="detail-row"><span class="detail-label">Relationship:</span><span class="detail-value">${h.relationship}</span></div>
-                        <div class="detail-row"><span class="detail-label">Heir Group:</span><span class="detail-value">${h.heir_group}</span></div>
-                        <div class="detail-row"><span class="detail-label">Portions Allocated:</span><span class="detail-value">${h.portions} out of ${d.totalPortions}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Amount Being Distributed:</span><span class="detail-value">${fmt(d.inheritanceAmount)} XAF</span></div>
-                        <div class="detail-row"><span class="detail-label">Value Per Portion:</span><span class="detail-value">${fmt(d.sharePerPortion)} XAF</span></div>
-                    </div>
-                    <div class="share-amount">
-                        <label>ENTITLED SHARE AMOUNT</label>
-                        <strong>${fmt(Math.round(h.shareAmount))} XAF</strong>
-                    </div>
-                    <div class="signature-line">
-                        <div class="sig-block"><div class="sig-line">Authorized Signature</div></div>
-                        <div class="sig-block"><div class="sig-line">Heir Signature</div></div>
-                    </div>
-                </div>
-                <div class="cert-footer">
-                    <p>Generated on ${today()} | This certificate is valid for the current distribution period only.</p>
-                </div>
-            </div>`;
+            return '<div class="certificate"><div class="cert-header"><h1>CAMPOST MANKON</h1><p>GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div class="cert-title"><h2>📜 INHERITANCE SHARE CERTIFICATE</h2></div><div class="cert-body"><p style="text-align:center;color:#666;font-size:12px;">This certifies that the following heir is entitled to receive their share of the inheritance distribution:</p><div class="heir-name">' + h.name + '</div><div class="cert-details"><div class="detail-row"><span class="detail-label">Relationship:</span><span class="detail-value">' + h.relationship + '</span></div><div class="detail-row"><span class="detail-label">Heir Group:</span><span class="detail-value">' + h.heir_group + '</span></div><div class="detail-row"><span class="detail-label">Portions Allocated:</span><span class="detail-value">' + h.portions + ' out of ' + d.totalPortions + '</span></div><div class="detail-row"><span class="detail-label">Total Amount Being Distributed:</span><span class="detail-value">' + fmt(d.inheritanceAmount) + ' XAF</span></div><div class="detail-row"><span class="detail-label">Value Per Portion:</span><span class="detail-value">' + fmt(d.sharePerPortion) + ' XAF</span></div></div><div class="share-amount"><label>ENTITLED SHARE AMOUNT</label><strong>' + fmt(Math.round(h.shareAmount)) + ' XAF</strong></div><div class="signature-line"><div class="sig-block"><div class="sig-line">Authorized Signature</div></div><div class="sig-block"><div class="sig-line">Heir Signature</div></div></div></div><div class="cert-footer"><p>Generated on ' + today() + ' | This certificate is valid for the current distribution period only.</p></div></div>';
         }
 
-        function closeCertModal() { document.getElementById('certModal').classList.remove('active'); }
-
-        // Export functions
+        // ========== EXPORT FUNCTIONS ==========
         async function exportCSV(type) {
-            let csv = '', fn = `campost_${type}.csv`;
+            let csv = '';
+            const fn = 'campost_' + type + '.csv';
             const h = 'CAMPOST MANKON - GHOUENZEN Soulemanou\nB.P 36 Mankon-Bamenda | Tel: 675299868\n\n';
-            if (type === 'bills') { const d = await api('/bills'); csv = h + 'Bill Number,Quarter,Period,Year,Due,Paid,Outstanding,Status\n'; d.forEach(b => csv += `${b.billNumber},${b.quarter},${b.period},${b.year},${b.amountDue},${b.paidAmount},${b.outstanding},${b.outstanding===0?'Paid':'Outstanding'}\n`); }
-            else if (type === 'payments') { const d = await api('/payments'); csv = h + 'Date,Bill,Period,Year,Amount,Reference\n'; d.forEach(p => csv += `${p.date},${p.billNumber},${p.period},${p.year},${p.amount},"${p.reference||''}"\n`); }
-            else if (type === 'expenses') { const d = await api('/expenses'); csv = h + 'Date,Description,Category,Amount\n'; d.forEach(e => csv += `${e.date},"${e.description}",${e.categoryName},${e.amount}\n`); }
-            else if (type === 'ledger') { const d = await api('/ledger'); csv = h + 'Date,Description,Category,Amount,Type\n'; d.forEach(t => csv += `${t.date},"${t.description}",${t.category_name},${t.amount},${t.type}\n`); }
+            
+            if (type === 'bills') {
+                const d = await api('/bills');
+                csv = h + 'Bill Number,Quarter,Period,Year,Due,Paid,Outstanding,Status\n';
+                d.forEach(b => {
+                    csv += b.billNumber + ',' + b.quarter + ',' + b.period + ',' + b.year + ',' + b.amountDue + ',' + b.paidAmount + ',' + b.outstanding + ',' + (b.outstanding === 0 ? 'Paid' : 'Outstanding') + '\n';
+                });
+            } else if (type === 'payments') {
+                const d = await api('/payments');
+                csv = h + 'Date,Bill,Period,Year,Amount,Reference\n';
+                d.forEach(p => {
+                    csv += p.date + ',' + p.billNumber + ',' + p.period + ',' + p.year + ',' + p.amount + ',"' + (p.reference || '') + '"\n';
+                });
+            } else if (type === 'expenses') {
+                const d = await api('/expenses');
+                csv = h + 'Date,Description,Category,Amount\n';
+                d.forEach(e => {
+                    csv += e.date + ',"' + e.description + '",' + e.categoryName + ',' + e.amount + '\n';
+                });
+            } else if (type === 'ledger') {
+                const d = await api('/ledger');
+                csv = h + 'Date,Description,Category,Amount,Type\n';
+                d.forEach(t => {
+                    csv += t.date + ',"' + t.description + '",' + t.category_name + ',' + t.amount + ',' + t.type + '\n';
+                });
+            }
             download(csv, fn);
         }
 
         async function exportAllCSV() {
             const all = await api('/export/all');
             let csv = 'CAMPOST MANKON - GHOUENZEN Soulemanou\nB.P 36 Mankon-Bamenda | Tel: 675299868\n';
-            csv += `\nSUMMARY\nBills Paid: ${all.summary.totalBillsPaid}\nExpenses: ${all.summary.totalExpenses}\nReserve: ${all.summary.reserveFunds}\n`;
-            csv += '\n\nBILLS\nBill,Period,Year,Due,Paid,Outstanding\n';
-            all.bills.forEach(b => csv += `${b.bill_number},${b.period},${b.year},${b.amount_due},${b.paid_amount},${b.outstanding}\n`);
-            csv += '\n\nPAYMENTS\nDate,Bill,Amount,Ref\n';
-            all.payments.forEach(p => csv += `${p.payment_date},${p.bill_number},${p.amount},"${p.reference||''}"\n`);
+            csv += '\nSUMMARY\nTotal Bills Paid: ' + all.summary.totalBillsPaid + '\nTotal Expenses: ' + all.summary.totalExpenses + '\nReserve Funds: ' + all.summary.reserveFunds + '\n';
+            csv += '\n\nBILLS\nBill Number,Period,Year,Amount Due,Paid,Outstanding\n';
+            all.bills.forEach(b => {
+                csv += b.bill_number + ',' + b.period + ',' + b.year + ',' + b.amount_due + ',' + b.paid_amount + ',' + b.outstanding + '\n';
+            });
+            csv += '\n\nPAYMENTS\nDate,Bill,Amount,Reference\n';
+            all.payments.forEach(p => {
+                csv += p.payment_date + ',' + p.bill_number + ',' + p.amount + ',"' + (p.reference || '') + '"\n';
+            });
             csv += '\n\nEXPENSES\nDate,Description,Category,Amount\n';
-            all.expenses.forEach(e => csv += `${e.expense_date},"${e.description}",${e.category_name},${e.amount}\n`);
+            all.expenses.forEach(e => {
+                csv += e.expense_date + ',"' + e.description + '",' + e.category_name + ',' + e.amount + '\n';
+            });
             csv += '\n\nHEIRS\nName,Relationship,Group,Portions\n';
-            all.heirs.forEach(h => csv += `${h.name},${h.relationship},${h.heir_group},${h.portions}\n`);
-            download(csv, 'campost_all.csv');
+            all.heirs.forEach(h => {
+                csv += h.name + ',' + h.relationship + ',' + h.heir_group + ',' + h.portions + '\n';
+            });
+            download(csv, 'campost_all_data.csv');
         }
 
         async function exportPDF(type) {
-            const { jsPDF } = window.jspdf;
+            const jsPDF = window.jspdf.jsPDF;
             const doc = new jsPDF();
-            doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.text('CAMPOST MANKON',105,15,{align:'center'});
-            doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868',105,22,{align:'center'});
-            doc.line(20,25,190,25); doc.setFontSize(12); doc.setFont('helvetica','bold');
-            if(type==='bills'){doc.text('BILLS REPORT',105,35,{align:'center'});const d=await api('/bills');doc.autoTable({startY:40,head:[['Bill','Period','Year','Due','Paid','Out','Status']],body:d.map(b=>[b.billNumber,b.period,b.year,fmt(b.amountDue),fmt(b.paidAmount),fmt(b.outstanding),b.outstanding===0?'Paid':'Outstanding']),styles:{fontSize:8}});}
-            else if(type==='payments'){doc.text('PAYMENTS REPORT',105,35,{align:'center'});const d=await api('/payments');doc.autoTable({startY:40,head:[['Date','Bill','Period','Amount','Ref']],body:d.map(p=>[fmtDate(p.date),p.billNumber,`${p.period} ${p.year}`,fmt(p.amount),p.reference||'-']),styles:{fontSize:8}});}
-            else if(type==='expenses'){doc.text('EXPENSES REPORT',105,35,{align:'center'});const d=await api('/expenses');doc.autoTable({startY:40,head:[['Date','Description','Category','Amount']],body:d.map(e=>[fmtDate(e.date),e.description.substring(0,35),e.categoryName,fmt(e.amount)]),styles:{fontSize:8}});}
-            else if(type==='heirs'){const d=await api('/inheritance/calculate');doc.text('INHERITANCE REPORT',105,35,{align:'center'});doc.setFontSize(10);doc.text(`Amount: ${fmt(d.inheritanceAmount)} XAF | Per Portion: ${fmt(d.sharePerPortion)} XAF`,105,42,{align:'center'});doc.autoTable({startY:48,head:[['Name','Rel','Group','Portions','Share']],body:d.heirs.map(h=>[h.name,h.relationship,h.heir_group,h.portions,fmt(Math.round(h.shareAmount))]),styles:{fontSize:8}});}
-            doc.save(`campost_${type}.pdf`); showAlert('PDF exported!');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CAMPOST MANKON', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868', 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            
+            if (type === 'bills') {
+                doc.text('BILLS REPORT', 105, 35, { align: 'center' });
+                const d = await api('/bills');
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Bill #', 'Period', 'Year', 'Due', 'Paid', 'Outstanding', 'Status']],
+                    body: d.map(b => [b.billNumber, b.period, b.year, fmt(b.amountDue), fmt(b.paidAmount), fmt(b.outstanding), b.outstanding === 0 ? 'Paid' : 'Outstanding']),
+                    styles: { fontSize: 8 }
+                });
+            } else if (type === 'payments') {
+                doc.text('PAYMENTS REPORT', 105, 35, { align: 'center' });
+                const d = await api('/payments');
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Date', 'Bill #', 'Period', 'Amount', 'Reference']],
+                    body: d.map(p => [fmtDate(p.date), p.billNumber, p.period + ' ' + p.year, fmt(p.amount), p.reference || '-']),
+                    styles: { fontSize: 8 }
+                });
+            } else if (type === 'expenses') {
+                doc.text('EXPENSES REPORT', 105, 35, { align: 'center' });
+                const d = await api('/expenses');
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Date', 'Description', 'Category', 'Amount']],
+                    body: d.map(e => [fmtDate(e.date), e.description.substring(0, 35), e.categoryName, fmt(e.amount)]),
+                    styles: { fontSize: 8 }
+                });
+            } else if (type === 'heirs') {
+                const d = await api('/inheritance/calculate');
+                doc.text('INHERITANCE REPORT', 105, 35, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text('Amount: ' + fmt(d.inheritanceAmount) + ' XAF | Per Portion: ' + fmt(d.sharePerPortion) + ' XAF', 105, 42, { align: 'center' });
+                doc.autoTable({
+                    startY: 48,
+                    head: [['Name', 'Relationship', 'Group', 'Portions', 'Share']],
+                    body: d.heirs.map(h => [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(h.shareAmount))]),
+                    styles: { fontSize: 8 }
+                });
+            }
+            
+            doc.save('campost_' + type + '.pdf');
+            showAlert('PDF exported!');
         }
 
         async function exportAllPDF() {
-            const { jsPDF } = window.jspdf;
+            const jsPDF = window.jspdf.jsPDF;
             const doc = new jsPDF();
-            const all = await api('/export/all'), inh = await api('/inheritance/calculate');
-            doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('CAMPOST MANKON',105,15,{align:'center'});
-            doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868',105,22,{align:'center'});
-            doc.line(20,25,190,25);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text('SUMMARY',20,33);
-            doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(`Paid: ${fmt(all.summary.totalBillsPaid)} | Expenses: ${fmt(all.summary.totalExpenses)} | Reserve: ${fmt(all.summary.reserveFunds)}`,20,40);
-            doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('BILLS',20,50);
-            doc.autoTable({startY:53,head:[['Bill','Period','Year','Due','Paid','Out']],body:all.bills.map(b=>[b.bill_number,b.period,b.year,fmt(b.amount_due),fmt(b.paid_amount),fmt(b.outstanding)]),styles:{fontSize:7}});
-            doc.addPage();doc.text('PAYMENTS',20,15);doc.autoTable({startY:18,head:[['Date','Bill','Amount','Ref']],body:all.payments.map(p=>[p.payment_date?.split('T')[0]||'',p.bill_number,fmt(p.amount),p.reference||'']),styles:{fontSize:7}});
-            let y=doc.lastAutoTable.finalY+10;doc.text('EXPENSES',20,y);doc.autoTable({startY:y+3,head:[['Date','Description','Category','Amount']],body:all.expenses.map(e=>[e.expense_date?.split('T')[0]||'',e.description?.substring(0,25)||'',e.category_name||'',fmt(e.amount)]),styles:{fontSize:7}});
-            doc.addPage();doc.text(`INHERITANCE (${fmt(inh.inheritanceAmount)} XAF)`,20,15);doc.autoTable({startY:20,head:[['Name','Rel','Group','Portions','Share']],body:inh.heirs.map(h=>[h.name,h.relationship,h.heir_group,h.portions,fmt(Math.round(h.shareAmount))]),styles:{fontSize:7}});
-            doc.save('campost_complete.pdf');showAlert('Complete PDF!');
+            const all = await api('/export/all');
+            const inh = await api('/inheritance/calculate');
+            
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CAMPOST MANKON', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868', 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FINANCIAL SUMMARY', 20, 33);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Bills Paid: ' + fmt(all.summary.totalBillsPaid) + ' | Expenses: ' + fmt(all.summary.totalExpenses) + ' | Reserve: ' + fmt(all.summary.reserveFunds), 20, 40);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('BILLS', 20, 50);
+            doc.autoTable({
+                startY: 53,
+                head: [['Bill #', 'Period', 'Year', 'Due', 'Paid', 'Outstanding']],
+                body: all.bills.map(b => [b.bill_number, b.period, b.year, fmt(b.amount_due), fmt(b.paid_amount), fmt(b.outstanding)]),
+                styles: { fontSize: 7 }
+            });
+            
+            doc.addPage();
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PAYMENTS', 20, 15);
+            doc.autoTable({
+                startY: 18,
+                head: [['Date', 'Bill', 'Amount', 'Reference']],
+                body: all.payments.map(p => [p.payment_date ? p.payment_date.split('T')[0] : '', p.bill_number, fmt(p.amount), p.reference || '']),
+                styles: { fontSize: 7 }
+            });
+            
+            var y = doc.lastAutoTable.finalY + 10;
+            doc.text('EXPENSES', 20, y);
+            doc.autoTable({
+                startY: y + 3,
+                head: [['Date', 'Description', 'Category', 'Amount']],
+                body: all.expenses.map(e => [e.expense_date ? e.expense_date.split('T')[0] : '', e.description ? e.description.substring(0, 25) : '', e.category_name || '', fmt(e.amount)]),
+                styles: { fontSize: 7 }
+            });
+            
+            doc.addPage();
+            doc.text('INHERITANCE (' + fmt(inh.inheritanceAmount) + ' XAF)', 20, 15);
+            doc.autoTable({
+                startY: 20,
+                head: [['Name', 'Relationship', 'Group', 'Portions', 'Share']],
+                body: inh.heirs.map(h => [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(h.shareAmount))]),
+                styles: { fontSize: 7 }
+            });
+            
+            doc.save('campost_complete_report.pdf');
+            showAlert('Complete PDF exported!');
         }
 
-        function download(c,f){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download=f;a.click();showAlert('Exported!');}
-        function printPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('printing'));document.getElementById(p).classList.add('printing');window.print();}
-        async function checkDb(){try{const s=await api('/status');document.getElementById('dbStatus').textContent=s.connected?'✓ Connected':'✗ Offline';document.getElementById('dbStatus').className=`db-status ${s.connected?'connected':'disconnected'}`;document.getElementById('settingsAlert').className=`alert alert-${s.connected?'success':'error'}`;document.getElementById('settingsAlert').innerHTML=s.connected?'✓ PostgreSQL Connected':'✗ Offline';}catch(e){document.getElementById('dbStatus').textContent='✗ Offline';document.getElementById('dbStatus').className='db-status disconnected';}}
-        async function resetAll(){if(!confirm('RESET ALL DATA?'))return;await api('/reset',{method:'POST'});showAlert('Reset!');loadDashboard();}
-        async function init(){await checkDb();await loadDashboard();}
+        function download(content, filename) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([content], { type: 'text/csv' }));
+            a.download = filename;
+            a.click();
+            showAlert('Exported!');
+        }
+
+        function printPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('printing'));
+            document.getElementById(pageId).classList.add('printing');
+            window.print();
+        }
+
+        // ========== SETTINGS ==========
+        async function checkDb() {
+            try {
+                const status = await api('/status');
+                document.getElementById('dbStatus').textContent = status.connected ? '✓ Connected' : '✗ Offline';
+                document.getElementById('dbStatus').className = 'db-status ' + (status.connected ? 'connected' : 'disconnected');
+                document.getElementById('settingsAlert').className = 'alert alert-' + (status.connected ? 'success' : 'error');
+                document.getElementById('settingsAlert').innerHTML = status.connected ? '✓ PostgreSQL Connected' : '✗ Database offline';
+            } catch (e) {
+                document.getElementById('dbStatus').textContent = '✗ Offline';
+                document.getElementById('dbStatus').className = 'db-status disconnected';
+            }
+        }
+
+        async function resetAll() {
+            if (!confirm('RESET ALL DATA? This cannot be undone!')) return;
+            await api('/reset', { method: 'POST' });
+            showAlert('Data reset!');
+            loadDashboard();
+        }
+
+        // ========== INITIALIZE ==========
+        async function init() {
+            await checkDb();
+            await loadDashboard();
+        }
+        
         init();
     </script>
 </body>

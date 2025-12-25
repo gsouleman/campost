@@ -332,7 +332,7 @@
                     <button class="btn btn-print btn-sm" onclick="exportPDF('expenses')">Expenses PDF</button>
                     <button class="btn btn-primary btn-sm" onclick="exportPDF('ledger')">Ledger PDF</button>
                     <button class="btn btn-gold btn-sm" onclick="exportPDF('heirs')">Heirs PDF</button>
-                    <button class="btn btn-success btn-sm" onclick="exportPDF('properties')">Properties PDF</button>
+                    <button class="btn btn-success btn-sm" onclick="exportREPropertiesPDF()">Properties PDF</button>
                 </div>
             </div></div>
         </div>
@@ -366,7 +366,7 @@
                         <span>🏠 Family Properties Portfolio</span>
                         <div class="no-print">
                             <button class="btn btn-success btn-sm" onclick="openPropertyModal()">➕ Add Property</button>
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('properties')">📥 Export PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">📥 Export PDF</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -410,7 +410,7 @@
                 <div class="card">
                     <div class="card-header gold">
                         <span>💵 Rental Income Summary</span>
-                        <button class="btn btn-print btn-sm no-print" onclick="exportPDF('rentalIncome')">📥 Export PDF</button>
+                        <button class="btn btn-print btn-sm no-print" onclick="exportRERentalIncomePDF()">📥 Export PDF</button>
                     </div>
                     <div class="card-body">
                         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px; background: #fffbeb; padding: 10px; border-radius: 6px;">
@@ -478,7 +478,7 @@
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><span>📄 Property Bills</span><button class="btn btn-print btn-sm no-print" onclick="exportPDF('reBills')">📥 Export PDF</button></div>
+                    <div class="card-header"><span>📄 Property Bills</span><button class="btn btn-print btn-sm no-print" onclick="exportREBillsPDF()">📥 Export PDF</button></div>
                     <div class="card-body">
                         <div class="table-container">
                             <table>
@@ -521,7 +521,7 @@
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><span>💳 Payment History</span><button class="btn btn-print btn-sm no-print" onclick="exportPDF('rePayments')">📥 Export PDF</button></div>
+                    <div class="card-header"><span>💳 Payment History</span><button class="btn btn-print btn-sm no-print" onclick="exportREPaymentsPDF()">📥 Export PDF</button></div>
                     <div class="card-body">
                         <div class="table-container">
                             <table>
@@ -578,7 +578,7 @@
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><span>💸 Property Expenses</span><button class="btn btn-print btn-sm no-print" onclick="exportPDF('reExpenses')">📥 Export PDF</button></div>
+                    <div class="card-header"><span>💸 Property Expenses</span><button class="btn btn-print btn-sm no-print" onclick="exportREExpensesPDF()">📥 Export PDF</button></div>
                     <div class="card-body">
                         <div class="table-container">
                             <table>
@@ -603,7 +603,7 @@
                         <span>👨‍👩‍👧‍👦 Real Estate Inheritance Distribution</span>
                         <div class="no-print">
                             <button class="btn btn-success btn-sm" onclick="openREHeirModal()">➕ Add Heir</button>
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('reHeirs')">📥 Export PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportREHeirsPDF()">📥 Export PDF</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -626,7 +626,7 @@
                     <div class="card-header">
                         <span>📒 Real Estate Ledger (Auto-Generated)</span>
                         <div class="no-print">
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('reLedger')">📥 Export PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportRELedgerPDF()">📥 Export PDF</button>
                             <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">📥 Export CSV</button>
                         </div>
                     </div>
@@ -662,28 +662,22 @@
                     <div class="card-body">
                         <p style="margin-bottom: 15px; color: #718096;">Export all Real Estate data with headers.</p>
                         <div class="btn-group" style="flex-wrap: wrap;">
-                            <button class="btn btn-primary" onclick="exportAllRECSV()">📄 All CSV</button>
-                            <button class="btn btn-print" onclick="exportAllREPDF()">📑 All PDF</button>
+                            <button class="btn btn-primary" onclick="exportAllRECSV()">📄 All Data CSV</button>
+                            <button class="btn btn-print" onclick="exportAllREPDF()">📑 All Data PDF</button>
                         </div>
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><span>📊 Individual Exports</span></div>
+                    <div class="card-header"><span>📊 Individual PDF Exports</span></div>
                     <div class="card-body">
-                        <div class="btn-group" style="flex-wrap: wrap; margin-bottom: 10px;">
-                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reProperties')">Properties CSV</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reBills')">Bills CSV</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportCSV('rePayments')">Payments CSV</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reExpenses')">Expenses CSV</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">Ledger CSV</button>
-                        </div>
                         <div class="btn-group" style="flex-wrap: wrap;">
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('properties')">Properties PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('reBills')">Bills PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('rePayments')">Payments PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportPDF('reExpenses')">Expenses PDF</button>
-                            <button class="btn btn-primary btn-sm" onclick="exportPDF('reLedger')">Ledger PDF</button>
-                            <button class="btn btn-gold btn-sm" onclick="exportPDF('reHeirs')">Heirs PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">🏠 Properties PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportRERentalIncomePDF()">💵 Rental Income PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportREBillsPDF()">📄 Bills PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportREPaymentsPDF()">💳 Payments PDF</button>
+                            <button class="btn btn-print btn-sm" onclick="exportREExpensesPDF()">💸 Expenses PDF</button>
+                            <button class="btn btn-primary btn-sm" onclick="exportRELedgerPDF()">📒 Ledger PDF</button>
+                            <button class="btn btn-gold btn-sm" onclick="exportREHeirsPDF()">👨‍👩‍👧‍👦 Inheritance PDF</button>
                         </div>
                     </div>
                 </div>
@@ -2847,28 +2841,480 @@
 
             var ledgerEntries = [];
 
-            rePayments.forEach(function(p) { var bill = reBills.find(function(b) { return b.id === p.bill_id; }); var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null; ledgerEntries.push({ date: p.payment_date, property: prop ? prop.name : 'N/A', description: 'Payment for ' + (bill ? bill.bill_number : 'Bill'), type: 'Income', income: p.amount, expense: 0 }); });
+            // Add payments as income - calculate NET income after tax
+            rePayments.forEach(function(p) { 
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                
+                // Get tax rate from property to calculate net income
+                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
+                var grossAmount = parseFloat(p.amount) || 0;
+                var taxAmount = grossAmount * taxRate / 100;
+                var netIncome = grossAmount - taxAmount;
+                
+                ledgerEntries.push({ 
+                    date: p.payment_date, 
+                    property: prop ? prop.name : 'N/A', 
+                    description: 'Rental Payment - ' + (bill ? bill.bill_number : 'Bill') + ' (Tax: ' + taxRate + '%)',
+                    type: 'Income', 
+                    income: netIncome,
+                    grossIncome: grossAmount,
+                    taxDeducted: taxAmount,
+                    expense: 0 
+                }); 
+            });
 
-            reExpenses.forEach(function(e) { var prop = properties.find(function(p) { return p.id === e.property_id; }); ledgerEntries.push({ date: e.expense_date, property: prop ? prop.name : 'General', description: e.description, type: e.category, income: 0, expense: e.amount }); });
+            // Add expenses
+            reExpenses.forEach(function(e) { 
+                var prop = properties.find(function(p) { return p.id === e.property_id; }); 
+                ledgerEntries.push({ 
+                    date: e.expense_date, 
+                    property: prop ? prop.name : 'General', 
+                    description: e.description, 
+                    type: e.category, 
+                    income: 0,
+                    grossIncome: 0,
+                    taxDeducted: 0,
+                    expense: parseFloat(e.amount) || 0 
+                }); 
+            });
 
+            // Sort by date
             ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
 
-            var runningBalance = 0, totalIncome = 0, totalExpense = 0;
+            var runningBalance = 0, totalIncome = 0, totalExpense = 0, totalTax = 0;
 
-            var html = ledgerEntries.map(function(entry) { runningBalance += entry.income - entry.expense; totalIncome += entry.income; totalExpense += entry.expense; var isIncome = entry.income > 0; var isInh = entry.type === 'Inheritance Share'; return '<tr><td>' + fmtDate(entry.date) + '</td><td>' + entry.property + '</td><td>' + entry.description + '</td><td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td><td class="amount-positive">' + (entry.income > 0 ? fmt(entry.income) : '-') + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(entry.expense) : '-') + '</td><td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td></tr>'; }).join('');
+            var html = ledgerEntries.map(function(entry) { 
+                runningBalance += entry.income - entry.expense; 
+                totalIncome += entry.income; 
+                totalExpense += entry.expense;
+                totalTax += entry.taxDeducted || 0;
+                
+                var isIncome = entry.income > 0; 
+                var isInh = entry.type === 'Inheritance Share'; 
+                
+                return '<tr>' +
+                    '<td>' + fmtDate(entry.date) + '</td>' +
+                    '<td>' + entry.property + '</td>' +
+                    '<td>' + entry.description + '</td>' +
+                    '<td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
+                    '<td class="amount-positive">' + (entry.income > 0 ? fmt(Math.round(entry.income)) : '-') + '</td>' +
+                    '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(Math.round(entry.expense)) : '-') + '</td>' +
+                    '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                '</tr>'; 
+            }).join('');
 
             document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
-            document.getElementById('reLedgerTotals').innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTALS:</td><td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td><td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td><td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td></tr>';
+            document.getElementById('reLedgerTotals').innerHTML = 
+                '<tr style="background: #f7fafc; font-weight: bold;">' +
+                '<td colspan="4" style="text-align: right;">TOTALS (Net after ' + fmt(Math.round(totalTax)) + ' tax):</td>' +
+                '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
+                '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
+                '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                '</tr>';
         }
 
         // ========== RE SETTINGS & EXPORT ==========
-        function saveRESettings() { var settings = { taxRate: document.getElementById('reSettingTaxRate').value, period: document.getElementById('reSettingPeriod').value, inhPercent: document.getElementById('reSettingInhPercent').value, currency: document.getElementById('reSettingCurrency').value }; localStorage.setItem('reSettings', JSON.stringify(settings)); showAlert('Settings saved!'); }
+        function saveRESettings() { 
+            var settings = { 
+                taxRate: document.getElementById('reSettingTaxRate').value, 
+                period: document.getElementById('reSettingPeriod').value, 
+                inhPercent: document.getElementById('reSettingInhPercent').value, 
+                currency: document.getElementById('reSettingCurrency').value 
+            }; 
+            localStorage.setItem('reSettings', JSON.stringify(settings)); 
+            showAlert('Settings saved!'); 
+        }
 
-        function resetREData() { if (!confirm('This will delete ALL Real Estate data. Are you sure?')) return; if (!confirm('FINAL WARNING: This cannot be undone!')) return; localStorage.removeItem('familyProperties'); localStorage.removeItem('reBills'); localStorage.removeItem('rePayments'); localStorage.removeItem('reExpenses'); localStorage.removeItem('reHeirs'); showAlert('All RE data reset'); loadRealEstate(); }
+        function resetREData() { 
+            if (!confirm('This will delete ALL Real Estate data. Are you sure?')) return; 
+            if (!confirm('FINAL WARNING: This cannot be undone!')) return; 
+            localStorage.removeItem('familyProperties'); 
+            localStorage.removeItem('reBills'); 
+            localStorage.removeItem('rePayments'); 
+            localStorage.removeItem('reExpenses'); 
+            localStorage.removeItem('reHeirs'); 
+            showAlert('All RE data reset'); 
+            loadRealEstate(); 
+        }
 
-        function exportAllRECSV() { var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]'); var csv = 'FAMILY REAL ESTATES\n\nPROPERTIES\nName,Location,Type,Status,Rent,Period,Tax,Net,Islamic Inh\n'; properties.forEach(function(p) { var isRented = p.status === 'Rented'; var rent = isRented ? (p.rent_amount || 0) : 0; var tax = isRented ? (p.tax_rate || 0) : 0; var net = rent - (rent * tax / 100); csv += '"' + p.name + '","' + p.location + '",' + p.type + ',' + p.status + ',' + rent + ',' + (isRented ? p.rent_period : '-') + ',' + tax + '%,' + Math.round(net) + ',' + (p.islamic_inheritance || 'NA') + '\n'; }); var blob = new Blob([csv], { type: 'text/csv' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'family_real_estates.csv'; a.click(); showAlert('CSV exported!'); }
+        // ========== RE PDF EXPORT FUNCTIONS ==========
+        function exportREPropertiesPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FAMILY REAL ESTATE - PROPERTIES', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            
+            var tableData = properties.map(function(p) {
+                var isRented = p.status === 'Rented';
+                var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
+                var tax = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
+                var net = rent - (rent * tax / 100);
+                return [p.name, p.location, p.type, p.status, fmt(rent), tax + '%', fmt(Math.round(net)), p.islamic_inheritance || 'NA'];
+            });
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Property', 'Location', 'Type', 'Status', 'Rent', 'Tax', 'Net Income', 'Islamic Inh.']],
+                body: tableData,
+                styles: { fontSize: 7 },
+                headStyles: { fillColor: [44, 82, 130] }
+            });
+            
+            doc.save('re_properties_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Properties PDF exported!');
+        }
 
-        function exportAllREPDF() { var jsPDF = window.jspdf.jsPDF; var doc = new jsPDF(); var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]'); doc.setFontSize(16); doc.text('FAMILY REAL ESTATES', 105, 15, { align: 'center' }); doc.setFontSize(10); doc.text('GHOUENZEN Soulemanou', 105, 22, { align: 'center' }); doc.autoTable({ startY: 30, head: [['Property', 'Location', 'Status', 'Rent', 'Tax', 'Net']], body: properties.map(function(p) { var isRented = p.status === 'Rented'; var rent = isRented ? (p.rent_amount || 0) : 0; var tax = isRented ? (p.tax_rate || 0) : 0; var net = rent - (rent * tax / 100); return [p.name, p.location, p.status, fmt(rent), tax + '%', fmt(Math.round(net))]; }), styles: { fontSize: 7 } }); doc.save('family_real_estates.pdf'); showAlert('PDF exported!'); }
+        function exportREBillsPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FAMILY REAL ESTATE - BILLS', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            
+            var tableData = reBills.map(function(b) {
+                var prop = properties.find(function(p) { return p.id === b.property_id; });
+                var status = b.outstanding === 0 ? 'Paid' : b.paid_amount > 0 ? 'Partial' : 'Unpaid';
+                return [b.bill_number, prop ? prop.name : 'N/A', b.period, b.year, fmt(b.amount_due), fmt(b.paid_amount || 0), fmt(b.outstanding), status];
+            });
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Bill #', 'Property', 'Period', 'Year', 'Amount Due', 'Paid', 'Outstanding', 'Status']],
+                body: tableData,
+                styles: { fontSize: 7 },
+                headStyles: { fillColor: [56, 161, 105] }
+            });
+            
+            doc.save('re_bills_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Bills PDF exported!');
+        }
+
+        function exportREPaymentsPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FAMILY REAL ESTATE - PAYMENTS', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            
+            var tableData = rePayments.map(function(p) {
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; });
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                return [fmtDate(p.payment_date), prop ? prop.name : 'N/A', bill ? bill.bill_number : 'N/A', fmt(p.amount), p.reference || '-'];
+            });
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Date', 'Property', 'Bill #', 'Amount', 'Reference']],
+                body: tableData,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [66, 153, 225] }
+            });
+            
+            doc.save('re_payments_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Payments PDF exported!');
+        }
+
+        function exportREExpensesPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FAMILY REAL ESTATE - EXPENSES', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            
+            var total = 0;
+            var tableData = reExpenses.map(function(e) {
+                var prop = properties.find(function(p) { return p.id === e.property_id; });
+                total += parseFloat(e.amount) || 0;
+                return [fmtDate(e.expense_date), prop ? prop.name : 'General', e.category, e.description, fmt(e.amount)];
+            });
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Date', 'Property', 'Category', 'Description', 'Amount']],
+                body: tableData,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [229, 62, 62] }
+            });
+            
+            doc.setFontSize(10);
+            doc.text('Total Expenses: ' + fmt(Math.round(total)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
+            
+            doc.save('re_expenses_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Expenses PDF exported!');
+        }
+
+        function exportRELedgerPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FAMILY REAL ESTATE - LEDGER', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.text('* Income shown is NET after tax deductions', 105, 27, { align: 'center' });
+            doc.line(20, 30, 190, 30);
+            
+            var ledgerEntries = [];
+            
+            // Payments as net income
+            rePayments.forEach(function(p) {
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; });
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
+                var gross = parseFloat(p.amount) || 0;
+                var net = gross - (gross * taxRate / 100);
+                ledgerEntries.push({ date: p.payment_date, property: prop ? prop.name : 'N/A', desc: 'Payment ' + (bill ? bill.bill_number : ''), type: 'Income', income: net, expense: 0 });
+            });
+            
+            // Expenses
+            reExpenses.forEach(function(e) {
+                var prop = properties.find(function(p) { return p.id === e.property_id; });
+                ledgerEntries.push({ date: e.expense_date, property: prop ? prop.name : 'General', desc: e.description, type: e.category, income: 0, expense: parseFloat(e.amount) || 0 });
+            });
+            
+            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+            
+            var balance = 0, totalIn = 0, totalOut = 0;
+            var tableData = ledgerEntries.map(function(e) {
+                balance += e.income - e.expense;
+                totalIn += e.income;
+                totalOut += e.expense;
+                return [fmtDate(e.date), e.property, e.desc, e.type, e.income > 0 ? fmt(Math.round(e.income)) : '-', e.expense > 0 ? fmt(Math.round(e.expense)) : '-', fmt(Math.round(balance))];
+            });
+            
+            doc.autoTable({
+                startY: 35,
+                head: [['Date', 'Property', 'Description', 'Type', 'Income (Net)', 'Expense', 'Balance']],
+                body: tableData,
+                styles: { fontSize: 7 },
+                headStyles: { fillColor: [44, 82, 130] }
+            });
+            
+            doc.setFontSize(10);
+            doc.text('Total Income (Net): ' + fmt(Math.round(totalIn)) + ' XAF | Total Expenses: ' + fmt(Math.round(totalOut)) + ' XAF | Balance: ' + fmt(Math.round(balance)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
+            
+            doc.save('re_ledger_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Ledger PDF exported!');
+        }
+
+        function exportREHeirsPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            
+            // Calculate pool with net income
+            var totalIncome = 0;
+            rePayments.forEach(function(p) {
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; });
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
+                var gross = parseFloat(p.amount) || 0;
+                totalIncome += gross - (gross * taxRate / 100);
+            });
+            
+            var totalExpenses = 0;
+            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+            
+            var pool = Math.max(0, totalIncome - totalExpenses);
+            var totalPortions = reHeirs.reduce(function(sum, h) { return sum + (parseFloat(h.portions) || 0); }, 0);
+            var perPortion = totalPortions > 0 ? pool / totalPortions : 0;
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ISLAMIC INHERITANCE DISTRIBUTION', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            
+            doc.setFontSize(11);
+            doc.text('Inheritance Pool: ' + fmt(Math.round(pool)) + ' XAF', 20, 35);
+            doc.text('Total Heirs: ' + reHeirs.length, 20, 42);
+            doc.text('Total Portions: ' + (Math.round(totalPortions * 1000) / 1000), 100, 35);
+            doc.text('Per Portion: ' + fmt(Math.round(perPortion)) + ' XAF', 100, 42);
+            
+            var tableData = reHeirs.map(function(h) {
+                var share = perPortion * (parseFloat(h.portions) || 0);
+                var portionDisplay = h.portions;
+                if (h.portions === 0.125) portionDisplay = '1/8';
+                else if (h.portions === 0.25) portionDisplay = '1/4';
+                else if (h.portions === 0.5) portionDisplay = '1/2';
+                else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
+                else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
+                return [h.name, h.relationship, h.gender || '-', portionDisplay, fmt(Math.round(share)) + ' XAF'];
+            });
+            
+            doc.autoTable({
+                startY: 50,
+                head: [['Name', 'Relationship', 'Gender', 'Portions', 'Share Amount']],
+                body: tableData,
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [212, 175, 55] }
+            });
+            
+            doc.save('re_inheritance_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Inheritance PDF exported!');
+        }
+
+        function exportRERentalIncomePDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RENTAL INCOME REPORT', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            
+            var totalGross = 0, totalTax = 0, totalNet = 0;
+            var tableData = properties.map(function(p) {
+                var isRented = p.status === 'Rented';
+                var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
+                var taxRate = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
+                var taxAmt = rent * taxRate / 100;
+                var net = rent - taxAmt;
+                totalGross += rent;
+                totalTax += taxAmt;
+                totalNet += net;
+                return [p.name, p.location, p.status, fmt(rent), taxRate + '%', fmt(Math.round(taxAmt)), fmt(Math.round(net))];
+            });
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Property', 'Location', 'Status', 'Gross Rent', 'Tax Rate', 'Tax Amount', 'Net Income']],
+                body: tableData,
+                styles: { fontSize: 7 },
+                headStyles: { fillColor: [212, 175, 55] }
+            });
+            
+            doc.setFontSize(10);
+            doc.text('Totals - Gross: ' + fmt(Math.round(totalGross)) + ' | Tax: ' + fmt(Math.round(totalTax)) + ' | Net: ' + fmt(Math.round(totalNet)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
+            
+            doc.save('re_rental_income_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Rental Income PDF exported!');
+        }
+
+        function exportAllRECSV() { 
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]'); 
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            
+            var csv = 'FAMILY REAL ESTATES - GHOUENZEN Soulemanou\nGenerated: ' + new Date().toLocaleDateString() + '\n\n';
+            
+            csv += 'PROPERTIES\nName,Location,Type,Status,Rent,Period,Tax,Net,Islamic Inh\n'; 
+            properties.forEach(function(p) { 
+                var isRented = p.status === 'Rented'; 
+                var rent = isRented ? (p.rent_amount || 0) : 0; 
+                var tax = isRented ? (p.tax_rate || 0) : 0; 
+                var net = rent - (rent * tax / 100); 
+                csv += '"' + p.name + '","' + p.location + '",' + p.type + ',' + p.status + ',' + rent + ',' + (isRented ? p.rent_period : '-') + ',' + tax + '%,' + Math.round(net) + ',' + (p.islamic_inheritance || 'NA') + '\n'; 
+            });
+            
+            csv += '\nBILLS\nBill #,Property,Period,Year,Amount,Paid,Outstanding,Status\n';
+            reBills.forEach(function(b) {
+                var prop = properties.find(function(p) { return p.id === b.property_id; });
+                var status = b.outstanding === 0 ? 'Paid' : b.paid_amount > 0 ? 'Partial' : 'Unpaid';
+                csv += b.bill_number + ',"' + (prop ? prop.name : '') + '",' + b.period + ',' + b.year + ',' + b.amount_due + ',' + (b.paid_amount || 0) + ',' + b.outstanding + ',' + status + '\n';
+            });
+            
+            csv += '\nPAYMENTS\nDate,Property,Bill,Amount,Reference\n';
+            rePayments.forEach(function(p) {
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; });
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                csv += p.payment_date + ',"' + (prop ? prop.name : '') + '",' + (bill ? bill.bill_number : '') + ',' + p.amount + ',"' + (p.reference || '') + '"\n';
+            });
+            
+            csv += '\nEXPENSES\nDate,Property,Category,Description,Amount\n';
+            reExpenses.forEach(function(e) {
+                var prop = properties.find(function(p) { return p.id === e.property_id; });
+                csv += e.expense_date + ',"' + (prop ? prop.name : 'General') + '",' + e.category + ',"' + e.description + '",' + e.amount + '\n';
+            });
+            
+            var blob = new Blob([csv], { type: 'text/csv' }); 
+            var a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = 'family_real_estates_all_' + new Date().toISOString().split('T')[0] + '.csv'; 
+            a.click(); 
+            showAlert('All CSV exported!'); 
+        }
+
+        function exportAllREPDF() { 
+            var jsPDF = window.jspdf.jsPDF; 
+            var doc = new jsPDF(); 
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]'); 
+            
+            doc.setFontSize(18); 
+            doc.setFont('helvetica', 'bold');
+            doc.text('FAMILY REAL ESTATES - COMPLETE REPORT', 105, 15, { align: 'center' }); 
+            doc.setFontSize(10); 
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' }); 
+            doc.line(20, 25, 190, 25);
+            
+            doc.setFontSize(12);
+            doc.text('Properties Summary', 20, 35);
+            
+            doc.autoTable({ 
+                startY: 40, 
+                head: [['Property', 'Location', 'Status', 'Rent', 'Tax', 'Net']], 
+                body: properties.map(function(p) { 
+                    var isRented = p.status === 'Rented'; 
+                    var rent = isRented ? (p.rent_amount || 0) : 0; 
+                    var tax = isRented ? (p.tax_rate || 0) : 0; 
+                    var net = rent - (rent * tax / 100); 
+                    return [p.name, p.location, p.status, fmt(rent), tax + '%', fmt(Math.round(net))]; 
+                }), 
+                styles: { fontSize: 7 },
+                headStyles: { fillColor: [44, 82, 130] }
+            }); 
+            
+            doc.save('family_real_estates_complete_' + new Date().toISOString().split('T')[0] + '.pdf'); 
+            showAlert('Complete PDF exported!'); 
+        }
 
         // Setup property form listeners
         document.addEventListener('DOMContentLoaded', function() {

@@ -1,7 +1,7 @@
 /**
  * CAMPOST MANKON - Property & Billing Management System
  * PostgreSQL Database Backend for Render.com
- * Rental Income from Bill Payments | Net Profit = Reserve Funds
+ * Full CRUD operations for Bills and Payments
  */
 
 const express = require('express');
@@ -56,16 +56,6 @@ async function initDatabase() {
         `);
 
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS inheritance_distributions (
-                id SERIAL PRIMARY KEY,
-                distribution_date DATE NOT NULL,
-                total_amount INTEGER NOT NULL,
-                notes TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        await pool.query(`
             CREATE TABLE IF NOT EXISTS bills (
                 bill_number VARCHAR(20) PRIMARY KEY,
                 quarter VARCHAR(5) NOT NULL,
@@ -93,7 +83,6 @@ async function initDatabase() {
         await initializeDefaultData();
         dbConnected = true;
         console.log('✓ Connected to PostgreSQL database');
-        console.log('✓ All tables initialized');
 
     } catch (err) {
         console.error('Database initialization error:', err.message);
@@ -114,7 +103,6 @@ async function initializeDefaultData() {
         for (const [name, type] of categories) {
             await pool.query('INSERT INTO categories (name, type) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING', [name, type]);
         }
-        console.log('  ✓ Categories initialized');
     }
 
     const expResult = await pool.query('SELECT COUNT(*) FROM expenses');
@@ -129,7 +117,8 @@ async function initializeDefaultData() {
             ['2024-10-16', 'Fuel & Transport for Property Inspection', 'Transportation', 90000],
             ['2024-10-18', 'Purchase of Office Supplies (Bulbs, Cleaners)', 'Others', 51300],
             ['2024-10-22', 'Quarterly Pest Control Service (Inv #4567)', 'Maintenance', 180000],
-            ['2024-10-25', 'Bank Fee for Cash Deposit Processing', 'Others', 27150]
+            ['2024-10-25', 'Bank Fee for Cash Deposit Processing', 'Others', 27150],
+            ['2024-10-28', 'Allocation of Net Profit to Islamic Inheritance', 'Inheritance Share', 456550]
         ];
         for (const [date, desc, cat, amount] of expenses) {
             await pool.query(
@@ -137,7 +126,6 @@ async function initializeDefaultData() {
                 [date, desc, catMap[cat], amount]
             );
         }
-        console.log('  ✓ Sample expenses initialized');
     }
 
     const heirResult = await pool.query('SELECT COUNT(*) FROM heirs');
@@ -166,7 +154,6 @@ async function initializeDefaultData() {
                 [name, rel, group, portions]
             );
         }
-        console.log('  ✓ Heirs initialized');
     }
 
     const billResult = await pool.query('SELECT COUNT(*) FROM bills');
@@ -204,11 +191,9 @@ async function initializeDefaultBills() {
             }
         }
     }
-    console.log('  ✓ Bills and payments initialized');
 }
 
-// ============== API ROUTES ==============
-
+// ============== CATEGORIES API ==============
 app.get('/api/categories', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM categories ORDER BY name');
@@ -218,34 +203,17 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
-app.post('/api/categories', async (req, res) => {
-    try {
-        const { name, type } = req.body;
-        const result = await pool.query(
-            'INSERT INTO categories (name, type) VALUES ($1, $2) RETURNING *',
-            [name, type || 'expense']
-        );
-        res.json(result.rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
+// ============== EXPENSES API ==============
 app.get('/api/expenses', async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT e.*, c.name as category_name
-            FROM expenses e
-            LEFT JOIN categories c ON e.category_id = c.id
+            FROM expenses e LEFT JOIN categories c ON e.category_id = c.id
             ORDER BY e.expense_date DESC
         `);
         res.json(result.rows.map(r => ({
-            id: r.id,
-            date: r.expense_date,
-            description: r.description,
-            categoryId: r.category_id,
-            categoryName: r.category_name,
-            amount: r.amount
+            id: r.id, date: r.expense_date, description: r.description,
+            categoryId: r.category_id, categoryName: r.category_name, amount: r.amount
         })));
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -256,11 +224,23 @@ app.post('/api/expenses', async (req, res) => {
     try {
         const { date, description, categoryId, amount } = req.body;
         const result = await pool.query(
-            `INSERT INTO expenses (expense_date, description, category_id, amount)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
+            `INSERT INTO expenses (expense_date, description, category_id, amount) VALUES ($1, $2, $3, $4) RETURNING *`,
             [date, description, categoryId, Math.abs(amount)]
         );
         res.json({ success: true, id: result.rows[0].id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/expenses/:id', async (req, res) => {
+    try {
+        const { date, description, categoryId, amount } = req.body;
+        await pool.query(
+            'UPDATE expenses SET expense_date = $1, description = $2, category_id = $3, amount = $4 WHERE id = $5',
+            [date, description, categoryId, Math.abs(amount), req.params.id]
+        );
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -275,6 +255,7 @@ app.delete('/api/expenses/:id', async (req, res) => {
     }
 });
 
+// ============== LEDGER API ==============
 app.get('/api/ledger', async (req, res) => {
     try {
         const payments = await pool.query(`
@@ -303,10 +284,14 @@ app.get('/api/ledger', async (req, res) => {
     }
 });
 
+// ============== SUMMARY API ==============
 app.get('/api/summary', async (req, res) => {
     try {
         const incomeResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM payments');
-        const totalIncome = parseInt(incomeResult.rows[0].total);
+        const totalBillsPaid = parseInt(incomeResult.rows[0].total);
+
+        const totalExpensesResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM expenses');
+        const totalExpenses = parseInt(totalExpensesResult.rows[0].total);
 
         const expensesByCat = await pool.query(`
             SELECT c.name, COALESCE(SUM(e.amount), 0) as total
@@ -314,15 +299,17 @@ app.get('/api/summary', async (req, res) => {
             GROUP BY c.id, c.name ORDER BY c.name
         `);
 
-        const totalExpensesResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM expenses');
-        const totalExpenses = parseInt(totalExpensesResult.rows[0].total);
+        const inheritanceResult = await pool.query(`
+            SELECT COALESCE(SUM(e.amount), 0) as total
+            FROM expenses e JOIN categories c ON e.category_id = c.id
+            WHERE c.name = 'Inheritance Share'
+        `);
+        const inheritanceAmount = parseInt(inheritanceResult.rows[0].total);
 
-        const reserveFunds = totalIncome - totalExpenses;
+        const reserveFunds = totalBillsPaid - totalExpenses;
 
         res.json({
-            rentalIncome: totalIncome,
-            totalExpenses: totalExpenses,
-            reserveFunds: reserveFunds,
+            totalBillsPaid, totalExpenses, reserveFunds, inheritanceAmount,
             expensesByCategory: expensesByCat.rows.map(r => ({ name: r.name, total: parseInt(r.total) }))
         });
     } catch (err) {
@@ -330,6 +317,7 @@ app.get('/api/summary', async (req, res) => {
     }
 });
 
+// ============== HEIRS API ==============
 app.get('/api/heirs', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
@@ -374,20 +362,28 @@ app.delete('/api/heirs/:id', async (req, res) => {
     }
 });
 
+// ============== INHERITANCE API ==============
 app.get('/api/inheritance/calculate', async (req, res) => {
     try {
         const incomeResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM payments');
-        const totalIncome = parseInt(incomeResult.rows[0].total);
+        const totalBillsPaid = parseInt(incomeResult.rows[0].total);
 
         const expensesResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM expenses');
         const totalExpenses = parseInt(expensesResult.rows[0].total);
 
-        const reserveFunds = totalIncome - totalExpenses;
+        const reserveFunds = totalBillsPaid - totalExpenses;
+
+        const inheritanceResult = await pool.query(`
+            SELECT COALESCE(SUM(e.amount), 0) as total
+            FROM expenses e JOIN categories c ON e.category_id = c.id
+            WHERE c.name = 'Inheritance Share'
+        `);
+        const inheritanceAmount = parseInt(inheritanceResult.rows[0].total);
 
         const totalPortionsResult = await pool.query('SELECT SUM(portions) as total FROM heirs');
         const totalPortions = parseFloat(totalPortionsResult.rows[0].total) || 24;
 
-        const sharePerPortion = reserveFunds > 0 ? reserveFunds / totalPortions : 0;
+        const sharePerPortion = inheritanceAmount > 0 ? inheritanceAmount / totalPortions : 0;
 
         const individualHeirs = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
         const heirShares = individualHeirs.rows.map(h => ({
@@ -405,59 +401,49 @@ app.get('/api/inheritance/calculate', async (req, res) => {
         });
 
         res.json({
-            totalIncome,
-            totalExpenses,
-            reserveFunds,
-            totalPortions,
-            sharePerPortion: Math.round(sharePerPortion * 100) / 100,
-            heirs: heirShares,
-            groupSummary
+            totalBillsPaid, totalExpenses, reserveFunds, inheritanceAmount,
+            totalPortions, sharePerPortion: Math.round(sharePerPortion * 100) / 100,
+            heirs: heirShares, groupSummary
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-app.post('/api/inheritance/distribute', async (req, res) => {
-    const client = await pool.connect();
-    try {
-        const { amount, notes } = req.body;
-        await client.query('BEGIN');
-        await client.query(
-            'INSERT INTO inheritance_distributions (distribution_date, total_amount, notes) VALUES (CURRENT_DATE, $1, $2)',
-            [amount, notes || 'Inheritance distribution']
-        );
-        const catResult = await client.query("SELECT id FROM categories WHERE name = 'Inheritance Share'");
-        if (catResult.rows.length > 0) {
-            await client.query(
-                'INSERT INTO expenses (expense_date, description, category_id, amount) VALUES (CURRENT_DATE, $1, $2, $3)',
-                [`Inheritance Distribution - ${notes || 'Allocation'}`, catResult.rows[0].id, amount]
-            );
-        }
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(500).json({ error: err.message });
-    } finally {
-        client.release();
-    }
-});
-
+// ============== BILLS API (Full CRUD) ==============
 app.get('/api/bills', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM bills ORDER BY year, quarter');
         res.json(result.rows.map(row => ({
-            billNumber: row.bill_number,
-            quarter: row.quarter,
-            year: row.year,
-            period: row.period,
-            amountDue: row.amount_due,
-            paidAmount: row.paid_amount,
-            outstanding: row.outstanding,
-            isNew: row.is_new,
-            createdAt: row.created_at
+            billNumber: row.bill_number, quarter: row.quarter, year: row.year,
+            period: row.period, amountDue: row.amount_due, paidAmount: row.paid_amount,
+            outstanding: row.outstanding, isNew: row.is_new, createdAt: row.created_at
         })));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/bills/:billNumber', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM bills WHERE bill_number = $1', [req.params.billNumber]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Bill not found' });
+        const row = result.rows[0];
+        
+        // Get payments for this bill
+        const payments = await pool.query(
+            'SELECT * FROM payments WHERE bill_number = $1 ORDER BY payment_date DESC',
+            [req.params.billNumber]
+        );
+        
+        res.json({
+            billNumber: row.bill_number, quarter: row.quarter, year: row.year,
+            period: row.period, amountDue: row.amount_due, paidAmount: row.paid_amount,
+            outstanding: row.outstanding, isNew: row.is_new, createdAt: row.created_at,
+            payments: payments.rows.map(p => ({
+                id: p.id, amount: p.amount, date: p.payment_date, reference: p.reference
+            }))
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -477,6 +463,24 @@ app.post('/api/bills', async (req, res) => {
     }
 });
 
+app.put('/api/bills/:billNumber', async (req, res) => {
+    try {
+        const { quarter, year, period, amountDue } = req.body;
+        // Recalculate outstanding based on current paid amount
+        const current = await pool.query('SELECT paid_amount FROM bills WHERE bill_number = $1', [req.params.billNumber]);
+        const paidAmount = current.rows[0]?.paid_amount || 0;
+        const outstanding = amountDue - paidAmount;
+        
+        await pool.query(
+            'UPDATE bills SET quarter = $1, year = $2, period = $3, amount_due = $4, outstanding = $5 WHERE bill_number = $6',
+            [quarter, year, period, amountDue, outstanding, req.params.billNumber]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.delete('/api/bills/:billNumber', async (req, res) => {
     try {
         await pool.query('DELETE FROM bills WHERE bill_number = $1', [req.params.billNumber]);
@@ -486,6 +490,7 @@ app.delete('/api/bills/:billNumber', async (req, res) => {
     }
 });
 
+// ============== PAYMENTS API (Full CRUD) ==============
 app.get('/api/payments', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -494,14 +499,29 @@ app.get('/api/payments', async (req, res) => {
             ORDER BY p.payment_date DESC
         `);
         res.json(result.rows.map(row => ({
-            id: row.id,
-            billNumber: row.bill_number,
-            amount: row.amount,
-            date: row.payment_date,
-            reference: row.reference,
-            period: row.period,
-            year: row.year
+            id: row.id, billNumber: row.bill_number, amount: row.amount,
+            date: row.payment_date, reference: row.reference,
+            period: row.period, year: row.year
         })));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/payments/:id', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT p.*, b.period, b.year 
+            FROM payments p JOIN bills b ON p.bill_number = b.bill_number
+            WHERE p.id = $1
+        `, [req.params.id]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
+        const row = result.rows[0];
+        res.json({
+            id: row.id, billNumber: row.bill_number, amount: row.amount,
+            date: row.payment_date, reference: row.reference,
+            period: row.period, year: row.year
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -512,14 +532,52 @@ app.post('/api/payments', async (req, res) => {
     try {
         const { billNumber, amount, date, reference } = req.body;
         await client.query('BEGIN');
-        await client.query(
-            'INSERT INTO payments (bill_number, amount, payment_date, reference) VALUES ($1, $2, $3, $4)',
+        const result = await client.query(
+            'INSERT INTO payments (bill_number, amount, payment_date, reference) VALUES ($1, $2, $3, $4) RETURNING id',
             [billNumber, amount, date, reference || '']
         );
         await client.query(
             `UPDATE bills SET paid_amount = paid_amount + $1, outstanding = amount_due - (paid_amount + $1) WHERE bill_number = $2`,
             [amount, billNumber]
         );
+        await client.query('COMMIT');
+        res.json({ success: true, id: result.rows[0].id });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+app.put('/api/payments/:id', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { amount, date, reference } = req.body;
+        await client.query('BEGIN');
+        
+        // Get old payment amount
+        const oldPayment = await client.query('SELECT amount, bill_number FROM payments WHERE id = $1', [req.params.id]);
+        if (oldPayment.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Payment not found' });
+        }
+        const oldAmount = oldPayment.rows[0].amount;
+        const billNumber = oldPayment.rows[0].bill_number;
+        const diff = amount - oldAmount;
+        
+        // Update payment
+        await client.query(
+            'UPDATE payments SET amount = $1, payment_date = $2, reference = $3 WHERE id = $4',
+            [amount, date, reference || '', req.params.id]
+        );
+        
+        // Update bill totals
+        await client.query(
+            `UPDATE bills SET paid_amount = paid_amount + $1, outstanding = outstanding - $1 WHERE bill_number = $2`,
+            [diff, billNumber]
+        );
+        
         await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
@@ -530,9 +588,73 @@ app.post('/api/payments', async (req, res) => {
     }
 });
 
+app.delete('/api/payments/:id', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // Get payment details
+        const payment = await client.query('SELECT amount, bill_number FROM payments WHERE id = $1', [req.params.id]);
+        if (payment.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Payment not found' });
+        }
+        const { amount, bill_number } = payment.rows[0];
+        
+        // Delete payment
+        await client.query('DELETE FROM payments WHERE id = $1', [req.params.id]);
+        
+        // Update bill totals
+        await client.query(
+            `UPDATE bills SET paid_amount = paid_amount - $1, outstanding = outstanding + $1 WHERE bill_number = $2`,
+            [amount, bill_number]
+        );
+        
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// ============== EXPORT ALL DATA ==============
+app.get('/api/export/all', async (req, res) => {
+    try {
+        const bills = await pool.query('SELECT * FROM bills ORDER BY year, quarter');
+        const payments = await pool.query(`
+            SELECT p.*, b.period, b.year FROM payments p 
+            JOIN bills b ON p.bill_number = b.bill_number ORDER BY p.payment_date DESC
+        `);
+        const expenses = await pool.query(`
+            SELECT e.*, c.name as category_name FROM expenses e 
+            LEFT JOIN categories c ON e.category_id = c.id ORDER BY e.expense_date DESC
+        `);
+        const heirs = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
+        const summary = await pool.query('SELECT COALESCE(SUM(amount), 0) as total_paid FROM payments');
+        const expTotal = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM expenses');
+        
+        res.json({
+            bills: bills.rows,
+            payments: payments.rows,
+            expenses: expenses.rows,
+            heirs: heirs.rows,
+            summary: {
+                totalBillsPaid: parseInt(summary.rows[0].total_paid),
+                totalExpenses: parseInt(expTotal.rows[0].total),
+                reserveFunds: parseInt(summary.rows[0].total_paid) - parseInt(expTotal.rows[0].total)
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RESET & STATUS ==============
 app.post('/api/reset', async (req, res) => {
     try {
-        await pool.query('DELETE FROM inheritance_distributions');
         await pool.query('DELETE FROM payments');
         await pool.query('DELETE FROM expenses');
         await pool.query('DELETE FROM bills');
@@ -548,7 +670,7 @@ app.post('/api/reset', async (req, res) => {
 app.get('/api/status', async (req, res) => {
     try {
         await pool.query('SELECT 1');
-        res.json({ connected: true, type: 'postgresql', path: 'Render.com PostgreSQL' });
+        res.json({ connected: true, type: 'postgresql' });
     } catch (err) {
         res.json({ connected: false, type: 'postgresql', error: err.message });
     }
@@ -559,7 +681,6 @@ app.get('/health', (req, res) => res.json({ status: 'ok', database: dbConnected 
 
 initDatabase().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
-        console.log(`\n✓ CAMPOST Server running on port ${PORT}`);
-        console.log('✓ Reserve Funds = Rental Income - Expenses\n');
+        console.log(`\n✓ CAMPOST Server running on port ${PORT}\n`);
     });
 });

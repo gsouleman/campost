@@ -10,8 +10,7 @@
             --primary-dark: #1a365d; --primary-blue: #2c5282; --primary-light: #4299e1;
             --accent-gold: #d69e2e; --accent-orange: #ed8936; --success-green: #38a169;
             --danger-red: #e53e3e; --bg-cream: #faf5eb; --bg-white: #ffffff;
-            --text-dark: #1a202c; --text-gray: #4a5568; --text-light: #718096;
-            --border-color: #e2e8f0; --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --text-dark: #1a202c; --text-gray: #4a5568; --border-color: #e2e8f0; --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Source Sans Pro', sans-serif; background: linear-gradient(135deg, var(--bg-cream) 0%, #e8e0d5 100%); min-height: 100vh; color: var(--text-dark); }
@@ -37,8 +36,9 @@
         .card-header { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; padding: 0.9rem 1.1rem; font-family: 'Playfair Display', serif; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
         .card-header.green { background: linear-gradient(135deg, var(--success-green) 0%, #276749 100%); }
         .card-header.gold { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); }
+        .card-header.red { background: linear-gradient(135deg, var(--danger-red) 0%, #c53030 100%); }
         .card-body { padding: 1.1rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
         .stat-card { background: var(--bg-white); border-radius: 10px; padding: 1rem; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
         .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
         .stat-card.blue::before { background: var(--primary-blue); }
@@ -46,9 +46,9 @@
         .stat-card.orange::before { background: var(--accent-orange); }
         .stat-card.red::before { background: var(--danger-red); }
         .stat-card.gold::before { background: var(--accent-gold); }
-        .stat-icon { font-size: 1.3rem; margin-bottom: 0.4rem; }
-        .stat-value { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.15rem; }
-        .stat-label { color: var(--text-gray); font-size: 0.75rem; }
+        .stat-icon { font-size: 1.2rem; margin-bottom: 0.3rem; }
+        .stat-value { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.1rem; }
+        .stat-label { color: var(--text-gray); font-size: 0.7rem; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.9rem; }
         .form-group { margin-bottom: 0.9rem; }
         .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.8rem; }
@@ -71,12 +71,14 @@
         .badge { padding: 0.2rem 0.4rem; border-radius: 10px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
         .badge-income { background: rgba(56,161,105,0.15); color: var(--success-green); }
         .badge-expense { background: rgba(229,62,62,0.15); color: var(--danger-red); }
+        .badge-inheritance { background: rgba(214,158,46,0.15); color: var(--accent-gold); }
         .badge-new { background: rgba(66,153,225,0.15); color: var(--primary-blue); }
         .badge-paid { background: rgba(56,161,105,0.15); color: var(--success-green); }
         .badge-partial { background: rgba(236,201,75,0.2); color: #b7791f; }
         .badge-unpaid { background: rgba(229,62,62,0.15); color: var(--danger-red); }
         .amount-positive { color: var(--success-green); font-weight: 600; }
         .amount-negative { color: var(--danger-red); font-weight: 600; }
+        .amount-gold { color: var(--accent-gold); font-weight: 600; }
         .alert { padding: 0.7rem 1rem; border-radius: 6px; margin-bottom: 0.9rem; font-size: 0.85rem; }
         .alert-success { background: rgba(56,161,105,0.15); color: var(--success-green); border: 1px solid var(--success-green); }
         .alert-error { background: rgba(229,62,62,0.15); color: var(--danger-red); border: 1px solid var(--danger-red); }
@@ -94,8 +96,9 @@
         .info-box { background: linear-gradient(135deg, rgba(66,153,225,0.1) 0%, rgba(56,161,105,0.1) 100%); border: 1px dashed var(--primary-blue); border-radius: 8px; padding: 0.9rem; margin-bottom: 1rem; }
         .info-box h4 { color: var(--primary-blue); margin-bottom: 0.3rem; font-size: 0.9rem; }
         .info-box p { font-size: 0.8rem; color: var(--text-gray); }
-        
-        /* Print Styles */
+        .highlight-box { background: linear-gradient(135deg, rgba(214,158,46,0.15) 0%, rgba(237,137,54,0.15) 100%); border: 2px solid var(--accent-gold); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; text-align: center; }
+        .highlight-box h3 { color: var(--accent-gold); font-size: 1.5rem; }
+        .highlight-box p { font-size: 0.8rem; color: var(--text-gray); }
         .print-only { display: none; }
         @media print {
             body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -110,11 +113,13 @@
             .print-header h1 { font-family: 'Playfair Display', serif; color: var(--primary-dark); font-size: 1.5rem; }
             .print-header p { color: var(--text-gray); font-size: 0.9rem; }
             .print-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; text-align: center; font-size: 0.8rem; color: var(--text-gray); }
-            .print-summary { display: flex; justify-content: space-between; margin-bottom: 1rem; padding: 0.5rem; background: #f7fafc; border-radius: 6px; }
+            .print-summary { display: flex; justify-content: space-around; margin-bottom: 1rem; padding: 0.75rem; background: #f7fafc; border-radius: 6px; }
             .print-summary div { text-align: center; }
-            .print-summary strong { display: block; font-size: 1.1rem; }
+            .print-summary strong { display: block; font-size: 1rem; }
             table { font-size: 0.8rem; }
             th, td { padding: 0.5rem; }
+            .stats-grid { display: none; }
+            .highlight-box { display: block; }
         }
         @media (max-width: 768px) { .header-top { flex-direction: column; text-align: center; } .main-content { padding: 0.75rem; } }
     </style>
@@ -150,19 +155,20 @@
         <!-- DASHBOARD -->
         <div id="dashboard" class="page active">
             <div class="info-box">
-                <h4>💡 Financial Flow</h4>
-                <p><strong>Rental Income</strong> (from Bill Payments) − <strong>Expenses</strong> = <strong>Reserve Funds</strong> (for taxes/emergencies/inheritance)</p>
+                <h4>💡 Financial Summary</h4>
+                <p><strong>Reserve Funds</strong> = Total Bills Paid − Total Expenses | <strong>Inheritance</strong> = From "Inheritance Share" expense entries</p>
             </div>
             <div class="stats-grid">
-                <div class="stat-card green"><div class="stat-icon">🏠</div><div class="stat-value" id="dashIncome">0</div><div class="stat-label">Rental Income (XAF)</div></div>
-                <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="dashExpenses">0</div><div class="stat-label">Total Expenses (XAF)</div></div>
-                <div class="stat-card gold"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserve Funds (XAF)</div></div>
-                <div class="stat-card blue"><div class="stat-icon">👨‍👩‍👧‍👦</div><div class="stat-value" id="dashHeirs">16</div><div class="stat-label">Total Heirs</div></div>
+                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="dashPaidTotal">0</div><div class="stat-label">Total Bills Paid</div></div>
+                <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="dashExpenses">0</div><div class="stat-label">Total Expenses</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserve Funds</div></div>
+                <div class="stat-card gold"><div class="stat-icon">👨‍👩‍👧‍👦</div><div class="stat-value" id="dashInheritance">0</div><div class="stat-label">Inheritance Pool</div></div>
             </div>
             <div class="stats-grid">
-                <div class="stat-card orange"><div class="stat-icon">📄</div><div class="stat-value" id="dashBills">0</div><div class="stat-label">Total Bills</div></div>
-                <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="dashPaid">0</div><div class="stat-label">Bills Paid (XAF)</div></div>
-                <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-value" id="dashOutstanding">0</div><div class="stat-label">Outstanding (XAF)</div></div>
+                <div class="stat-card orange"><div class="stat-icon">📄</div><div class="stat-value" id="dashBillCount">0</div><div class="stat-label">Total Bills</div></div>
+                <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="dashBillPaid">0</div><div class="stat-label">Paid Bills</div></div>
+                <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-value" id="dashOutstanding">0</div><div class="stat-label">Outstanding</div></div>
+                <div class="stat-card blue"><div class="stat-icon">👥</div><div class="stat-value" id="dashHeirs">0</div><div class="stat-label">Total Heirs</div></div>
             </div>
             <div class="card">
                 <div class="card-header"><span>📋 Recent Transactions</span></div>
@@ -174,22 +180,22 @@
 
         <!-- LEDGER -->
         <div id="ledger" class="page">
-            <div class="info-box no-print">
-                <h4>📒 Transaction Ledger</h4>
-                <p><strong>Income</strong> = Bill Payments (automatic) | <strong>Expenses</strong> = Manual entries</p>
-            </div>
             <div class="print-only print-header">
                 <h1>CAMPOST MANKON - Transaction Ledger</h1>
                 <p>GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p>
                 <p>Generated: <span id="ledgerPrintDate"></span></p>
             </div>
+            <div class="info-box no-print">
+                <h4>📒 Transaction Ledger</h4>
+                <p><strong>Income</strong> = Bill Payments | <strong>Expenses</strong> = Manual entries including Inheritance Share</p>
+            </div>
             <div class="stats-grid no-print">
-                <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income</div></div>
+                <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Bills Paid</div></div>
                 <div class="stat-card red"><div class="stat-icon">📉</div><div class="stat-value" id="ledgerExpenses">0</div><div class="stat-label">Total Expenses</div></div>
-                <div class="stat-card gold"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerReserve">0</div><div class="stat-label">Reserve Funds</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerReserve">0</div><div class="stat-label">Reserve Funds</div></div>
             </div>
             <div class="print-only print-summary">
-                <div><span>Total Income</span><strong id="printLedgerIncome">0</strong></div>
+                <div><span>Total Bills Paid</span><strong id="printLedgerIncome">0</strong></div>
                 <div><span>Total Expenses</span><strong id="printLedgerExpenses">0</strong></div>
                 <div><span>Reserve Funds</span><strong id="printLedgerReserve">0</strong></div>
             </div>
@@ -214,6 +220,10 @@
                 <p>GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p>
                 <p>Generated: <span id="expensesPrintDate"></span></p>
             </div>
+            <div class="info-box no-print">
+                <h4>💸 Expense Management</h4>
+                <p>Add expenses here. Select <strong>"Inheritance Share"</strong> category to allocate funds for heir distribution.</p>
+            </div>
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add New Expense</span></div>
                 <div class="card-body">
@@ -228,6 +238,7 @@
             </div>
             <div class="print-only print-summary">
                 <div><span>Total Expenses</span><strong id="printExpTotal">0</strong></div>
+                <div><span>Inheritance Allocated</span><strong id="printExpInheritance">0</strong></div>
                 <div><span>Number of Entries</span><strong id="printExpCount">0</strong></div>
             </div>
             <div class="card">
@@ -248,7 +259,7 @@
         <div id="bills" class="page">
             <div class="info-box no-print">
                 <h4>📄 Quarterly Rent Bills</h4>
-                <p>Bill Payments automatically become <strong>Rental Income</strong></p>
+                <p>Bill Payments become income. <strong>Reserve Funds</strong> = Total Paid - Total Expenses</p>
             </div>
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Create New Bill (2026+)</span></div>
@@ -273,13 +284,13 @@
         <!-- PAYMENTS -->
         <div id="payments" class="page">
             <div class="print-only print-header">
-                <h1>CAMPOST MANKON - Payment Report (Rental Income)</h1>
+                <h1>CAMPOST MANKON - Payment Report</h1>
                 <p>GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p>
                 <p>Generated: <span id="paymentsPrintDate"></span></p>
             </div>
             <div class="info-box no-print">
-                <h4>💵 Bill Payments = Rental Income</h4>
-                <p>Each payment recorded here automatically appears as <strong>Rental Income</strong> in the Ledger</p>
+                <h4>💵 Bill Payments</h4>
+                <p>Payments recorded here contribute to <strong>Total Bills Paid</strong></p>
             </div>
             <div class="card no-print">
                 <div class="card-header green"><span>💵 Record Payment</span></div>
@@ -295,11 +306,11 @@
                 </div>
             </div>
             <div class="print-only print-summary">
-                <div><span>Total Rental Income</span><strong id="printPayTotal">0</strong></div>
+                <div><span>Total Payments</span><strong id="printPayTotal">0</strong></div>
                 <div><span>Number of Payments</span><strong id="printPayCount">0</strong></div>
             </div>
             <div class="card">
-                <div class="card-header"><span>📜 Payment History (= Rental Income)</span>
+                <div class="card-header"><span>📜 Payment History</span>
                     <div class="no-print">
                         <button class="btn btn-print btn-sm" onclick="printPage('payments')">🖨️ Print</button>
                         <button class="btn btn-outline btn-sm" onclick="exportPayments()">📥 Export</button>
@@ -321,13 +332,17 @@
             </div>
             <div class="info-box no-print">
                 <h4>👨‍👩‍👧‍👦 Islamic Inheritance Distribution</h4>
-                <p><strong>Reserve Funds</strong> (Rental Income - Expenses) can be distributed to heirs. Sons receive double the share of daughters.</p>
+                <p>The amount to distribute comes from <strong>"Inheritance Share"</strong> expense entries. Sons receive double the share of daughters.</p>
+            </div>
+            <div class="highlight-box">
+                <p>Amount to Distribute (from Inheritance Share expenses)</p>
+                <h3 id="inhAmountDisplay">0 XAF</h3>
             </div>
             <div class="stats-grid">
-                <div class="stat-card green"><div class="stat-icon">🏠</div><div class="stat-value" id="inhIncome">0</div><div class="stat-label">Rental Income</div></div>
-                <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="inhExpenses">0</div><div class="stat-label">Expenses</div></div>
-                <div class="stat-card gold"><div class="stat-icon">🏦</div><div class="stat-value" id="inhReserve">0</div><div class="stat-label">Reserve Funds</div></div>
-                <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-value" id="inhPerPortion">0</div><div class="stat-label">Per Portion (XAF)</div></div>
+                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="inhPaid">0</div><div class="stat-label">Total Bills Paid</div></div>
+                <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="inhExpenses">0</div><div class="stat-label">Total Expenses</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="inhReserve">0</div><div class="stat-label">Reserve Funds</div></div>
+                <div class="stat-card gold"><div class="stat-icon">📊</div><div class="stat-value" id="inhPerPortion">0</div><div class="stat-label">Per Portion</div></div>
             </div>
             <div class="card">
                 <div class="card-header gold"><span>👨‍👩‍👧‍👦 Heir Groups (Total: <span id="inhPortions">24</span> portions)</span>
@@ -366,11 +381,11 @@
                 <div class="card-header"><span>📥 Export All Data</span></div>
                 <div class="card-body">
                     <div class="btn-group">
-                        <button class="btn btn-primary" onclick="exportLedger()">📒 Ledger CSV</button>
-                        <button class="btn btn-primary" onclick="exportExpenses()">💸 Expenses CSV</button>
-                        <button class="btn btn-primary" onclick="exportPayments()">💵 Payments CSV</button>
-                        <button class="btn btn-primary" onclick="exportBills()">📄 Bills CSV</button>
-                        <button class="btn btn-primary" onclick="exportInheritance()">👨‍👩‍👧‍👦 Inheritance CSV</button>
+                        <button class="btn btn-primary" onclick="exportLedger()">📒 Ledger</button>
+                        <button class="btn btn-primary" onclick="exportExpenses()">💸 Expenses</button>
+                        <button class="btn btn-primary" onclick="exportPayments()">💵 Payments</button>
+                        <button class="btn btn-primary" onclick="exportBills()">📄 Bills</button>
+                        <button class="btn btn-primary" onclick="exportInheritance()">👨‍👩‍👧‍👦 Inheritance</button>
                     </div>
                 </div>
             </div>
@@ -407,21 +422,14 @@
         };
         const api = async (url, opts={}) => (await fetch(API + url, { headers: {'Content-Type':'application/json'}, ...opts })).json();
 
-        // Print functionality
         function printPage(pageId) {
-            // Set print date
             const dateEl = document.getElementById(pageId + 'PrintDate');
             if (dateEl) dateEl.textContent = fmtDate();
-            
-            // Mark page for printing
             document.querySelectorAll('.page').forEach(p => p.classList.remove('printing'));
             document.getElementById(pageId).classList.add('printing');
-            
-            // Print
             window.print();
         }
 
-        // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -442,64 +450,72 @@
             else if (page === 'settings') checkDb();
         }
 
-        // Dashboard
         async function loadDashboard() {
             const summary = await api('/summary');
             const bills = await api('/bills');
             const heirs = await api('/heirs');
             const ledger = await api('/ledger');
             
-            document.getElementById('dashIncome').textContent = fmt(summary.rentalIncome);
+            document.getElementById('dashPaidTotal').textContent = fmt(summary.totalBillsPaid);
             document.getElementById('dashExpenses').textContent = fmt(summary.totalExpenses);
             document.getElementById('dashReserve').textContent = fmt(summary.reserveFunds);
+            document.getElementById('dashInheritance').textContent = fmt(summary.inheritanceAmount);
+            
+            document.getElementById('dashBillCount').textContent = bills.length;
+            const paidBills = bills.filter(b => b.outstanding === 0).length;
+            document.getElementById('dashBillPaid').textContent = paidBills;
+            document.getElementById('dashOutstanding').textContent = fmt(bills.reduce((s, b) => s + b.outstanding, 0));
             document.getElementById('dashHeirs').textContent = heirs.length;
             
-            document.getElementById('dashBills').textContent = bills.length;
-            document.getElementById('dashPaid').textContent = fmt(bills.reduce((s, b) => s + b.paidAmount, 0));
-            document.getElementById('dashOutstanding').textContent = fmt(bills.reduce((s, b) => s + b.outstanding, 0));
-            
-            document.getElementById('dashLedger').innerHTML = ledger.slice(0, 6).map(t =>
-                `<tr><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.description.substring(0,35)}${t.description.length > 35 ? '...' : ''}</td><td>${t.category_name}</td>
-                <td class="${t.amount >= 0 ? 'amount-positive' : 'amount-negative'}">${t.amount >= 0 ? '+' : ''}${fmt(t.amount)}</td>
-                <td><span class="badge badge-${t.type.toLowerCase()}">${t.type}</span></td></tr>`
-            ).join('') || '<tr><td colspan="5" style="text-align:center">No transactions</td></tr>';
+            document.getElementById('dashLedger').innerHTML = ledger.slice(0, 6).map(t => {
+                const isInheritance = t.category_name === 'Inheritance Share';
+                return `<tr><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.description.substring(0,35)}${t.description.length > 35 ? '...' : ''}</td>
+                <td>${t.category_name}${isInheritance ? ' 👨‍👩‍👧‍👦' : ''}</td>
+                <td class="${t.amount >= 0 ? 'amount-positive' : isInheritance ? 'amount-gold' : 'amount-negative'}">${t.amount >= 0 ? '+' : ''}${fmt(t.amount)}</td>
+                <td><span class="badge ${isInheritance ? 'badge-inheritance' : 'badge-' + t.type.toLowerCase()}">${isInheritance ? 'Inheritance' : t.type}</span></td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center">No transactions</td></tr>';
         }
 
-        // Ledger
         async function loadLedger() {
             const summary = await api('/summary');
             const ledger = await api('/ledger');
             
-            document.getElementById('ledgerIncome').textContent = fmt(summary.rentalIncome);
+            document.getElementById('ledgerIncome').textContent = fmt(summary.totalBillsPaid);
             document.getElementById('ledgerExpenses').textContent = fmt(summary.totalExpenses);
             document.getElementById('ledgerReserve').textContent = fmt(summary.reserveFunds);
-            document.getElementById('printLedgerIncome').textContent = fmt(summary.rentalIncome) + ' XAF';
+            document.getElementById('printLedgerIncome').textContent = fmt(summary.totalBillsPaid) + ' XAF';
             document.getElementById('printLedgerExpenses').textContent = fmt(summary.totalExpenses) + ' XAF';
             document.getElementById('printLedgerReserve').textContent = fmt(summary.reserveFunds) + ' XAF';
             
-            document.getElementById('ledgerTable').innerHTML = ledger.map(t =>
-                `<tr><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.description}</td><td>${t.category_name}</td>
-                <td class="${t.amount >= 0 ? 'amount-positive' : 'amount-negative'}">${t.amount >= 0 ? '+' : ''}${fmt(t.amount)}</td>
-                <td><span class="badge badge-${t.type.toLowerCase()}">${t.type}</span></td></tr>`
-            ).join('') || '<tr><td colspan="5" style="text-align:center">No transactions</td></tr>';
+            document.getElementById('ledgerTable').innerHTML = ledger.map(t => {
+                const isInheritance = t.category_name === 'Inheritance Share';
+                return `<tr><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.description}</td><td>${t.category_name}</td>
+                <td class="${t.amount >= 0 ? 'amount-positive' : isInheritance ? 'amount-gold' : 'amount-negative'}">${t.amount >= 0 ? '+' : ''}${fmt(t.amount)}</td>
+                <td><span class="badge ${isInheritance ? 'badge-inheritance' : 'badge-' + t.type.toLowerCase()}">${isInheritance ? 'Inheritance' : t.type}</span></td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center">No transactions</td></tr>';
         }
 
-        // Expenses
         async function loadExpenses() {
             const cats = await api('/categories');
-            document.getElementById('expCategory').innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('expCategory').innerHTML = cats.map(c => 
+                `<option value="${c.id}">${c.name}${c.name === 'Inheritance Share' ? ' 👨‍👩‍👧‍👦' : ''}</option>`
+            ).join('');
             document.getElementById('expDate').valueAsDate = new Date();
             
             const expenses = await api('/expenses');
-            const total = expenses.reduce((s, e) => s + e.amount, 0);
-            document.getElementById('printExpTotal').textContent = fmt(total) + ' XAF';
+            const summary = await api('/summary');
+            
+            document.getElementById('printExpTotal').textContent = fmt(summary.totalExpenses) + ' XAF';
+            document.getElementById('printExpInheritance').textContent = fmt(summary.inheritanceAmount) + ' XAF';
             document.getElementById('printExpCount').textContent = expenses.length;
             
-            document.getElementById('expenseTable').innerHTML = expenses.map(e =>
-                `<tr><td>${new Date(e.date).toLocaleDateString()}</td><td>${e.description}</td><td>${e.categoryName}</td>
-                <td class="amount-negative">-${fmt(e.amount)}</td>
-                <td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteExpense(${e.id})">🗑️</button></td></tr>`
-            ).join('') || '<tr><td colspan="5" style="text-align:center">No expenses</td></tr>';
+            document.getElementById('expenseTable').innerHTML = expenses.map(e => {
+                const isInheritance = e.categoryName === 'Inheritance Share';
+                return `<tr><td>${new Date(e.date).toLocaleDateString()}</td><td>${e.description}</td>
+                <td>${e.categoryName}${isInheritance ? ' 👨‍👩‍👧‍👦' : ''}</td>
+                <td class="${isInheritance ? 'amount-gold' : 'amount-negative'}">-${fmt(e.amount)}</td>
+                <td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteExpense(${e.id})">🗑️</button></td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center">No expenses</td></tr>';
         }
 
         async function addExpense() {
@@ -509,7 +525,14 @@
             const amount = parseInt(document.getElementById('expAmount').value);
             if (!date || !description || !amount) { showAlert('Fill all fields!', 'error'); return; }
             await api('/expenses', { method: 'POST', body: JSON.stringify({ date, description, categoryId, amount }) });
-            showAlert('Expense saved!');
+            
+            const cats = await api('/categories');
+            const cat = cats.find(c => c.id == categoryId);
+            if (cat && cat.name === 'Inheritance Share') {
+                showAlert('Inheritance Share added! Amount will be distributed to heirs.');
+            } else {
+                showAlert('Expense saved!');
+            }
             document.getElementById('expDesc').value = '';
             document.getElementById('expAmount').value = '';
             loadExpenses();
@@ -523,7 +546,6 @@
             loadExpenses();
         }
 
-        // Bills
         async function loadBills() {
             const yearSel = document.getElementById('billYear');
             yearSel.innerHTML = '';
@@ -566,7 +588,6 @@
             loadBills();
         }
 
-        // Payments
         async function loadPayments() {
             const bills = await api('/bills');
             document.getElementById('payBill').innerHTML = '<option value="">-- Select Bill --</option>' +
@@ -599,17 +620,18 @@
             const reference = document.getElementById('payRef').value;
             if (!billNumber || !amount) { showAlert('Select bill and enter amount!', 'error'); return; }
             await api('/payments', { method: 'POST', body: JSON.stringify({ billNumber, amount, date, reference }) });
-            showAlert('Payment recorded → Rental Income!');
+            showAlert('Payment recorded!');
             document.getElementById('payAmount').value = '';
             document.getElementById('payRef').value = '';
             loadPayments();
             loadDashboard();
         }
 
-        // Inheritance
         async function loadInheritance() {
             const data = await api('/inheritance/calculate');
-            document.getElementById('inhIncome').textContent = fmt(data.totalIncome);
+            
+            document.getElementById('inhAmountDisplay').textContent = fmt(data.inheritanceAmount) + ' XAF';
+            document.getElementById('inhPaid').textContent = fmt(data.totalBillsPaid);
             document.getElementById('inhExpenses').textContent = fmt(data.totalExpenses);
             document.getElementById('inhReserve').textContent = fmt(data.reserveFunds);
             document.getElementById('inhPortions').textContent = data.totalPortions;
@@ -655,7 +677,6 @@
             loadInheritance();
         }
 
-        // Settings
         async function checkDb() {
             try {
                 const status = await api('/status');
@@ -676,7 +697,6 @@
             loadDashboard();
         }
 
-        // Exports
         async function exportLedger() {
             const ledger = await api('/ledger');
             let csv = 'Date,Description,Category,Amount,Type\n';
@@ -707,7 +727,7 @@
 
         async function exportInheritance() {
             const data = await api('/inheritance/calculate');
-            let csv = 'Name,Relationship,Group,Portions,Share (XAF)\n';
+            let csv = `Inheritance Amount:,${data.inheritanceAmount}\nTotal Portions:,${data.totalPortions}\nPer Portion:,${data.sharePerPortion}\n\nName,Relationship,Group,Portions,Share (XAF)\n`;
             data.heirs.forEach(h => csv += `${h.name},${h.relationship},${h.heir_group},${h.portions},${Math.round(h.shareAmount)}\n`);
             download(csv, 'campost_inheritance.csv');
         }
@@ -720,7 +740,137 @@
             showAlert('Exported!');
         }
 
-        // Init
+        async function init() {
+            await checkDb();
+            await loadDashboard();
+        }
+        init();
+    </script>
+</body>
+</html>
+
+        async function exportAllCSV() {
+            const all = await api('/export/all');
+            let csv = 'CAMPOST MANKON - GHOUENZEN Soulemanou\nB.P 36 Mankon-Bamenda | Tel: 675299868\n';
+            csv += `\nSUMMARY\nTotal Bills Paid: ${all.summary.totalBillsPaid}\nTotal Expenses: ${all.summary.totalExpenses}\nReserve Funds: ${all.summary.reserveFunds}\n`;
+            csv += '\n\nBILLS\nBill Number,Period,Year,Amount Due,Paid,Outstanding\n';
+            all.bills.forEach(b => csv += `${b.bill_number},${b.period},${b.year},${b.amount_due},${b.paid_amount},${b.outstanding}\n`);
+            csv += '\n\nPAYMENTS\nDate,Bill,Amount,Reference\n';
+            all.payments.forEach(p => csv += `${p.payment_date},${p.bill_number},${p.amount},"${p.reference || ''}"\n`);
+            csv += '\n\nEXPENSES\nDate,Description,Category,Amount\n';
+            all.expenses.forEach(e => csv += `${e.expense_date},"${e.description}",${e.category_name},${e.amount}\n`);
+            csv += '\n\nHEIRS\nName,Relationship,Group,Portions\n';
+            all.heirs.forEach(h => csv += `${h.name},${h.relationship},${h.heir_group},${h.portions}\n`);
+            download(csv, 'campost_all_data.csv');
+        }
+
+        async function exportPDF(type) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CAMPOST MANKON', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868', 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            
+            if (type === 'bills') {
+                doc.text('BILLS REPORT', 105, 35, { align: 'center' });
+                const bills = await api('/bills');
+                doc.autoTable({ startY: 40, head: [['Bill #', 'Period', 'Year', 'Due', 'Paid', 'Outstanding', 'Status']], body: bills.map(b => [b.billNumber, b.period, b.year, fmt(b.amountDue), fmt(b.paidAmount), fmt(b.outstanding), b.outstanding === 0 ? 'Paid' : 'Outstanding']), styles: { fontSize: 8 } });
+            } else if (type === 'payments') {
+                doc.text('PAYMENTS REPORT', 105, 35, { align: 'center' });
+                const payments = await api('/payments');
+                doc.autoTable({ startY: 40, head: [['Date', 'Bill #', 'Period', 'Amount', 'Reference']], body: payments.map(p => [fmtDate(p.date), p.billNumber, `${p.period} ${p.year}`, fmt(p.amount), p.reference || '-']), styles: { fontSize: 8 } });
+            } else if (type === 'expenses') {
+                doc.text('EXPENSES REPORT', 105, 35, { align: 'center' });
+                const expenses = await api('/expenses');
+                doc.autoTable({ startY: 40, head: [['Date', 'Description', 'Category', 'Amount']], body: expenses.map(e => [fmtDate(e.date), e.description.substring(0,40), e.categoryName, fmt(e.amount)]), styles: { fontSize: 8 } });
+            } else if (type === 'heirs') {
+                const data = await api('/inheritance/calculate');
+                doc.text('INHERITANCE REPORT', 105, 35, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text(`Amount: ${fmt(data.inheritanceAmount)} XAF | Per Portion: ${fmt(data.sharePerPortion)} XAF`, 105, 42, { align: 'center' });
+                doc.autoTable({ startY: 48, head: [['Name', 'Relationship', 'Group', 'Portions', 'Share']], body: data.heirs.map(h => [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(h.shareAmount))]), styles: { fontSize: 8 } });
+            }
+            doc.save(`campost_${type}.pdf`);
+            showAlert('PDF exported!');
+        }
+
+        async function exportAllPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const all = await api('/export/all');
+            const inh = await api('/inheritance/calculate');
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CAMPOST MANKON', 105, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868', 105, 22, { align: 'center' });
+            doc.line(20, 25, 190, 25);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FINANCIAL SUMMARY', 20, 33);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Bills Paid: ${fmt(all.summary.totalBillsPaid)} | Expenses: ${fmt(all.summary.totalExpenses)} | Reserve: ${fmt(all.summary.reserveFunds)}`, 20, 40);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('BILLS', 20, 50);
+            doc.autoTable({ startY: 53, head: [['Bill #', 'Period', 'Year', 'Due', 'Paid', 'Out']], body: all.bills.map(b => [b.bill_number, b.period, b.year, fmt(b.amount_due), fmt(b.paid_amount), fmt(b.outstanding)]), styles: { fontSize: 7 } });
+            doc.addPage();
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PAYMENTS', 20, 15);
+            doc.autoTable({ startY: 18, head: [['Date', 'Bill', 'Amount', 'Ref']], body: all.payments.map(p => [p.payment_date?.split('T')[0] || '', p.bill_number, fmt(p.amount), p.reference || '']), styles: { fontSize: 7 } });
+            let y = doc.lastAutoTable.finalY + 10;
+            doc.text('EXPENSES', 20, y);
+            doc.autoTable({ startY: y + 3, head: [['Date', 'Description', 'Category', 'Amount']], body: all.expenses.map(e => [e.expense_date?.split('T')[0] || '', e.description?.substring(0,25) || '', e.category_name || '', fmt(e.amount)]), styles: { fontSize: 7 } });
+            doc.addPage();
+            doc.text(`INHERITANCE (${fmt(inh.inheritanceAmount)} XAF)`, 20, 15);
+            doc.autoTable({ startY: 20, head: [['Name', 'Rel', 'Group', 'Portions', 'Share']], body: inh.heirs.map(h => [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(h.shareAmount))]), styles: { fontSize: 7 } });
+            doc.save('campost_complete_report.pdf');
+            showAlert('Complete PDF exported!');
+        }
+
+        function download(content, filename) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([content], { type: 'text/csv' }));
+            a.download = filename;
+            a.click();
+            showAlert('Exported!');
+        }
+
+        function printPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('printing'));
+            document.getElementById(pageId).classList.add('printing');
+            window.print();
+        }
+
+        async function checkDb() {
+            try {
+                const status = await api('/status');
+                document.getElementById('dbStatus').textContent = status.connected ? '✓ Connected' : '✗ Offline';
+                document.getElementById('dbStatus').className = `db-status ${status.connected ? 'connected' : 'disconnected'}`;
+                document.getElementById('settingsAlert').className = `alert alert-${status.connected ? 'success' : 'error'}`;
+                document.getElementById('settingsAlert').innerHTML = status.connected ? '✓ PostgreSQL Connected' : '✗ Database offline';
+            } catch(e) {
+                document.getElementById('dbStatus').textContent = '✗ Offline';
+                document.getElementById('dbStatus').className = 'db-status disconnected';
+            }
+        }
+
+        async function resetAll() {
+            if (!confirm('RESET ALL DATA? This cannot be undone!')) return;
+            await api('/reset', { method: 'POST' });
+            showAlert('Data reset!');
+            loadDashboard();
+        }
+
         async function init() {
             await checkDb();
             await loadDashboard();

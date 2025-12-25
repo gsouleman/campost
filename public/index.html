@@ -181,13 +181,13 @@
         <!-- LEDGER -->
         <div id="ledger" class="page">
             <div class="stats-grid">
-                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income</div></div>
+                <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income (from Bills)</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="ledgerExpense">0</div><div class="stat-label">Total Expenses</div></div>
                 <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerBalance">0</div><div class="stat-label">Balance (Reserve)</div></div>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <span>📒 Ledger (Auto-Generated)</span>
+                    <span>📒 Ledger - Income & Expenses (Auto-Generated)</span>
                     <div class="no-print">
                         <button class="btn btn-print btn-sm" onclick="exportPDF('ledger')">📥 Export PDF</button>
                         <button class="btn btn-outline btn-sm" onclick="exportCSV('ledger')">📥 Export CSV</button>
@@ -195,6 +195,9 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
+                        📌 <strong>Income</strong> = Bills with status Paid or Partial | <strong>Expenses</strong> = All recorded expenses
+                    </p>
                     <div class="table-container">
                         <table>
                             <thead>
@@ -202,8 +205,8 @@
                                     <th>Date</th>
                                     <th>Description</th>
                                     <th>Type</th>
-                                    <th>Income (Credit)</th>
-                                    <th>Expense (Debit)</th>
+                                    <th style="background: #c6f6d5; color: #276749;">Income (Credit)</th>
+                                    <th style="background: #fed7d7; color: #c53030;">Expense (Debit)</th>
                                     <th>Balance</th>
                                 </tr>
                             </thead>
@@ -581,11 +584,14 @@
 
         // Dashboard
         function loadDashboard() {
-            // Get total income from payments (bills paid)
-            api('/payments').then(function(payments) {
+            // Get total income from bills (paid amounts from bills with paid or partial status)
+            api('/bills').then(function(bills) {
                 var totalIncome = 0;
-                payments.forEach(function(p) {
-                    totalIncome += p.amount;
+                bills.forEach(function(b) {
+                    // Include paid amount from bills that have any payment (paid or partial)
+                    if (b.paidAmount > 0) {
+                        totalIncome += b.paidAmount;
+                    }
                 });
                 document.getElementById('dashIncome').textContent = fmt(totalIncome);
                 document.getElementById('dashIncomeSum').textContent = fmt(totalIncome) + ' XAF';
@@ -618,25 +624,28 @@
             });
         }
 
-        // Ledger - combines income (payments) and expenses
+        // Ledger - combines income (from bills paid/partial) and expenses
         function loadLedger() {
-            Promise.all([api('/payments'), api('/expenses')]).then(function(results) {
-                var payments = results[0];
+            Promise.all([api('/bills'), api('/expenses')]).then(function(results) {
+                var bills = results[0];
                 var expenses = results[1];
                 
                 // Combine into ledger entries
                 var ledgerEntries = [];
                 
-                // Add payments as income
-                payments.forEach(function(p) {
-                    ledgerEntries.push({
-                        date: p.date,
-                        description: 'Payment for ' + p.billNumber + ' (' + p.period + ' ' + p.year + ')',
-                        type: 'Income',
-                        income: p.amount,
-                        expense: 0,
-                        reference: p.reference
-                    });
+                // Add bills with payments as income (paid or partial status)
+                bills.forEach(function(b) {
+                    if (b.paidAmount > 0) {
+                        var status = b.outstanding === 0 ? 'Paid' : 'Partial';
+                        ledgerEntries.push({
+                            date: b.createdAt || new Date().toISOString(),
+                            description: 'Bill ' + b.billNumber + ' - ' + b.period + ' ' + b.year + ' (' + status + ')',
+                            type: 'Income',
+                            income: b.paidAmount,
+                            expense: 0,
+                            status: status
+                        });
+                    }
                 });
                 
                 // Add expenses
@@ -673,10 +682,11 @@
                     }
                     
                     var isInheritance = entry.type === 'Inheritance Share';
+                    var isIncome = entry.income > 0;
                     tableHtml += '<tr>' +
                         '<td>' + fmtDate(entry.date) + '</td>' +
                         '<td>' + entry.description + '</td>' +
-                        '<td><span class="badge ' + (entry.income > 0 ? 'badge-income' : isInheritance ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
+                        '<td><span class="badge ' + (isIncome ? 'badge-income' : isInheritance ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + (entry.status ? ' (' + entry.status + ')' : '') + '</span></td>' +
                         '<td class="amount-positive">' + (entry.income > 0 ? fmt(entry.income) : '-') + '</td>' +
                         '<td class="' + (isInheritance ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(entry.expense) : '-') + '</td>' +
                         '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(runningBalance) + '</td>' +
@@ -1140,24 +1150,35 @@
                     download(csv, 'campost_expenses.csv');
                 });
             } else if (type === 'ledger') {
-                Promise.all([api('/payments'), api('/expenses')]).then(function(results) {
-                    var payments = results[0];
+                Promise.all([api('/bills'), api('/expenses')]).then(function(results) {
+                    var bills = results[0];
                     var expenses = results[1];
-                    var csv = h + 'Date,Description,Type,Income,Expense,Balance\n';
+                    var csv = h + 'Date,Description,Type,Status,Income,Expense,Balance\n';
                     
                     var ledgerEntries = [];
-                    payments.forEach(function(p) {
-                        ledgerEntries.push({ date: p.date, description: 'Payment: ' + p.billNumber, type: 'Income', income: p.amount, expense: 0 });
+                    // Add bills with payments (paid or partial)
+                    bills.forEach(function(b) {
+                        if (b.paidAmount > 0) {
+                            var status = b.outstanding === 0 ? 'Paid' : 'Partial';
+                            ledgerEntries.push({ 
+                                date: b.createdAt || new Date().toISOString(), 
+                                description: 'Bill ' + b.billNumber + ' - ' + b.period + ' ' + b.year, 
+                                type: 'Income', 
+                                status: status,
+                                income: b.paidAmount, 
+                                expense: 0 
+                            });
+                        }
                     });
                     expenses.forEach(function(e) {
-                        ledgerEntries.push({ date: e.date, description: e.description, type: e.categoryName, income: 0, expense: e.amount });
+                        ledgerEntries.push({ date: e.date, description: e.description, type: e.categoryName, status: '', income: 0, expense: e.amount });
                     });
                     ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
                     
                     var balance = 0;
                     ledgerEntries.forEach(function(entry) {
                         balance += entry.income - entry.expense;
-                        csv += entry.date + ',"' + entry.description + '",' + entry.type + ',' + entry.income + ',' + entry.expense + ',' + balance + '\n';
+                        csv += (entry.date ? entry.date.split('T')[0] : '') + ',"' + entry.description + '",' + entry.type + ',' + entry.status + ',' + entry.income + ',' + entry.expense + ',' + balance + '\n';
                     });
                     download(csv, 'campost_ledger.csv');
                 });
@@ -1219,20 +1240,23 @@
                     showAlert('PDF exported!');
                 });
             } else if (type === 'ledger') {
-                Promise.all([api('/payments'), api('/expenses')]).then(function(results) {
-                    var payments = results[0];
+                Promise.all([api('/bills'), api('/expenses')]).then(function(results) {
+                    var bills = results[0];
                     var expenses = results[1];
                     
-                    // Build ledger entries
+                    // Build ledger entries from bills with payments
                     var ledgerEntries = [];
-                    payments.forEach(function(p) {
-                        ledgerEntries.push({
-                            date: p.date,
-                            description: 'Payment: ' + p.billNumber,
-                            type: 'Income',
-                            income: p.amount,
-                            expense: 0
-                        });
+                    bills.forEach(function(b) {
+                        if (b.paidAmount > 0) {
+                            var status = b.outstanding === 0 ? 'Paid' : 'Partial';
+                            ledgerEntries.push({
+                                date: b.createdAt || new Date().toISOString(),
+                                description: b.billNumber + ' - ' + b.period + ' ' + b.year,
+                                type: 'Income (' + status + ')',
+                                income: b.paidAmount,
+                                expense: 0
+                            });
+                        }
                     });
                     expenses.forEach(function(e) {
                         ledgerEntries.push({

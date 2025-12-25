@@ -558,7 +558,9 @@
             var y = parseInt(document.getElementById('billY').value);
             var p = document.getElementById('billP').value;
             var rate = parseInt(document.getElementById('billRate').value) || CONFIG.monthlyRate;
-            var amountDue = rate * CONFIG.months;
+            var grossAmount = rate * CONFIG.months; // 600,000
+            var taxAmount = Math.round(grossAmount * CONFIG.taxRate); // 90,000
+            var amountDue = grossAmount - taxAmount; // 510,000 (net after tax)
             var bn = document.getElementById('billNum').value;
 
             if (em === 'edit') {
@@ -598,11 +600,12 @@
         // View Bill as Invoice
         function viewBill(bn) {
             api('/bills/' + bn).then(function(b) {
-                var rate = Math.round(b.amountDue / 3);
-                var grossAmount = rate * CONFIG.months;
-                var taxAmount = Math.round(grossAmount * CONFIG.taxRate);
+                var rate = CONFIG.monthlyRate; // 200,000 per month
+                var grossAmount = rate * CONFIG.months; // 600,000 quarterly
+                var taxAmount = Math.round(grossAmount * CONFIG.taxRate); // 90,000 (15% of 600,000)
+                var netAmount = grossAmount - taxAmount; // 510,000 (amount due per quarter)
                 var advancePayment = b.paidAmount;
-                var totalDue = b.outstanding;
+                var totalDue = netAmount - advancePayment; // Outstanding after payments
                 var qInfo = QUARTERS[b.quarter] || { months: b.period };
                 var paymentNum = b.quarter === 'Q1' ? 1 : b.quarter === 'Q2' ? 2 : b.quarter === 'Q3' ? 3 : 4;
                 var billDate = b.createdAt ? formatDateLong(b.createdAt) : formatDateLong(new Date());
@@ -641,11 +644,12 @@
                         '<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">' +
                             '<tr style="background: #d69e2e; color: white;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Description</th><th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qty (months)</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rate (XAF)</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Amount (XAF)</th></tr>' +
                             '<tr><td style="padding: 8px; border: 1px solid #ddd;">Rent for ' + b.quarter + ' (' + qInfo.months + ')</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">' + CONFIG.months + '</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">' + fmt(rate) + '</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">' + fmt(grossAmount) + '</td></tr>' +
-                            '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less 15% Tax</td><td style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">15%</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #e53e3e;">' + fmt(taxAmount) + '</td></tr>' +
-                            '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less Advance Payment</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #38a169;">' + fmt(advancePayment) + '</td></tr>' +
+                            '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less 15% Tax</td><td style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">15%</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #e53e3e;">-' + fmt(taxAmount) + '</td></tr>' +
+                            '<tr style="background: #f7fafc;"><td colspan="3" style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Net Amount (After Tax)</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">' + fmt(netAmount) + '</td></tr>' +
+                            '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less Advance Payment</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #38a169;">-' + fmt(advancePayment) + '</td></tr>' +
                             '<tr style="background: #2c5282; color: white;"><td colspan="3" style="padding: 10px; font-weight: bold; text-align: center;">TOTAL AMOUNT DUE</td><td style="padding: 10px; text-align: right; font-weight: bold; font-size: 18px;">' + fmt(totalDue) + '</td></tr>' +
                         '</table>' +
-                        '<p style="text-align: center; color: #e53e3e; font-style: italic; font-weight: bold;">(' + numberToWords(b.amountDue) + ' francs CFA.)</p>' +
+                        '<p style="text-align: center; color: #e53e3e; font-style: italic; font-weight: bold;">(' + numberToWords(netAmount) + ' francs CFA.)</p>' +
                         '<div style="margin-top: 40px;">' +
                             '<p><strong>Signature:</strong></p>' +
                             '<div style="margin-top: 10px; border-bottom: 1px solid #333; width: 200px; height: 50px;"></div>' +

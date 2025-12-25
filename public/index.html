@@ -706,12 +706,15 @@
             <!-- ========== RE SETTINGS TAB ========== -->
             <div id="reSettingsTab" class="tab-content">
                 <div class="card">
-                    <div class="card-header gold"><span>⚙️ Real Estate Settings</span></div>
+                    <div class="card-header gold"><span>⚙️ Global Default Settings</span></div>
                     <div class="card-body">
+                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                            These defaults will be applied to new properties. Changes here will update all existing properties.
+                        </p>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Default Tax Rate (%)</label>
-                                <select id="reSettingTaxRate">
+                                <select id="reSettingTaxRate" onchange="previewGlobalSettings()">
                                     <option value="0">0%</option>
                                     <option value="5">5%</option>
                                     <option value="10">10%</option>
@@ -722,7 +725,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Default Rental Period</label>
-                                <select id="reSettingPeriod">
+                                <select id="reSettingPeriod" onchange="previewGlobalSettings()">
                                     <option value="Monthly">Monthly</option>
                                     <option value="Quarterly">Quarterly</option>
                                     <option value="Yearly">Yearly</option>
@@ -738,10 +741,82 @@
                             </div>
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-success" onclick="saveRESettings()">💾 Save Settings</button>
+                            <button class="btn btn-success" onclick="saveGlobalRESettings()">💾 Save & Apply to All Properties</button>
                         </div>
                     </div>
                 </div>
+                
+                <div class="card">
+                    <div class="card-header"><span>🏠 Property-Specific Settings</span></div>
+                    <div class="card-body">
+                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                            Override global settings for individual properties.
+                        </p>
+                        <div class="form-grid">
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label>Select Property</label>
+                                <select id="reSettingProperty" onchange="loadPropertySettings()">
+                                    <option value="">-- Select a Property --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tax Rate (%)</label>
+                                <select id="reSettingPropTaxRate">
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="10">10%</option>
+                                    <option value="15">15%</option>
+                                    <option value="20">20%</option>
+                                    <option value="25">25%</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rental Period</label>
+                                <select id="reSettingPropPeriod">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rent Amount</label>
+                                <input type="number" id="reSettingPropRent" placeholder="Rent amount">
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="reSettingPropStatus">
+                                    <option value="Rented">Rented</option>
+                                    <option value="Vacant">Vacant</option>
+                                    <option value="Under Maintenance">Under Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="savePropertySettings()">💾 Save Property Settings</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header"><span>📋 Properties Overview</span></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Status</th>
+                                        <th>Tax Rate</th>
+                                        <th>Period</th>
+                                        <th>Rent</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reSettingsPropertiesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="card">
                     <div class="card-header red"><span>⚠️ Data Management</span></div>
                     <div class="card-body">
@@ -2058,6 +2133,8 @@
                 loadREInheritance();
             } else if (tabId === 'reLedgerTab') {
                 loadRELedgerFull();
+            } else if (tabId === 'reSettingsTab') {
+                loadRESettings();
             }
         }
 
@@ -2212,6 +2289,11 @@
 
         // Open Property Modal
         function openPropertyModal() {
+            // Get global default settings
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            var defaultTaxRate = settings.taxRate || '15';
+            var defaultPeriod = settings.period || 'Monthly';
+            
             document.getElementById('propertyModalTitle').textContent = '🏠 Add Property';
             document.getElementById('propId').value = '';
             document.getElementById('propName').value = '';
@@ -2219,8 +2301,8 @@
             document.getElementById('propType').value = 'Residential';
             document.getElementById('propStatus').value = 'Rented';
             document.getElementById('propRentAmount').value = 0;
-            document.getElementById('propRentPeriod').value = 'Monthly';
-            document.getElementById('propTaxRate').value = '15';
+            document.getElementById('propRentPeriod').value = defaultPeriod;
+            document.getElementById('propTaxRate').value = defaultTaxRate;
             document.getElementById('propInheritance').value = 'Yes';
             document.getElementById('propNotes').value = '';
             toggleRentalFields();
@@ -3076,14 +3158,125 @@
         }
 
         // ========== RE SETTINGS & EXPORT ==========
-        function saveRESettings() { 
+        // ========== RE SETTINGS FUNCTIONS ==========
+        function loadRESettings() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            
+            // Load global settings
+            if (settings.taxRate) document.getElementById('reSettingTaxRate').value = settings.taxRate;
+            if (settings.period) document.getElementById('reSettingPeriod').value = settings.period;
+            if (settings.currency) document.getElementById('reSettingCurrency').value = settings.currency;
+            
+            // Populate property dropdown
+            document.getElementById('reSettingProperty').innerHTML = '<option value="">-- Select a Property --</option>' +
+                properties.map(function(p) {
+                    return '<option value="' + p.id + '">' + p.name + ' (' + p.status + ')</option>';
+                }).join('');
+            
+            // Render properties overview table
+            renderSettingsPropertiesTable();
+        }
+        
+        function renderSettingsPropertiesTable() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            var currency = settings.currency || 'XAF';
+            
+            var html = properties.map(function(p) {
+                var isRented = p.status === 'Rented';
+                return '<tr>' +
+                    '<td><strong>' + p.name + '</strong><br><small style="color: #718096;">' + p.location + '</small></td>' +
+                    '<td><span class="badge ' + (isRented ? 'badge-paid' : 'badge-unpaid') + '">' + p.status + '</span></td>' +
+                    '<td>' + (p.tax_rate || 0) + '%</td>' +
+                    '<td>' + (p.rent_period || '-') + '</td>' +
+                    '<td>' + (isRented ? fmt(p.rent_amount || 0) + ' ' + currency : '-') + '</td>' +
+                '</tr>';
+            }).join('');
+            
+            document.getElementById('reSettingsPropertiesTable').innerHTML = html || '<tr><td colspan="5">No properties added yet</td></tr>';
+        }
+        
+        function loadPropertySettings() {
+            var propertyId = parseInt(document.getElementById('reSettingProperty').value);
+            if (!propertyId) {
+                document.getElementById('reSettingPropTaxRate').value = '15';
+                document.getElementById('reSettingPropPeriod').value = 'Monthly';
+                document.getElementById('reSettingPropRent').value = '';
+                document.getElementById('reSettingPropStatus').value = 'Rented';
+                return;
+            }
+            
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var prop = properties.find(function(p) { return p.id === propertyId; });
+            
+            if (prop) {
+                document.getElementById('reSettingPropTaxRate').value = prop.tax_rate || '15';
+                document.getElementById('reSettingPropPeriod').value = prop.rent_period || 'Monthly';
+                document.getElementById('reSettingPropRent').value = prop.rent_amount || '';
+                document.getElementById('reSettingPropStatus').value = prop.status || 'Rented';
+            }
+        }
+        
+        function savePropertySettings() {
+            var propertyId = parseInt(document.getElementById('reSettingProperty').value);
+            if (!propertyId) {
+                showAlert('Please select a property first', 'error');
+                return;
+            }
+            
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var idx = properties.findIndex(function(p) { return p.id === propertyId; });
+            
+            if (idx !== -1) {
+                properties[idx].tax_rate = document.getElementById('reSettingPropTaxRate').value;
+                properties[idx].rent_period = document.getElementById('reSettingPropPeriod').value;
+                properties[idx].rent_amount = parseFloat(document.getElementById('reSettingPropRent').value) || 0;
+                properties[idx].status = document.getElementById('reSettingPropStatus').value;
+                
+                // If not rented, clear rent values
+                if (properties[idx].status !== 'Rented') {
+                    properties[idx].rent_amount = 0;
+                }
+                
+                localStorage.setItem('familyProperties', JSON.stringify(properties));
+                showAlert('Property settings saved for ' + properties[idx].name + '!');
+                renderSettingsPropertiesTable();
+                loadRealEstate();
+            }
+        }
+        
+        function saveGlobalRESettings() {
+            var taxRate = document.getElementById('reSettingTaxRate').value;
+            var period = document.getElementById('reSettingPeriod').value;
+            var currency = document.getElementById('reSettingCurrency').value;
+            
+            // Save global settings
             var settings = { 
-                taxRate: document.getElementById('reSettingTaxRate').value, 
-                period: document.getElementById('reSettingPeriod').value, 
-                currency: document.getElementById('reSettingCurrency').value 
+                taxRate: taxRate, 
+                period: period, 
+                currency: currency 
             }; 
-            localStorage.setItem('reSettings', JSON.stringify(settings)); 
-            showAlert('Settings saved!'); 
+            localStorage.setItem('reSettings', JSON.stringify(settings));
+            
+            // Apply to all properties
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            properties = properties.map(function(p) {
+                p.tax_rate = taxRate;
+                if (p.status === 'Rented') {
+                    p.rent_period = period;
+                }
+                return p;
+            });
+            localStorage.setItem('familyProperties', JSON.stringify(properties));
+            
+            showAlert('Global settings saved and applied to all ' + properties.length + ' properties!');
+            renderSettingsPropertiesTable();
+            loadRealEstate();
+        }
+        
+        function previewGlobalSettings() {
+            // Optional: Show preview of changes
         }
 
         function resetREData() { 
@@ -3093,7 +3286,8 @@
             localStorage.removeItem('reBills'); 
             localStorage.removeItem('rePayments'); 
             localStorage.removeItem('reExpenses'); 
-            localStorage.removeItem('reHeirs'); 
+            localStorage.removeItem('reHeirs');
+            localStorage.removeItem('reSettings');
             showAlert('All RE data reset'); 
             loadRealEstate(); 
         }

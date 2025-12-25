@@ -344,6 +344,8 @@
                 <div class="stat-card blue"><div class="stat-icon">🔑</div><div class="stat-value" id="reRented">0</div><div class="stat-label">Rented Properties</div></div>
                 <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reTotalIncome">0</div><div class="stat-label">Total Income</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="reTotalExpenses">0</div><div class="stat-label">Total Expenses</div></div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #805ad5, #6b46c1); color: white;"><div class="stat-icon">🏦</div><div class="stat-value" id="reReservedFunds">0</div><div class="stat-label">Reserved Funds</div></div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #2d3748, #1a202c); color: white;"><div class="stat-icon">📊</div><div class="stat-value" id="reNetBalance">0</div><div class="stat-label">Net Balance</div></div>
             </div>
 
             <!-- RE Navigation Tabs -->
@@ -740,6 +742,24 @@
                                     <option value="EUR">EUR (Euro)</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>Reserved Funds (% of Income)</label>
+                                <select id="reSettingReservedPercent">
+                                    <option value="0">0% - No Reserve</option>
+                                    <option value="5">5%</option>
+                                    <option value="10" selected>10%</option>
+                                    <option value="15">15%</option>
+                                    <option value="20">20%</option>
+                                    <option value="25">25%</option>
+                                    <option value="30">30%</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="background: #f0f4f8; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                            <p style="font-size: 0.85rem; color: #4a5568; margin: 0;">
+                                🏦 <strong>Reserved Funds:</strong> A percentage of total income set aside for maintenance, emergencies, or future investments. 
+                                <br>📊 <strong>Net Balance</strong> = Total Income - Total Expenses - Reserved Funds
+                            </p>
                         </div>
                         <div class="btn-group">
                             <button class="btn btn-success" onclick="saveGlobalRESettings()">💾 Save & Apply to All Properties</button>
@@ -2154,6 +2174,9 @@
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            var currency = settings.currency || 'XAF';
+            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
 
             var totalIncome = 0;
             rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
@@ -2161,12 +2184,20 @@
             var totalExpenses = 0;
             reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
 
+            // Calculate Reserved Funds (percentage of total income)
+            var reservedFunds = totalIncome * reservedPercent / 100;
+            
+            // Net Balance = Income - Expenses - Reserved Funds
+            var netBalance = totalIncome - totalExpenses - reservedFunds;
+
             var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
 
             document.getElementById('reTotalProps').textContent = properties.length;
             document.getElementById('reRented').textContent = rentedProps.length;
             document.getElementById('reTotalIncome').textContent = fmt(Math.round(totalIncome));
             document.getElementById('reTotalExpenses').textContent = fmt(Math.round(totalExpenses));
+            document.getElementById('reReservedFunds').textContent = fmt(Math.round(reservedFunds));
+            document.getElementById('reNetBalance').textContent = fmt(Math.round(netBalance));
 
             renderPropertiesTable(properties);
             renderRentalIncomeTable(properties);
@@ -3114,7 +3145,9 @@
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
             var currency = getCurrency();
+            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
 
             var ledgerEntries = [];
 
@@ -3130,7 +3163,8 @@
                     description: 'Rental Payment - ' + (bill ? bill.bill_number : 'Bill'),
                     type: 'Income', 
                     income: amount,
-                    expense: 0 
+                    expense: 0,
+                    reserved: 0
                 }); 
             });
 
@@ -3143,7 +3177,8 @@
                     description: e.description, 
                     type: e.category, 
                     income: 0,
-                    expense: parseFloat(e.amount) || 0 
+                    expense: parseFloat(e.amount) || 0,
+                    reserved: 0
                 }); 
             });
 
@@ -3171,13 +3206,29 @@
                 '</tr>'; 
             }).join('');
 
+            // Calculate Reserved Funds and Net Balance
+            var reservedFunds = totalIncome * reservedPercent / 100;
+            var netBalance = runningBalance - reservedFunds;
+
             document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
             document.getElementById('reLedgerTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right;">TOTALS (' + currency + '):</td>' +
+                '<td colspan="4" style="text-align: right;">SUBTOTAL (' + currency + '):</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
                 '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
                 '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                '</tr>' +
+                '<tr style="background: #e9d8fd; font-weight: bold;">' +
+                '<td colspan="4" style="text-align: right;">🏦 Reserved Funds (' + reservedPercent + '% of Income):</td>' +
+                '<td></td>' +
+                '<td style="color: #805ad5;">-' + fmt(Math.round(reservedFunds)) + '</td>' +
+                '<td></td>' +
+                '</tr>' +
+                '<tr style="background: #2d3748; color: white; font-weight: bold;">' +
+                '<td colspan="4" style="text-align: right;">📊 NET BALANCE:</td>' +
+                '<td></td>' +
+                '<td></td>' +
+                '<td>' + fmt(Math.round(netBalance)) + '</td>' +
                 '</tr>';
         }
 
@@ -3191,6 +3242,7 @@
             if (settings.taxRate) document.getElementById('reSettingTaxRate').value = settings.taxRate;
             if (settings.period) document.getElementById('reSettingPeriod').value = settings.period;
             if (settings.currency) document.getElementById('reSettingCurrency').value = settings.currency;
+            if (settings.reservedPercent) document.getElementById('reSettingReservedPercent').value = settings.reservedPercent;
             
             // Populate property dropdown
             document.getElementById('reSettingProperty').innerHTML = '<option value="">-- Select a Property --</option>' +
@@ -3274,12 +3326,14 @@
             var taxRate = document.getElementById('reSettingTaxRate').value;
             var period = document.getElementById('reSettingPeriod').value;
             var currency = document.getElementById('reSettingCurrency').value;
+            var reservedPercent = document.getElementById('reSettingReservedPercent').value;
             
             // Save global settings
             var settings = { 
                 taxRate: taxRate, 
                 period: period, 
-                currency: currency 
+                currency: currency,
+                reservedPercent: reservedPercent
             }; 
             localStorage.setItem('reSettings', JSON.stringify(settings));
             
@@ -3294,7 +3348,7 @@
             });
             localStorage.setItem('familyProperties', JSON.stringify(properties));
             
-            showAlert('Global settings saved and applied to all ' + properties.length + ' properties!');
+            showAlert('Global settings saved! Reserved Funds set to ' + reservedPercent + '% of income.');
             renderSettingsPropertiesTable();
             loadRealEstate();
         }

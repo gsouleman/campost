@@ -741,10 +741,6 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Inheritance Pool %</label>
-                                <input type="number" id="reSettingInhPercent" value="100" min="0" max="100">
-                            </div>
-                            <div class="form-group">
                                 <label>Currency</label>
                                 <select id="reSettingCurrency">
                                     <option value="XAF">XAF (CFA Franc)</option>
@@ -3147,7 +3143,6 @@
             var settings = { 
                 taxRate: document.getElementById('reSettingTaxRate').value, 
                 period: document.getElementById('reSettingPeriod').value, 
-                inhPercent: document.getElementById('reSettingInhPercent').value, 
                 currency: document.getElementById('reSettingCurrency').value 
             }; 
             localStorage.setItem('reSettings', JSON.stringify(settings)); 

@@ -1073,6 +1073,7 @@
                         <span>👨‍👩‍👧‍👦 Real Estate Inheritance Distribution</span>
                         <div class="no-print">
                             <button class="btn btn-success btn-sm admin-only" onclick="openREHeirModal()">➕ Add Heir</button>
+                            <button class="btn btn-gold btn-sm" onclick="printAllREHeirCertificates()">🖨️ Print All Certificates</button>
                             <button class="btn btn-print btn-sm" onclick="exportREHeirsPDF()">📥 Export PDF</button>
                         </div>
                     </div>
@@ -1083,7 +1084,7 @@
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Name</th><th>Relationship</th><th>Gender</th><th>Portions</th><th>Share Amount</th><th class="no-print admin-only">Actions</th></tr></thead>
+                                <thead><tr><th>Name</th><th>Relationship</th><th>Gender</th><th>Portions</th><th>Share Amount</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="reHeirsTable"></tbody>
                             </table>
                         </div>
@@ -4487,6 +4488,15 @@
             document.getElementById('reInhPortions').textContent = Math.round(totalPortions * 1000) / 1000;
             document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion)) + ' ' + currency;
 
+            // Store inheritance data for certificate printing
+            window.reInheritanceData = {
+                inheritancePool: inheritancePool,
+                totalPortions: totalPortions,
+                perPortion: perPortion,
+                beneficiaries: beneficiaries,
+                currency: currency
+            };
+
             var isAdmin = currentUser && currentUser.role === 'admin';
             var html = beneficiaries.map(function(h) { 
                 var shareAmount = perPortion * (parseFloat(h.portions) || 0);
@@ -4498,10 +4508,15 @@
                 else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
                 else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
                 
-                var actionsHtml = isAdmin ? '<td class="no-print">' +
-                    '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> ' +
-                    '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button>' +
-                '</td>' : '';
+                // Print certificate button for all users, edit/delete only for admin
+                var actionsHtml = '<td class="no-print">' +
+                    '<button class="btn btn-gold btn-sm" onclick="printREHeirCertificate(' + h.id + ')" title="Print Certificate">📜</button> ';
+                
+                if (isAdmin) {
+                    actionsHtml += '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')" title="Edit">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')" title="Delete">🗑️</button>';
+                }
+                actionsHtml += '</td>';
                 
                 return '<tr>' +
                     '<td>' + h.name + '</td>' +
@@ -4613,6 +4628,115 @@
             localStorage.removeItem('reBeneficiaries');
             showAlert('Heirs reset to default family members (16 heirs)');
             loadREInheritance();
+        }
+        
+        // Print single RE heir certificate
+        function printREHeirCertificate(heirId) {
+            var data = window.reInheritanceData;
+            if (!data) {
+                showAlert('Please wait for inheritance data to load', 'error');
+                return;
+            }
+            
+            var h = data.beneficiaries.find(function(x) { return x.id === heirId; });
+            if (!h) {
+                showAlert('Heir not found', 'error');
+                return;
+            }
+            
+            var shareAmount = data.perPortion * (parseFloat(h.portions) || 0);
+            var certHtml = generateRECertificateHTML(h, data, shareAmount);
+            var w = window.open('', '_blank');
+            w.document.write(certHtml);
+            w.document.close();
+            w.print();
+        }
+        
+        // Print all RE heir certificates
+        function printAllREHeirCertificates() {
+            var data = window.reInheritanceData;
+            if (!data || !data.beneficiaries || data.beneficiaries.length === 0) {
+                showAlert('No beneficiaries to print', 'error');
+                return;
+            }
+            
+            var allCerts = data.beneficiaries.map(function(h) {
+                var shareAmount = data.perPortion * (parseFloat(h.portions) || 0);
+                return generateRECertificateHTML(h, data, shareAmount, true);
+            }).join('<div style="page-break-after: always;"></div>');
+            
+            var w = window.open('', '_blank');
+            w.document.write('<html><head><title>Family Real Estate - All Heir Certificates</title></head><body>' + allCerts + '</body></html>');
+            w.document.close();
+            w.print();
+        }
+        
+        // Generate RE certificate HTML
+        function generateRECertificateHTML(heir, data, shareAmount, isPartOfBatch) {
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            var currency = data.currency || 'XAF';
+            
+            return (isPartOfBatch ? '' : '<html><head><title>Heir Certificate - ' + heir.name + '</title></head><body>') +
+                '<div style="max-width: 800px; margin: 0 auto; padding: 40px; font-family: Georgia, serif; border: 3px double #d69e2e; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">' +
+                    '<div style="text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 20px; margin-bottom: 30px;">' +
+                        '<h1 style="color: #92400e; margin: 0; font-size: 28px;">🏠 FAMILY REAL ESTATES</h1>' +
+                        '<h2 style="color: #78350f; margin: 10px 0; font-size: 20px;">NJIKAM SALIFU REAL ESTATE PROPERTIES</h2>' +
+                        '<p style="color: #a16207; font-style: italic; margin: 5px 0;">Islamic Inheritance Distribution Certificate</p>' +
+                    '</div>' +
+                    
+                    '<div style="text-align: center; margin-bottom: 30px;">' +
+                        '<h2 style="color: #1e40af; font-size: 24px; margin: 0;">CERTIFICATE OF INHERITANCE</h2>' +
+                        '<p style="color: #6b7280; font-size: 14px;">Certificate No: RE-' + new Date().getFullYear() + '-' + String(heir.id).padStart(4, '0') + '</p>' +
+                    '</div>' +
+                    
+                    '<div style="background: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e5e7eb;">' +
+                        '<p style="font-size: 16px; line-height: 1.8; text-align: justify;">' +
+                            'This is to certify that <strong style="color: #1e40af; font-size: 18px;">' + heir.name + '</strong>, ' +
+                            'being a <strong>' + heir.relationship + '</strong> (' + (heir.gender || 'N/A') + ') of the deceased, ' +
+                            'is entitled to receive their rightful share of the Family Real Estate inheritance ' +
+                            'in accordance with Islamic law (Sharia).' +
+                        '</p>' +
+                    '</div>' +
+                    
+                    '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">' +
+                        '<div style="background: #dbeafe; padding: 15px; border-radius: 8px; text-align: center;">' +
+                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL INHERITANCE POOL</p>' +
+                            '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #1e40af;">' + fmt(Math.round(data.inheritancePool)) + ' ' + currency + '</p>' +
+                        '</div>' +
+                        '<div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">' +
+                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL PORTIONS</p>' +
+                            '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #92400e;">' + data.totalPortions + '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    
+                    '<div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 8px; text-align: center; margin-bottom: 25px; border: 2px solid #22c55e;">' +
+                        '<p style="margin: 0; color: #166534; font-size: 14px;">HEIR\'S PORTIONS</p>' +
+                        '<p style="margin: 5px 0; font-size: 24px; font-weight: bold; color: #15803d;">' + heir.portions + ' portion(s)</p>' +
+                        '<hr style="border: none; border-top: 1px dashed #86efac; margin: 15px 0;">' +
+                        '<p style="margin: 0; color: #166534; font-size: 14px;">INHERITANCE SHARE AMOUNT</p>' +
+                        '<p style="margin: 5px 0; font-size: 32px; font-weight: bold; color: #15803d;">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</p>' +
+                    '</div>' +
+                    
+                    '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; padding-top: 30px; border-top: 1px solid #e5e7eb;">' +
+                        '<div style="text-align: center;">' +
+                            '<div style="border-top: 2px solid #1e40af; width: 200px; margin: 0 auto;"></div>' +
+                            '<p style="margin: 10px 0 5px; font-weight: bold;">Estate Administrator</p>' +
+                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">Date: ' + today + '</p>' +
+                        '</div>' +
+                        '<div style="text-align: center;">' +
+                            '<div style="border-top: 2px solid #1e40af; width: 200px; margin: 0 auto;"></div>' +
+                            '<p style="margin: 10px 0 5px; font-weight: bold;">Witness</p>' +
+                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">Date: ' + today + '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    
+                    '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #d69e2e;">' +
+                        '<p style="color: #92400e; font-size: 11px; margin: 0;">This certificate is issued as part of the Islamic inheritance distribution</p>' +
+                        '<p style="color: #92400e; font-size: 11px; margin: 5px 0;">for the Family Real Estate properties of the late NJIKAM SALIFU</p>' +
+                        '<p style="color: #6b7280; font-size: 10px; margin-top: 10px;">Generated on: ' + today + '</p>' +
+                    '</div>' +
+                '</div>' +
+                (isPartOfBatch ? '' : '</body></html>');
         }
 
         function openREHeirModal() { 

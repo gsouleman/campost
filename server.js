@@ -318,7 +318,7 @@ async function initializeDefaultData() {
     if (parseInt(userResult.rows[0].count) === 0) {
         await pool.query(
             'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',
-            ['admin', 'admin123', 'Administrator', 'admin', true]
+            ['admin', '12345', 'Administrator', 'admin', true]
         );
         await pool.query(
             'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',

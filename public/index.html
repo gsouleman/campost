@@ -209,10 +209,18 @@
                         <div class="form-group"><label>Quarter</label><select id="billQ"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select></div>
                         <div class="form-group"><label>Year</label><select id="billY"></select></div>
                         <div class="form-group"><label>Period</label><select id="billP"><option value="January to March">January to March</option><option value="April to June">April to June</option><option value="July to September">July to September</option><option value="October to December">October to December</option></select></div>
-                        <div class="form-group"><label>Monthly Rate (XAF)</label><input type="number" id="billRate" value="200000"></div>
                         <div class="form-group"><label>Bill Number</label><input type="text" id="billNum" readonly></div>
                     </div>
-                    <div class="btn-group"><button class="btn btn-success" onclick="saveBill()">💾 Save</button><button class="btn btn-outline" onclick="clearBillForm()">🔄 Clear</button></div>
+                    <div style="background: #ebf8ff; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px solid #90cdf4;">
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.85rem;">
+                            <div><span style="color: #4a5568;">Monthly Rate:</span> <strong id="billShowRate">200,000</strong> XAF</div>
+                            <div><span style="color: #4a5568;">Gross (3 mo):</span> <strong id="billShowGross">600,000</strong> XAF</div>
+                            <div><span style="color: #4a5568;">Tax (<span id="billShowTaxPct">15</span>%):</span> <strong id="billShowTax" style="color: #e53e3e;">-90,000</strong> XAF</div>
+                            <div><span style="color: #4a5568;">Net Due:</span> <strong id="billShowNet" style="color: #38a169;">510,000</strong> XAF</div>
+                        </div>
+                        <p style="margin-top: 8px; font-size: 0.7rem; color: #718096;">💡 To change monthly rate or tax rate, go to <strong>Settings</strong> tab</p>
+                    </div>
+                    <div class="btn-group"><button class="btn btn-success" onclick="saveBill()">💾 Save Bill</button><button class="btn btn-outline" onclick="clearBillForm()">🔄 Clear</button></div>
                 </div>
             </div>
             <div class="card"><div class="card-header"><span>📄 All Bills (Click to View Invoice)</span><button class="btn btn-print btn-sm no-print" onclick="printPage('bills')">🖨️ Print List</button></div>
@@ -290,14 +298,44 @@
 
         <!-- SETTINGS -->
         <div id="settings" class="page">
-            <div class="card"><div class="card-header"><span>⚙️ Settings</span></div>
-            <div class="card-body">
-                <div class="alert" id="settingsAlert">Checking...</div>
-                <div class="btn-group">
-                    <button class="btn btn-outline" onclick="checkDb()">🔄 Refresh</button>
-                    <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset All</button>
+            <div class="card">
+                <div class="card-header gold"><span>💰 Rent Configuration</span></div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Monthly Rent (XAF)</label>
+                            <input type="number" id="settingMonthlyRent" value="200000">
+                        </div>
+                        <div class="form-group">
+                            <label>Tax Rate (%)</label>
+                            <input type="number" id="settingTaxRate" value="15" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Months per Quarter</label>
+                            <input type="number" id="settingMonths" value="3" readonly>
+                        </div>
+                    </div>
+                    <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <h4 style="margin-bottom: 10px; color: #2c5282;">📊 Calculated Amounts</h4>
+                        <div class="summary-row"><span>Quarterly Gross:</span><span id="calcGross">600,000 XAF</span></div>
+                        <div class="summary-row"><span>Tax Deduction:</span><span id="calcTax">90,000 XAF</span></div>
+                        <div class="summary-row" style="font-weight: bold; color: #38a169;"><span>Net Amount Due:</span><span id="calcNet">510,000 XAF</span></div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveSettings()">💾 Save Settings</button>
+                    </div>
                 </div>
-            </div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span>⚙️ System Status</span></div>
+                <div class="card-body">
+                    <div class="alert" id="settingsAlert">Checking...</div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline" onclick="checkDb()">🔄 Refresh</button>
+                        <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset All Data</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -327,13 +365,96 @@
     <div id="alertBox" style="position:fixed;top:60px;right:10px;z-index:3000;max-width:280px;"></div>
 
     <script>
-        // Configuration
+        // Configuration - load from localStorage or use defaults
         var CONFIG = {
-            monthlyRate: 200000,
-            taxRate: 0.15,
+            monthlyRate: parseInt(localStorage.getItem('monthlyRate')) || 200000,
+            taxRate: parseFloat(localStorage.getItem('taxRate')) || 0.15,
             months: 3,
             accountNo: '12003 14012 10868895015 89'
         };
+
+        // Calculate amounts based on config
+        function calcAmounts() {
+            var gross = CONFIG.monthlyRate * CONFIG.months;
+            var tax = Math.round(gross * CONFIG.taxRate);
+            var net = gross - tax;
+            return { gross: gross, tax: tax, net: net };
+        }
+
+        // Update displayed calculations
+        function updateCalcDisplays() {
+            var calc = calcAmounts();
+            var taxPct = Math.round(CONFIG.taxRate * 100);
+            // Settings page
+            if (document.getElementById('calcGross')) {
+                document.getElementById('calcGross').textContent = fmt(calc.gross) + ' XAF';
+                document.getElementById('calcTax').textContent = fmt(calc.tax) + ' XAF';
+                document.getElementById('calcNet').textContent = fmt(calc.net) + ' XAF';
+            }
+            // Bills page
+            if (document.getElementById('billShowRate')) {
+                document.getElementById('billShowRate').textContent = fmt(CONFIG.monthlyRate);
+                document.getElementById('billShowGross').textContent = fmt(calc.gross);
+                document.getElementById('billShowTax').textContent = '-' + fmt(calc.tax);
+                document.getElementById('billShowNet').textContent = fmt(calc.net);
+                if (document.getElementById('billShowTaxPct')) {
+                    document.getElementById('billShowTaxPct').textContent = taxPct;
+                }
+            }
+        }
+
+        // Save settings
+        function saveSettings() {
+            var rate = parseInt(document.getElementById('settingMonthlyRent').value);
+            var tax = parseFloat(document.getElementById('settingTaxRate').value) / 100;
+            if (rate < 1000) {
+                showAlert('Invalid monthly rate', 'error');
+                return;
+            }
+            CONFIG.monthlyRate = rate;
+            CONFIG.taxRate = tax;
+            localStorage.setItem('monthlyRate', rate);
+            localStorage.setItem('taxRate', tax);
+            updateCalcDisplays();
+            showAlert('Settings saved!');
+        }
+
+        // Load settings into form
+        function loadSettings() {
+            document.getElementById('settingMonthlyRent').value = CONFIG.monthlyRate;
+            document.getElementById('settingTaxRate').value = Math.round(CONFIG.taxRate * 100);
+            updateCalcDisplays();
+        }
+
+        // Add event listeners for real-time calculation in settings
+        function setupSettingsListeners() {
+            var rateInput = document.getElementById('settingMonthlyRent');
+            var taxInput = document.getElementById('settingTaxRate');
+            if (rateInput) {
+                rateInput.addEventListener('input', function() {
+                    var tempRate = parseInt(this.value) || 0;
+                    var tempTax = parseFloat(taxInput.value) / 100 || 0.15;
+                    var gross = tempRate * CONFIG.months;
+                    var tax = Math.round(gross * tempTax);
+                    var net = gross - tax;
+                    document.getElementById('calcGross').textContent = fmt(gross) + ' XAF';
+                    document.getElementById('calcTax').textContent = fmt(tax) + ' XAF';
+                    document.getElementById('calcNet').textContent = fmt(net) + ' XAF';
+                });
+            }
+            if (taxInput) {
+                taxInput.addEventListener('input', function() {
+                    var tempRate = parseInt(rateInput.value) || CONFIG.monthlyRate;
+                    var tempTax = parseFloat(this.value) / 100 || 0.15;
+                    var gross = tempRate * CONFIG.months;
+                    var tax = Math.round(gross * tempTax);
+                    var net = gross - tax;
+                    document.getElementById('calcGross').textContent = fmt(gross) + ' XAF';
+                    document.getElementById('calcTax').textContent = fmt(tax) + ' XAF';
+                    document.getElementById('calcNet').textContent = fmt(net) + ' XAF';
+                });
+            }
+        }
 
         var QUARTERS = {
             'Q1': { period: 'January to March', months: 'Jan-Mar', shortPeriod: 'Q1 (Jan-Mar)' },
@@ -415,10 +536,10 @@
         function loadPage(p) {
             if (p === 'dashboard') loadDashboard();
             else if (p === 'expenses') loadExpenses();
-            else if (p === 'bills') loadBills();
+            else if (p === 'bills') { loadBills(); updateCalcDisplays(); }
             else if (p === 'payments') loadPayments();
             else if (p === 'inheritance') loadInheritance();
-            else if (p === 'settings') checkDb();
+            else if (p === 'settings') { loadSettings(); setupSettingsListeners(); checkDb(); }
         }
 
         // Dashboard
@@ -545,8 +666,8 @@
                     document.getElementById('billQ').value = b.quarter;
                     document.getElementById('billY').value = b.year;
                     document.getElementById('billP').value = b.period;
-                    document.getElementById('billRate').value = Math.round(b.amountDue / 3);
                     updateBillNumber();
+                    updateCalcDisplays();
                 }
             });
         }
@@ -557,10 +678,8 @@
             var q = document.getElementById('billQ').value;
             var y = parseInt(document.getElementById('billY').value);
             var p = document.getElementById('billP').value;
-            var rate = parseInt(document.getElementById('billRate').value) || CONFIG.monthlyRate;
-            var grossAmount = rate * CONFIG.months; // 600,000
-            var taxAmount = Math.round(grossAmount * CONFIG.taxRate); // 90,000
-            var amountDue = grossAmount - taxAmount; // 510,000 (net after tax)
+            var calc = calcAmounts();
+            var amountDue = calc.net; // Use calculated net amount from CONFIG
             var bn = document.getElementById('billNum').value;
 
             if (em === 'edit') {
@@ -593,17 +712,18 @@
             document.getElementById('billEditMode').value = '';
             document.getElementById('billOldNumber').value = '';
             document.getElementById('billY').value = new Date().getFullYear();
-            document.getElementById('billRate').value = CONFIG.monthlyRate;
             updateBillNumber();
+            updateCalcDisplays();
         }
 
         // View Bill as Invoice
         function viewBill(bn) {
             api('/bills/' + bn).then(function(b) {
-                var rate = CONFIG.monthlyRate; // 200,000 per month
-                var grossAmount = rate * CONFIG.months; // 600,000 quarterly
-                var taxAmount = Math.round(grossAmount * CONFIG.taxRate); // 90,000 (15% of 600,000)
-                var netAmount = grossAmount - taxAmount; // 510,000 (amount due per quarter)
+                var rate = CONFIG.monthlyRate; // Monthly rate from settings
+                var grossAmount = rate * CONFIG.months; // Quarterly gross
+                var taxPercent = Math.round(CONFIG.taxRate * 100); // Tax percentage for display
+                var taxAmount = Math.round(grossAmount * CONFIG.taxRate); // Tax amount
+                var netAmount = grossAmount - taxAmount; // Net amount due per quarter
                 var advancePayment = b.paidAmount;
                 var totalDue = netAmount - advancePayment; // Outstanding after payments
                 var qInfo = QUARTERS[b.quarter] || { months: b.period };
@@ -644,7 +764,7 @@
                         '<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">' +
                             '<tr style="background: #d69e2e; color: white;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Description</th><th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qty (months)</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rate (XAF)</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Amount (XAF)</th></tr>' +
                             '<tr><td style="padding: 8px; border: 1px solid #ddd;">Rent for ' + b.quarter + ' (' + qInfo.months + ')</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">' + CONFIG.months + '</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">' + fmt(rate) + '</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">' + fmt(grossAmount) + '</td></tr>' +
-                            '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less 15% Tax</td><td style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">15%</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #e53e3e;">-' + fmt(taxAmount) + '</td></tr>' +
+                            '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less ' + taxPercent + '% Tax</td><td style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">' + taxPercent + '%</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #e53e3e;">-' + fmt(taxAmount) + '</td></tr>' +
                             '<tr style="background: #f7fafc;"><td colspan="3" style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Net Amount (After Tax)</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">' + fmt(netAmount) + '</td></tr>' +
                             '<tr><td style="padding: 8px; border: 1px solid #ddd;">Less Advance Payment</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd;"></td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #38a169;">-' + fmt(advancePayment) + '</td></tr>' +
                             '<tr style="background: #2c5282; color: white;"><td colspan="3" style="padding: 10px; font-weight: bold; text-align: center;">TOTAL AMOUNT DUE</td><td style="padding: 10px; text-align: right; font-weight: bold; font-size: 18px;">' + fmt(totalDue) + '</td></tr>' +

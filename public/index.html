@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMPOST MANKON - Property & Billing Management</title>
+    <title>NJIKAM SALIFU REAL ESTATE PROPERTIES</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -51,6 +51,7 @@
         .card-header { background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%); color: white; padding: 0.75rem 1rem; font-family: 'Playfair Display', serif; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
         .card-header.green { background: linear-gradient(135deg, var(--success-green) 0%, #276749 100%); }
         .card-header.gold { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); }
+        .card-header.red { background: linear-gradient(135deg, var(--danger-red) 0%, #c53030 100%); }
         .card-body { padding: 1rem; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
@@ -80,6 +81,7 @@
         .btn-print { background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%); color: white; }
         .btn-gold { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); color: white; }
         .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+        .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; }
         .btn-group { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
         
         .table-container { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border-color); }
@@ -98,6 +100,29 @@
         .badge-partial { background: rgba(236,201,75,0.2); color: #b7791f; }
         .badge-unpaid { background: rgba(229,62,62,0.15); color: var(--danger-red); }
         .badge-new { background: rgba(66,153,225,0.15); color: var(--primary-blue); }
+        
+        /* Landing Page Styles */
+        .landing-page { text-align: center; padding: 2rem 1rem; }
+        .landing-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); margin-bottom: 0.5rem; }
+        .landing-subtitle { color: var(--text-gray); font-size: 1rem; margin-bottom: 2rem; }
+        .landing-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto 2rem; }
+        .landing-card { background: var(--bg-white); border-radius: 12px; box-shadow: var(--shadow-md); padding: 1.5rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 3px solid transparent; }
+        .landing-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .landing-card.campost { border-color: var(--primary-blue); }
+        .landing-card.campost:hover { border-color: var(--accent-gold); }
+        .landing-card.family { border-color: var(--success-green); }
+        .landing-card.family:hover { border-color: var(--accent-gold); }
+        .landing-card-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .landing-card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--primary-dark); margin-bottom: 0.5rem; }
+        .landing-card-desc { color: var(--text-gray); font-size: 0.85rem; margin-bottom: 1rem; }
+        .landing-card-stats { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+        .landing-stat { text-align: center; }
+        .landing-stat-value { font-size: 1.2rem; font-weight: 700; }
+        .landing-stat-label { font-size: 0.7rem; color: var(--text-gray); }
+        .back-btn { position: fixed; top: 80px; left: 20px; z-index: 999; }
+        
+        .module-header { display: none; }
+        .module-header.active { display: block; }
         
         .amount-positive { color: var(--success-green); font-weight: 600; }
         .amount-negative { color: var(--danger-red); font-weight: 600; }
@@ -137,8 +162,11 @@
     <header class="header no-print">
         <div class="header-top">
             <div class="logo-section">
-                <div class="logo-icon">CP</div>
-                <div class="logo-text"><h1>CAMPOST MANKON</h1><p>Property & Billing Management</p></div>
+                <div class="logo-icon">NS</div>
+                <div class="logo-text">
+                    <h1 id="mainTitle">NJIKAM SALIFU REAL ESTATE PROPERTIES</h1>
+                    <p id="mainSubtitle">Property & Billing Management System</p>
+                </div>
             </div>
             <div class="header-info">
                 <strong>GHOUENZEN Soulemanou</strong><br>
@@ -146,22 +174,113 @@
                 <div class="db-status disconnected" id="dbStatus">Connecting...</div>
             </div>
         </div>
-        <nav class="nav">
-            <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
-            <button class="nav-btn" data-page="ledger">📒 Ledger</button>
-            <button class="nav-btn" data-page="expenses">💸 Expenses</button>
-            <button class="nav-btn" data-page="bills">📄 Bills</button>
-            <button class="nav-btn" data-page="payments">💵 Payments</button>
-            <button class="nav-btn" data-page="inheritance">👨‍👩‍👧‍👦 Inheritance</button>
-            <button class="nav-btn" data-page="realestate">🏠 Family Real Estates</button>
-            <button class="nav-btn" data-page="export">📥 Export</button>
-            <button class="nav-btn" data-page="settings">⚙️ Settings</button>
+        <!-- Main Navigation - shown on landing page -->
+        <nav class="nav" id="mainNav">
+            <button class="nav-btn active" data-page="landing">🏠 Home</button>
+        </nav>
+        <!-- CAMPOST MANKON Navigation -->
+        <nav class="nav module-header" id="campostNav">
+            <button class="nav-btn" onclick="goToLanding()">🏠 Home</button>
+            <button class="nav-btn active" data-page="campost-dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-page="campost-ledger">📒 Ledger</button>
+            <button class="nav-btn" data-page="campost-expenses">💸 Expenses</button>
+            <button class="nav-btn" data-page="campost-bills">📄 Bills</button>
+            <button class="nav-btn" data-page="campost-payments">💵 Payments</button>
+            <button class="nav-btn" data-page="campost-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
+            <button class="nav-btn" data-page="campost-export">📥 Export</button>
+            <button class="nav-btn" data-page="campost-settings">⚙️ Settings</button>
+        </nav>
+        <!-- FAMILY REAL ESTATES Navigation -->
+        <nav class="nav module-header" id="familyNav">
+            <button class="nav-btn" onclick="goToLanding()">🏠 Home</button>
+            <button class="nav-btn active" data-page="family-dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-page="family-properties">🏠 Properties</button>
+            <button class="nav-btn" data-page="family-income">💵 Rental Income</button>
+            <button class="nav-btn" data-page="family-bills">📄 Bills</button>
+            <button class="nav-btn" data-page="family-payments">💳 Payments</button>
+            <button class="nav-btn" data-page="family-expenses">💸 Expenses</button>
+            <button class="nav-btn" data-page="family-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
+            <button class="nav-btn" data-page="family-ledger">📒 Ledger</button>
+            <button class="nav-btn" data-page="family-export">📥 Export</button>
+            <button class="nav-btn" data-page="family-settings">⚙️ Settings</button>
         </nav>
     </header>
 
     <main class="main-content">
-        <!-- DASHBOARD -->
-        <div id="dashboard" class="page active">
+        <!-- ==================== LANDING PAGE ==================== -->
+        <div id="landing" class="page active">
+            <div class="landing-page">
+                <h1 class="landing-title">🏢 NJIKAM SALIFU REAL ESTATE PROPERTIES</h1>
+                <p class="landing-subtitle">Comprehensive Property & Billing Management System</p>
+                
+                <div class="landing-cards">
+                    <!-- CAMPOST MANKON Card -->
+                    <div class="landing-card campost" onclick="openModule('campost')">
+                        <div class="landing-card-icon">🏛️</div>
+                        <h2 class="landing-card-title">CAMPOST MANKON</h2>
+                        <p class="landing-card-desc">Manage CAMPOST property billing, payments, expenses, and inheritance distribution.</p>
+                        <div class="landing-card-stats">
+                            <div class="landing-stat">
+                                <div class="landing-stat-value amount-positive" id="landingCampostIncome">0</div>
+                                <div class="landing-stat-label">Total Income</div>
+                            </div>
+                            <div class="landing-stat">
+                                <div class="landing-stat-value amount-negative" id="landingCampostExpenses">0</div>
+                                <div class="landing-stat-label">Total Expenses</div>
+                            </div>
+                            <div class="landing-stat">
+                                <div class="landing-stat-value amount-gold" id="landingCampostBalance">0</div>
+                                <div class="landing-stat-label">Balance</div>
+                            </div>
+                        </div>
+                        <div class="btn-group" style="justify-content: center; margin-top: 1rem;">
+                            <button class="btn btn-primary btn-lg">Enter CAMPOST MANKON →</button>
+                        </div>
+                    </div>
+                    
+                    <!-- FAMILY REAL ESTATES Card -->
+                    <div class="landing-card family" onclick="openModule('family')">
+                        <div class="landing-card-icon">🏠</div>
+                        <h2 class="landing-card-title">FAMILY REAL ESTATES</h2>
+                        <p class="landing-card-desc">Manage family properties, rental income, bills, payments, and Islamic inheritance.</p>
+                        <div class="landing-card-stats">
+                            <div class="landing-stat">
+                                <div class="landing-stat-value amount-positive" id="landingFamilyIncome">0</div>
+                                <div class="landing-stat-label">Total Income</div>
+                            </div>
+                            <div class="landing-stat">
+                                <div class="landing-stat-value amount-negative" id="landingFamilyExpenses">0</div>
+                                <div class="landing-stat-label">Total Expenses</div>
+                            </div>
+                            <div class="landing-stat">
+                                <div class="landing-stat-value" id="landingFamilyProperties">0</div>
+                                <div class="landing-stat-label">Properties</div>
+                            </div>
+                        </div>
+                        <div class="btn-group" style="justify-content: center; margin-top: 1rem;">
+                            <button class="btn btn-success btn-lg">Enter Family Real Estates →</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="card-header gold"><span>📊 Combined Portfolio Overview</span></div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="landingTotalIncome">0</div><div class="stat-label">Combined Income</div></div>
+                            <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="landingTotalExpenses">0</div><div class="stat-label">Combined Expenses</div></div>
+                            <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="landingTotalBalance">0</div><div class="stat-label">Combined Balance</div></div>
+                            <div class="stat-card gold"><div class="stat-icon">🏠</div><div class="stat-value" id="landingTotalProperties">0</div><div class="stat-label">Total Properties</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CAMPOST MANKON MODULE ==================== -->
+        
+        <!-- CAMPOST DASHBOARD -->
+        <div id="campost-dashboard" class="page">
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="dashIncome">0</div><div class="stat-label">Total Income</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="dashExp">0</div><div class="stat-label">Total Expenses</div></div>
@@ -180,7 +299,7 @@
         </div>
 
         <!-- LEDGER -->
-        <div id="ledger" class="page">
+        <div id="campost-ledger" class="page">
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income (from Bills)</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="ledgerExpense">0</div><div class="stat-label">Total Expenses</div></div>
@@ -220,7 +339,7 @@
         </div>
 
         <!-- EXPENSES -->
-        <div id="expenses" class="page">
+        <div id="campost-expenses" class="page">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Expense</span></div>
                 <div class="card-body">
@@ -239,7 +358,7 @@
         </div>
 
         <!-- BILLS -->
-        <div id="bills" class="page">
+        <div id="campost-bills" class="page">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Bill</span></div>
                 <div class="card-body">
@@ -267,7 +386,7 @@
         </div>
 
         <!-- PAYMENTS -->
-        <div id="payments" class="page">
+        <div id="campost-payments" class="page">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Payment</span></div>
                 <div class="card-body">
@@ -287,7 +406,7 @@
         </div>
 
         <!-- INHERITANCE -->
-        <div id="inheritance" class="page">
+        <div id="campost-inheritance" class="page">
             <div class="highlight-box">
                 <p>Amount to Distribute (from Inheritance Share expenses)</p>
                 <h3 id="inhAmt">0 XAF</h3>
@@ -309,7 +428,7 @@
         </div>
 
         <!-- EXPORT -->
-        <div id="export" class="page">
+        <div id="campost-export" class="page">
             <div class="card"><div class="card-header"><span>📥 Export All Data</span></div>
             <div class="card-body">
                 <p style="margin-bottom:1rem;font-size:0.85rem;">Export with CAMPOST MANKON header.</p>
@@ -337,8 +456,10 @@
             </div></div>
         </div>
 
-        <!-- FAMILY REAL ESTATES -->
-        <div id="realestate" class="page">
+        <!-- ==================== FAMILY REAL ESTATES MODULE ==================== -->
+        
+        <!-- FAMILY DASHBOARD -->
+        <div id="family-dashboard" class="page">
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">🏠</div><div class="stat-value" id="reTotalProps">0</div><div class="stat-label">Total Properties</div></div>
                 <div class="stat-card blue"><div class="stat-icon">🔑</div><div class="stat-value" id="reRented">0</div><div class="stat-label">Rented Properties</div></div>
@@ -347,68 +468,67 @@
                 <div class="stat-card red"><div class="stat-icon">🏦</div><div class="stat-value" id="reReservedFunds">0</div><div class="stat-label">Reserved Funds</div></div>
                 <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="reNetBalance">0</div><div class="stat-label">Net Balance</div></div>
             </div>
-
-            <!-- RE Navigation Tabs -->
-            <div class="tabs" style="margin-bottom: 15px; flex-wrap: wrap;">
-                <button class="tab-btn active" onclick="showRETab('rePropertiesTab', this)">🏠 Properties</button>
-                <button class="tab-btn" onclick="showRETab('reIncomeTab', this)">💵 Rental Income</button>
-                <button class="tab-btn" onclick="showRETab('reBillsTab', this)">📄 Bills</button>
-                <button class="tab-btn" onclick="showRETab('rePaymentsTab', this)">💳 Payments</button>
-                <button class="tab-btn" onclick="showRETab('reExpensesTab', this)">💸 Expenses</button>
-                <button class="tab-btn" onclick="showRETab('reInheritanceTab', this)">👨‍👩‍👧‍👦 Inheritance</button>
-                <button class="tab-btn" onclick="showRETab('reLedgerTab', this)">📒 Ledger</button>
-                <button class="tab-btn" onclick="showRETab('reExportTab', this)">📥 Export</button>
-                <button class="tab-btn" onclick="showRETab('reSettingsTab', this)">⚙️ Settings</button>
+            <div class="card">
+                <div class="card-header gold"><span>📊 Family Real Estate Summary</span></div>
+                <div class="card-body">
+                    <div class="summary-row"><span>Total Properties:</span><span id="familySummaryProps">0</span></div>
+                    <div class="summary-row"><span>Rented Properties:</span><span class="amount-positive" id="familySummaryRented">0</span></div>
+                    <div class="summary-row"><span>Total Income (Net after Tax):</span><span class="amount-positive" id="familySummaryIncome">0 XAF</span></div>
+                    <div class="summary-row"><span>Total Expenses:</span><span class="amount-negative" id="familySummaryExpenses">0 XAF</span></div>
+                    <div class="summary-row"><span>Reserved Funds:</span><span class="amount-negative" id="familySummaryReserved">0 XAF</span></div>
+                    <div class="summary-row" style="font-size: 1rem;"><span><strong>Net Balance:</strong></span><span id="familySummaryBalance" style="font-weight: bold;">0 XAF</span></div>
+                </div>
             </div>
+        </div>
 
-            <!-- ========== PROPERTIES TAB ========== -->
-            <div id="rePropertiesTab" class="tab-content active">
-                <div class="card">
-                    <div class="card-header">
-                        <span>🏠 Family Properties Portfolio</span>
-                        <div class="no-print">
-                            <button class="btn btn-success btn-sm" onclick="openPropertyModal()">➕ Add Property</button>
-                            <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">📥 Export PDF</button>
-                        </div>
+        <!-- FAMILY PROPERTIES -->
+        <div id="family-properties" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <span>🏠 Family Properties Portfolio</span>
+                    <div class="no-print">
+                        <button class="btn btn-success btn-sm" onclick="openPropertyModal()">➕ Add Property</button>
+                        <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">📥 Export PDF</button>
                     </div>
-                    <div class="card-body">
-                        <div style="margin-bottom: 10px;">
-                            <select id="reStatusFilter" onchange="filterProperties()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                                <option value="">All Status</option>
-                                <option value="Rented">Rented</option>
-                                <option value="Sold">Sold</option>
-                                <option value="For sale">For Sale</option>
-                                <option value="Not to be sold">Not to be Sold</option>
-                                <option value="Shared">Shared</option>
-                                <option value="Admin issues">Admin Issues</option>
-                                <option value="Others">Others</option>
-                            </select>
-                        </div>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Property Name</th>
-                                        <th>Location</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Rent Amount</th>
-                                        <th>Period</th>
-                                        <th>Tax Rate</th>
-                                        <th>Net Income</th>
-                                        <th>Islamic Inh.</th>
-                                        <th class="no-print">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="propertiesTable"></tbody>
-                            </table>
-                        </div>
+                </div>
+                <div class="card-body">
+                    <div style="margin-bottom: 10px;">
+                        <select id="reStatusFilter" onchange="filterProperties()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="">All Status</option>
+                            <option value="Rented">Rented</option>
+                            <option value="Sold">Sold</option>
+                            <option value="For sale">For Sale</option>
+                            <option value="Not to be sold">Not to be Sold</option>
+                            <option value="Shared">Shared</option>
+                            <option value="Admin issues">Admin Issues</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property Name</th>
+                                    <th>Location</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Rent Amount</th>
+                                    <th>Period</th>
+                                    <th>Tax Rate</th>
+                                    <th>Net Income</th>
+                                    <th>Islamic Inh.</th>
+                                    <th class="no-print">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="propertiesTable"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
 
             <!-- ========== RENTAL INCOME TAB ========== -->
-            <div id="reIncomeTab" class="tab-content">
+            <div id="family-income" class="page">
                 <div class="card">
                     <div class="card-header gold">
                         <span>💵 Rental Income Summary</span>
@@ -442,7 +562,7 @@
             </div>
 
             <!-- ========== RE BILLS TAB ========== -->
-            <div id="reBillsTab" class="tab-content">
+            <div id="family-bills" class="page">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Create Property Bill</span></div>
                     <div class="card-body">
@@ -509,7 +629,7 @@
             </div>
 
             <!-- ========== RE PAYMENTS TAB ========== -->
-            <div id="rePaymentsTab" class="tab-content">
+            <div id="family-payments" class="page">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Record Payment</span></div>
                     <div class="card-body">
@@ -556,7 +676,7 @@
             </div>
 
             <!-- ========== RE EXPENSES TAB ========== -->
-            <div id="reExpensesTab" class="tab-content">
+            <div id="family-expenses" class="page">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Add Property Expense</span></div>
                     <div class="card-body">
@@ -618,7 +738,7 @@
             </div>
 
             <!-- ========== RE INHERITANCE TAB ========== -->
-            <div id="reInheritanceTab" class="tab-content">
+            <div id="family-inheritance" class="page">
                 <div class="stats-grid">
                     <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reInhPool">0</div><div class="stat-label">Inheritance Pool</div></div>
                     <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value" id="reInhHeirs">0</div><div class="stat-label">Total Heirs</div></div>
@@ -648,7 +768,7 @@
             </div>
 
             <!-- ========== RE LEDGER TAB ========== -->
-            <div id="reLedgerTab" class="tab-content">
+            <div id="family-ledger" class="page">
                 <div class="card">
                     <div class="card-header">
                         <span>📒 Real Estate Ledger (Auto-Generated)</span>
@@ -683,7 +803,7 @@
             </div>
 
             <!-- ========== RE EXPORT TAB ========== -->
-            <div id="reExportTab" class="tab-content">
+            <div id="family-export" class="page">
                 <div class="card">
                     <div class="card-header"><span>📥 Export Real Estate Data</span></div>
                     <div class="card-body">
@@ -711,7 +831,7 @@
             </div>
 
             <!-- ========== RE SETTINGS TAB ========== -->
-            <div id="reSettingsTab" class="tab-content">
+            <div id="family-settings" class="page">
                 <div class="card">
                     <div class="card-header gold"><span>⚙️ Global Default Settings</span></div>
                     <div class="card-body">
@@ -997,7 +1117,7 @@
         </div>
 
         <!-- SETTINGS -->
-        <div id="settings" class="page">
+        <div id="campost-settings" class="page">
             <div class="card">
                 <div class="card-header gold"><span>💰 Rent Configuration</span></div>
                 <div class="card-body">
@@ -1229,28 +1349,174 @@
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
         }
+        
+        // Current active module
+        var currentModule = 'landing';
 
         // Navigation
         document.querySelectorAll('.nav-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var page = this.dataset.page;
-                document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
-                document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+                if (!page) return; // Skip buttons without data-page (like Home buttons with onclick)
+                
+                // Update active states within current nav
+                var currentNav = this.closest('.nav');
+                currentNav.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
                 this.classList.add('active');
+                
+                // Hide all pages and show selected
+                document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
                 document.getElementById(page).classList.add('active');
+                
                 loadPage(page);
             });
         });
+        
+        // Open a module (CAMPOST or FAMILY)
+        function openModule(module) {
+            currentModule = module;
+            
+            // Hide all navs and pages
+            document.querySelectorAll('.nav').forEach(function(n) { n.style.display = 'none'; });
+            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+            
+            if (module === 'campost') {
+                // Show CAMPOST nav and dashboard
+                document.getElementById('campostNav').style.display = 'flex';
+                document.getElementById('campost-dashboard').classList.add('active');
+                document.getElementById('mainTitle').textContent = 'CAMPOST MANKON';
+                document.getElementById('mainSubtitle').textContent = 'Property & Billing Management';
+                document.querySelector('.logo-icon').textContent = 'CP';
+                loadDashboard();
+            } else if (module === 'family') {
+                // Show FAMILY nav and dashboard
+                document.getElementById('familyNav').style.display = 'flex';
+                document.getElementById('family-dashboard').classList.add('active');
+                document.getElementById('mainTitle').textContent = 'FAMILY REAL ESTATES';
+                document.getElementById('mainSubtitle').textContent = 'Property & Rental Management';
+                document.querySelector('.logo-icon').textContent = 'FR';
+                loadRealEstate();
+                loadFamilyDashboardSummary();
+            }
+        }
+        
+        // Go back to landing page
+        function goToLanding() {
+            currentModule = 'landing';
+            
+            // Hide all navs
+            document.querySelectorAll('.nav').forEach(function(n) { n.style.display = 'none'; });
+            
+            // Show main nav and landing page
+            document.getElementById('mainNav').style.display = 'flex';
+            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('landing').classList.add('active');
+            
+            // Reset header
+            document.getElementById('mainTitle').textContent = 'NJIKAM SALIFU REAL ESTATE PROPERTIES';
+            document.getElementById('mainSubtitle').textContent = 'Property & Billing Management System';
+            document.querySelector('.logo-icon').textContent = 'NS';
+            
+            // Load landing page stats
+            loadLandingStats();
+        }
+        
+        // Load landing page statistics
+        function loadLandingStats() {
+            // CAMPOST stats
+            api('/bills').then(function(bills) {
+                var campostIncome = 0;
+                bills.forEach(function(b) { if (b.paidAmount > 0) campostIncome += b.paidAmount; });
+                document.getElementById('landingCampostIncome').textContent = fmt(campostIncome);
+                
+                api('/expenses').then(function(expenses) {
+                    var campostExpenses = 0;
+                    expenses.forEach(function(e) { campostExpenses += e.amount; });
+                    document.getElementById('landingCampostExpenses').textContent = fmt(campostExpenses);
+                    document.getElementById('landingCampostBalance').textContent = fmt(campostIncome - campostExpenses);
+                    
+                    // Update combined totals
+                    updateCombinedTotals();
+                });
+            });
+            
+            // Family RE stats
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            
+            var familyIncome = 0;
+            rePayments.forEach(function(p) { familyIncome += parseFloat(p.amount) || 0; });
+            
+            var familyExpenses = 0;
+            reExpenses.forEach(function(e) { familyExpenses += parseFloat(e.amount) || 0; });
+            
+            document.getElementById('landingFamilyIncome').textContent = fmt(familyIncome);
+            document.getElementById('landingFamilyExpenses').textContent = fmt(familyExpenses);
+            document.getElementById('landingFamilyProperties').textContent = properties.length;
+            document.getElementById('landingTotalProperties').textContent = properties.length;
+        }
+        
+        function updateCombinedTotals() {
+            var campostIncome = parseInt(document.getElementById('landingCampostIncome').textContent.replace(/,/g, '')) || 0;
+            var campostExpenses = parseInt(document.getElementById('landingCampostExpenses').textContent.replace(/,/g, '')) || 0;
+            var familyIncome = parseInt(document.getElementById('landingFamilyIncome').textContent.replace(/,/g, '')) || 0;
+            var familyExpenses = parseInt(document.getElementById('landingFamilyExpenses').textContent.replace(/,/g, '')) || 0;
+            
+            document.getElementById('landingTotalIncome').textContent = fmt(campostIncome + familyIncome);
+            document.getElementById('landingTotalExpenses').textContent = fmt(campostExpenses + familyExpenses);
+            document.getElementById('landingTotalBalance').textContent = fmt((campostIncome + familyIncome) - (campostExpenses + familyExpenses));
+        }
+        
+        // Load Family Dashboard Summary
+        function loadFamilyDashboardSummary() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
+            var currency = settings.currency || 'XAF';
+            
+            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+            
+            var totalIncome = 0;
+            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
+            
+            var totalExpenses = 0;
+            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+            
+            var reservedFunds = totalIncome * reservedPercent / 100;
+            var netBalance = Math.max(0, totalIncome - totalExpenses - reservedFunds);
+            
+            document.getElementById('familySummaryProps').textContent = properties.length;
+            document.getElementById('familySummaryRented').textContent = rentedProps.length;
+            document.getElementById('familySummaryIncome').textContent = fmt(Math.round(totalIncome)) + ' ' + currency;
+            document.getElementById('familySummaryExpenses').textContent = fmt(Math.round(totalExpenses)) + ' ' + currency;
+            document.getElementById('familySummaryReserved').textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
+            document.getElementById('familySummaryBalance').textContent = fmt(Math.round(netBalance)) + ' ' + currency;
+        }
 
         function loadPage(p) {
-            if (p === 'dashboard') loadDashboard();
-            else if (p === 'ledger') loadLedger();
-            else if (p === 'expenses') loadExpenses();
-            else if (p === 'bills') { loadBills(); updateCalcDisplays(); }
-            else if (p === 'payments') loadPayments();
-            else if (p === 'inheritance') loadInheritance();
-            else if (p === 'realestate') loadRealEstate();
-            else if (p === 'settings') { loadSettings(); setupSettingsListeners(); checkDb(); }
+            // CAMPOST pages
+            if (p === 'campost-dashboard') loadDashboard();
+            else if (p === 'campost-ledger') loadLedger();
+            else if (p === 'campost-expenses') loadExpenses();
+            else if (p === 'campost-bills') { loadBills(); updateCalcDisplays(); }
+            else if (p === 'campost-payments') loadPayments();
+            else if (p === 'campost-inheritance') loadInheritance();
+            else if (p === 'campost-settings') { loadSettings(); setupSettingsListeners(); checkDb(); }
+            // Family RE pages
+            else if (p === 'family-dashboard') { loadRealEstate(); loadFamilyDashboardSummary(); }
+            else if (p === 'family-properties') loadRealEstate();
+            else if (p === 'family-income') { loadRealEstate(); renderRentalIncomeTable(JSON.parse(localStorage.getItem('familyProperties') || '[]')); }
+            else if (p === 'family-bills') loadREBills();
+            else if (p === 'family-payments') loadREPayments();
+            else if (p === 'family-expenses') loadREExpenses();
+            else if (p === 'family-inheritance') loadREInheritance();
+            else if (p === 'family-ledger') loadRELedgerFull();
+            else if (p === 'family-settings') loadRESettings();
+            // Landing
+            else if (p === 'landing') loadLandingStats();
         }
 
         // Dashboard
@@ -3880,7 +4146,8 @@
         // Initialize
         function init() {
             checkDb();
-            loadDashboard();
+            // Start on landing page
+            goToLanding();
         }
 
         init();

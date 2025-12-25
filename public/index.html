@@ -604,6 +604,7 @@
                             <table>
                                 <thead><tr><th>Date</th><th>Property</th><th>Category</th><th>Description</th><th>Amount</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="reExpensesTable"></tbody>
+                                <tfoot id="reExpensesTotal"></tfoot>
                             </table>
                         </div>
                     </div>
@@ -1142,6 +1143,15 @@
 
         function fmt(n) {
             return n ? Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0';
+        }
+        
+        function getCurrency() {
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            return settings.currency || 'XAF';
+        }
+        
+        function fmtCurrency(n) {
+            return fmt(n) + ' ' + getCurrency();
         }
 
         function fmtDate(d) {
@@ -2208,6 +2218,7 @@
             var totalGross = 0;
             var totalTax = 0;
             var totalNet = 0;
+            var currency = getCurrency();
 
             var html = properties.map(function(p) {
                 var isRented = p.status === 'Rented';
@@ -2242,7 +2253,7 @@
             
             document.getElementById('rentalIncomeTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="6" style="text-align: right;">TOTALS:</td>' +
+                '<td colspan="6" style="text-align: right;">TOTALS (' + currency + '):</td>' +
                 '<td>' + fmt(Math.round(totalGross)) + '</td>' +
                 '<td class="amount-negative">-' + fmt(Math.round(totalTax)) + '</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalNet)) + '</td>' +
@@ -2415,6 +2426,7 @@
             var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
             var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var currency = getCurrency();
 
             // Populate property dropdown with rented properties only, showing period and tax
             document.getElementById('reBillProperty').innerHTML = '<option value="">Select Rented Property</option>' + 
@@ -2423,7 +2435,7 @@
                     var grossRent = parseFloat(p.rent_amount) || 0;
                     var netRent = grossRent - (grossRent * taxRate / 100);
                     return '<option value="' + p.id + '" data-period="' + (p.rent_period || 'Monthly') + '" data-rent="' + grossRent + '" data-taxrate="' + taxRate + '">' + 
-                        p.name + ' (' + (p.rent_period || 'Monthly') + ' | Gross: ' + fmt(grossRent) + ' | Tax: ' + taxRate + '% | Net: ' + fmt(Math.round(netRent)) + ' XAF)</option>'; 
+                        p.name + ' (' + (p.rent_period || 'Monthly') + ' | Gross: ' + fmt(grossRent) + ' | Tax: ' + taxRate + '% | Net: ' + fmt(Math.round(netRent)) + ' ' + currency + ')</option>'; 
                 }).join('');
 
             if (!document.getElementById('reBillDate').value) {
@@ -2469,7 +2481,7 @@
             // Add totals row
             document.getElementById('reBillsTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right;">TOTALS:</td>' +
+                '<td colspan="4" style="text-align: right;">TOTALS (' + currency + '):</td>' +
                 '<td>' + fmt(Math.round(totalGross)) + '</td>' +
                 '<td class="amount-negative">' + fmt(Math.round(totalTax)) + '</td>' +
                 '<td>' + fmt(Math.round(totalNet)) + '</td>' +
@@ -2625,6 +2637,7 @@
             var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var currency = getCurrency();
 
             // Populate Select Bill dropdown from Bills section (only bills with outstanding > 0)
             var unpaidBills = reBills.filter(function(b) { return b.outstanding > 0; });
@@ -2633,7 +2646,7 @@
                     var prop = properties.find(function(p) { return p.id === b.property_id; });
                     var status = b.paid_amount > 0 ? 'Partial' : 'Unpaid';
                     return '<option value="' + b.id + '" data-outstanding="' + b.outstanding + '">' + 
-                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | Outstanding: ' + fmt(b.outstanding) + ' XAF (' + status + ')' + 
+                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | Outstanding: ' + fmt(b.outstanding) + ' ' + currency + ' (' + status + ')' + 
                     '</option>'; 
                 }).join('');
 
@@ -2665,7 +2678,7 @@
             // Add totals row
             document.getElementById('rePaymentsTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="3" style="text-align: right;">TOTAL:</td>' +
+                '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
                 '<td colspan="2"></td>' +
                 '</tr>';
@@ -2750,6 +2763,7 @@
         function loadREExpenses() {
             var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var currency = getCurrency();
 
             // Populate property dropdown with all properties
             var propOptions = properties.map(function(p) { 
@@ -2761,9 +2775,11 @@
                 document.getElementById('reExpDate').valueAsDate = new Date(); 
             }
 
+            var totalExpenses = 0;
             var html = reExpenses.map(function(e) { 
                 var prop = properties.find(function(p) { return p.id === e.property_id; }); 
-                var isInh = e.category === 'Inheritance Share'; 
+                var isInh = e.category === 'Inheritance Share';
+                totalExpenses += parseFloat(e.amount) || 0;
                 return '<tr>' +
                     '<td>' + fmtDate(e.expense_date) + '</td>' +
                     '<td>' + (prop ? prop.name : 'General') + '</td>' +
@@ -2778,6 +2794,12 @@
             }).join('');
 
             document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
+            
+            // Update expenses total if element exists
+            var expTotalEl = document.getElementById('reExpensesTotal');
+            if (expTotalEl) {
+                expTotalEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTAL (' + currency + '):</td><td class="amount-negative">-' + fmt(Math.round(totalExpenses)) + '</td><td></td></tr>';
+            }
         }
 
         function saveREExpense() {
@@ -2918,6 +2940,7 @@
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
             var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            var currency = getCurrency();
 
             var totalIncome = 0; 
             rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
@@ -2935,10 +2958,10 @@
             // Per portion value
             var perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
 
-            document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool));
+            document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool)) + ' ' + currency;
             document.getElementById('reInhHeirs').textContent = reHeirs.length;
             document.getElementById('reInhPortions').textContent = Math.round(totalPortions * 1000) / 1000;
-            document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion));
+            document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion)) + ' ' + currency;
 
             var html = reHeirs.map(function(h) { 
                 var shareAmount = perPortion * (parseFloat(h.portions) || 0);
@@ -2955,7 +2978,7 @@
                     '<td>' + h.relationship + '</td>' +
                     '<td>' + (h.gender || '-') + '</td>' +
                     '<td>' + portionDisplay + '</td>' +
-                    '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' XAF</td>' +
+                    '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
                     '<td class="no-print">' +
                         '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> ' +
                         '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button>' +
@@ -3091,6 +3114,7 @@
             var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var currency = getCurrency();
 
             var ledgerEntries = [];
 
@@ -3150,7 +3174,7 @@
             document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
             document.getElementById('reLedgerTotals').innerHTML = 
                 '<tr style="background: #f7fafc; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right;">TOTALS:</td>' +
+                '<td colspan="4" style="text-align: right;">TOTALS (' + currency + '):</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
                 '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
                 '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +

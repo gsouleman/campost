@@ -139,6 +139,26 @@
         .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
         .modal-body { padding: 1.25rem; }
         
+        /* Login Page Styles */
+        .login-container { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 1rem; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%); }
+        .login-container.active { display: flex; }
+        .login-box { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 400px; width: 100%; overflow: hidden; }
+        .login-header { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); color: white; padding: 1.5rem; text-align: center; }
+        .login-header h1 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.25rem; }
+        .login-header p { font-size: 0.8rem; opacity: 0.9; }
+        .login-body { padding: 1.5rem; }
+        .login-body .form-group { margin-bottom: 1rem; }
+        .login-body .form-group label { font-size: 0.85rem; }
+        .login-body .form-group input { padding: 0.6rem; font-size: 0.9rem; }
+        .login-btn { width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem; }
+        .login-footer { text-align: center; padding: 1rem; background: #f7fafc; font-size: 0.75rem; color: var(--text-gray); }
+        .login-footer a { color: var(--primary-blue); cursor: pointer; text-decoration: underline; }
+        .login-error { background: rgba(229,62,62,0.15); color: var(--danger-red); padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.8rem; display: none; }
+        .login-error.show { display: block; }
+        .user-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.65rem; margin-left: 0.5rem; }
+        .user-badge.admin { background: rgba(214,158,46,0.2); color: var(--accent-gold); }
+        .user-badge.user { background: rgba(66,153,225,0.2); color: var(--primary-blue); }
+        
         .heir-group { background: #f7fafc; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
         .heir-group h4 { color: var(--primary-blue); margin-bottom: 0.3rem; display: flex; justify-content: space-between; font-size: 0.9rem; }
         .summary-row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dashed var(--border-color); font-size: 0.8rem; }
@@ -159,6 +179,94 @@
     </style>
 </head>
 <body>
+    <!-- ==================== LOGIN PAGE ==================== -->
+    <div class="login-container active" id="loginContainer">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>🏢 NJIKAM SALIFU REAL ESTATE</h1>
+                <p>Property & Billing Management System</p>
+            </div>
+            <div class="login-body">
+                <div class="login-error" id="loginError"></div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username" onkeypress="if(event.key==='Enter')doLogin()">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="if(event.key==='Enter')doLogin()">
+                </div>
+                <button class="btn btn-primary login-btn" onclick="doLogin()">🔐 Login</button>
+            </div>
+            <div class="login-footer">
+                <a onclick="showForgotPassword()">Forgot Password?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header"><h3>🔑 Reset Password</h3><button class="modal-close" onclick="closeForgotPassword()">×</button></div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #718096; margin-bottom: 1rem;">Enter your email address to receive a password reset code.</p>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter your email">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="sendResetCode()">📧 Send Reset Code</button>
+                </div>
+                <div id="resetCodeSection" style="display: none; margin-top: 1rem;">
+                    <div class="form-group">
+                        <label>Reset Code</label>
+                        <input type="text" id="resetCode" placeholder="Enter code from email">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newResetPassword" placeholder="Enter new password">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmResetPassword" placeholder="Confirm new password">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="resetPasswordWithCode()">🔐 Reset Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Force Password Change Modal -->
+    <div class="modal-overlay" id="forcePasswordModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%);"><h3>🔐 Change Password Required</h3></div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: #718096; margin-bottom: 1rem; background: #fffbeb; padding: 10px; border-radius: 6px;">
+                    ⚠️ You must change your password before continuing. This is required for first-time login.
+                </p>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="forceCurrentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="forceNewPassword" placeholder="Enter new password (min 4 characters)">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="forceConfirmPassword" placeholder="Confirm new password">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="forceChangePassword()">🔐 Change Password & Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP (Hidden until login) ==================== -->
+    <div id="mainApp" style="display: none;">
     <header class="header no-print">
         <div class="header-top">
             <div class="logo-section">
@@ -169,14 +277,20 @@
                 </div>
             </div>
             <div class="header-info">
-                <strong>GHOUENZEN Soulemanou</strong><br>
+                <div style="margin-bottom: 5px;">
+                    <strong id="loggedInUser">User</strong>
+                    <span class="user-badge" id="userRoleBadge">User</span>
+                </div>
                 <span>B.P 36 Mankon-Bamenda | 675299868</span>
-                <div class="db-status disconnected" id="dbStatus">Connecting...</div>
+                <div style="margin-top: 5px;">
+                    <button class="btn btn-sm btn-outline" style="padding: 2px 8px; font-size: 0.65rem; border-color: white; color: white;" onclick="doLogout()">🚪 Logout</button>
+                </div>
             </div>
         </div>
         <!-- Main Navigation - shown on landing page -->
         <nav class="nav" id="mainNav">
             <button class="nav-btn active" data-page="landing">🏠 Home</button>
+            <button class="nav-btn" data-page="main-settings">⚙️ Settings</button>
         </nav>
         <!-- CAMPOST MANKON Navigation -->
         <nav class="nav module-header" id="campostNav">
@@ -271,6 +385,109 @@
                             <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="landingTotalExpenses">0</div><div class="stat-label">Combined Expenses</div></div>
                             <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="landingTotalBalance">0</div><div class="stat-label">Combined Balance</div></div>
                             <div class="stat-card gold"><div class="stat-icon">🏠</div><div class="stat-value" id="landingTotalProperties">0</div><div class="stat-label">Total Properties</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MAIN SETTINGS PAGE ==================== -->
+        <div id="main-settings" class="page">
+            <div class="card">
+                <div class="card-header gold"><span>👤 My Account</span></div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="myUsername" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="myEmail" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <input type="text" id="myRole" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><span>🔐 Change My Password</span></div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="changeCurrentPwd" placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="changeNewPwd" placeholder="Enter new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="changeConfirmPwd" placeholder="Confirm new password">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="changeMyPassword()">🔐 Change Password</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Only: User Management -->
+            <div id="adminUserManagement" style="display: none;">
+                <div class="card">
+                    <div class="card-header green"><span>➕ Create New User</span><span class="badge badge-income">ADMIN ONLY</span></div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Username *</label>
+                                <input type="text" id="newUserUsername" placeholder="Enter username">
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="newUserEmail" placeholder="Enter email address">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="newUserFullName" placeholder="Enter full name">
+                            </div>
+                            <div class="form-group">
+                                <label>Role *</label>
+                                <select id="newUserRole">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #718096; margin: 10px 0; background: #ebf8ff; padding: 8px; border-radius: 6px;">
+                            📌 Default password for new users is <strong>1234</strong>. User must change it on first login.
+                        </p>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="createNewUser()">👤 Create User</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><span>👥 All Users</span><span class="badge badge-income">ADMIN ONLY</span></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1181,10 +1398,435 @@
             </div>
         </div>
     </div>
+    </div> <!-- End mainApp -->
 
     <div id="alertBox" style="position:fixed;top:60px;right:10px;z-index:3000;max-width:280px;"></div>
 
     <script>
+        // ==================== AUTHENTICATION SYSTEM ====================
+        
+        // Initialize default admin user if not exists
+        function initializeUsers() {
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            if (users.length === 0) {
+                // Create default admin user
+                users.push({
+                    id: 1,
+                    username: 'admin',
+                    password: '12345',
+                    email: 'admin@njikamsalifu.com',
+                    fullName: 'Administrator',
+                    role: 'admin',
+                    mustChangePassword: true,
+                    active: true,
+                    createdAt: new Date().toISOString()
+                });
+                localStorage.setItem('appUsers', JSON.stringify(users));
+            }
+            // Store reset codes
+            if (!localStorage.getItem('resetCodes')) {
+                localStorage.setItem('resetCodes', JSON.stringify({}));
+            }
+        }
+        
+        // Current logged in user
+        var currentUser = null;
+        
+        // Login function
+        function doLogin() {
+            var username = document.getElementById('loginUsername').value.trim().toLowerCase();
+            var password = document.getElementById('loginPassword').value;
+            var errorEl = document.getElementById('loginError');
+            
+            if (!username || !password) {
+                errorEl.textContent = 'Please enter username and password';
+                errorEl.classList.add('show');
+                return;
+            }
+            
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var user = users.find(function(u) { 
+                return u.username.toLowerCase() === username && u.password === password && u.active; 
+            });
+            
+            if (!user) {
+                errorEl.textContent = 'Invalid username or password';
+                errorEl.classList.add('show');
+                return;
+            }
+            
+            // Login successful
+            currentUser = user;
+            localStorage.setItem('currentSession', JSON.stringify({ userId: user.id, loginTime: new Date().toISOString() }));
+            
+            // Check if password change required
+            if (user.mustChangePassword) {
+                document.getElementById('forcePasswordModal').classList.add('active');
+                return;
+            }
+            
+            // Proceed to main app
+            enterMainApp();
+        }
+        
+        // Enter main app after successful login
+        function enterMainApp() {
+            document.getElementById('loginContainer').classList.remove('active');
+            document.getElementById('mainApp').style.display = 'block';
+            
+            // Update UI with user info
+            document.getElementById('loggedInUser').textContent = currentUser.fullName || currentUser.username;
+            var badge = document.getElementById('userRoleBadge');
+            badge.textContent = currentUser.role.toUpperCase();
+            badge.className = 'user-badge ' + currentUser.role;
+            
+            // Show admin section if admin
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminUserManagement').style.display = 'block';
+            }
+            
+            // Initialize app
+            checkDb();
+            goToLanding();
+        }
+        
+        // Logout function
+        function doLogout() {
+            if (!confirm('Are you sure you want to logout?')) return;
+            
+            currentUser = null;
+            localStorage.removeItem('currentSession');
+            
+            // Reset UI
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginContainer').classList.add('active');
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').classList.remove('show');
+            document.getElementById('adminUserManagement').style.display = 'none';
+        }
+        
+        // Force password change
+        function forceChangePassword() {
+            var currentPwd = document.getElementById('forceCurrentPassword').value;
+            var newPwd = document.getElementById('forceNewPassword').value;
+            var confirmPwd = document.getElementById('forceConfirmPassword').value;
+            
+            if (currentPwd !== currentUser.password) {
+                showAlert('Current password is incorrect', 'error');
+                return;
+            }
+            
+            if (newPwd.length < 4) {
+                showAlert('New password must be at least 4 characters', 'error');
+                return;
+            }
+            
+            if (newPwd !== confirmPwd) {
+                showAlert('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPwd === currentPwd) {
+                showAlert('New password must be different from current password', 'error');
+                return;
+            }
+            
+            // Update password
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var idx = users.findIndex(function(u) { return u.id === currentUser.id; });
+            if (idx !== -1) {
+                users[idx].password = newPwd;
+                users[idx].mustChangePassword = false;
+                localStorage.setItem('appUsers', JSON.stringify(users));
+                currentUser = users[idx];
+            }
+            
+            document.getElementById('forcePasswordModal').classList.remove('active');
+            showAlert('Password changed successfully!');
+            enterMainApp();
+        }
+        
+        // Change my password (from settings)
+        function changeMyPassword() {
+            var currentPwd = document.getElementById('changeCurrentPwd').value;
+            var newPwd = document.getElementById('changeNewPwd').value;
+            var confirmPwd = document.getElementById('changeConfirmPwd').value;
+            
+            if (currentPwd !== currentUser.password) {
+                showAlert('Current password is incorrect', 'error');
+                return;
+            }
+            
+            if (newPwd.length < 4) {
+                showAlert('New password must be at least 4 characters', 'error');
+                return;
+            }
+            
+            if (newPwd !== confirmPwd) {
+                showAlert('New passwords do not match', 'error');
+                return;
+            }
+            
+            // Update password
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var idx = users.findIndex(function(u) { return u.id === currentUser.id; });
+            if (idx !== -1) {
+                users[idx].password = newPwd;
+                localStorage.setItem('appUsers', JSON.stringify(users));
+                currentUser = users[idx];
+            }
+            
+            document.getElementById('changeCurrentPwd').value = '';
+            document.getElementById('changeNewPwd').value = '';
+            document.getElementById('changeConfirmPwd').value = '';
+            showAlert('Password changed successfully!');
+        }
+        
+        // Create new user (admin only)
+        function createNewUser() {
+            if (currentUser.role !== 'admin') {
+                showAlert('Only admins can create users', 'error');
+                return;
+            }
+            
+            var username = document.getElementById('newUserUsername').value.trim().toLowerCase();
+            var email = document.getElementById('newUserEmail').value.trim().toLowerCase();
+            var fullName = document.getElementById('newUserFullName').value.trim();
+            var role = document.getElementById('newUserRole').value;
+            
+            if (!username || !email) {
+                showAlert('Username and email are required', 'error');
+                return;
+            }
+            
+            // Validate email
+            if (!email.includes('@') || !email.includes('.')) {
+                showAlert('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            
+            // Check if username exists
+            if (users.find(function(u) { return u.username.toLowerCase() === username; })) {
+                showAlert('Username already exists', 'error');
+                return;
+            }
+            
+            // Check if email exists
+            if (users.find(function(u) { return u.email.toLowerCase() === email; })) {
+                showAlert('Email already exists', 'error');
+                return;
+            }
+            
+            // Create new user
+            var newId = users.length > 0 ? Math.max.apply(null, users.map(function(u) { return u.id; })) + 1 : 1;
+            users.push({
+                id: newId,
+                username: username,
+                password: '1234', // Default password
+                email: email,
+                fullName: fullName || username,
+                role: role,
+                mustChangePassword: true,
+                active: true,
+                createdAt: new Date().toISOString()
+            });
+            
+            localStorage.setItem('appUsers', JSON.stringify(users));
+            
+            // Clear form
+            document.getElementById('newUserUsername').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserFullName').value = '';
+            document.getElementById('newUserRole').value = 'user';
+            
+            showAlert('User created successfully! Default password is 1234');
+            loadUsersTable();
+        }
+        
+        // Load users table (admin only)
+        function loadUsersTable() {
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            
+            var html = users.map(function(u) {
+                var statusClass = u.active ? 'badge-paid' : 'badge-unpaid';
+                var statusText = u.active ? 'Active' : 'Inactive';
+                var roleClass = u.role === 'admin' ? 'badge-inheritance' : 'badge-new';
+                var pwdStatus = u.mustChangePassword ? '<span class="badge badge-expense" style="margin-left:5px;">Must Change Pwd</span>' : '';
+                
+                return '<tr>' +
+                    '<td><strong>' + u.username + '</strong>' + pwdStatus + '</td>' +
+                    '<td>' + (u.fullName || '-') + '</td>' +
+                    '<td>' + u.email + '</td>' +
+                    '<td><span class="badge ' + roleClass + '">' + u.role.toUpperCase() + '</span></td>' +
+                    '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                    '<td>' +
+                        (u.id !== currentUser.id ? 
+                            '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')">🔑 Reset Pwd</button> ' +
+                            '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ')">' + (u.active ? '🚫 Disable' : '✅ Enable') + '</button>'
+                            : '<span style="color:#718096;font-size:0.75rem;">Current User</span>') +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+            
+            document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="6">No users</td></tr>';
+        }
+        
+        // Reset user password (admin only)
+        function resetUserPassword(userId) {
+            if (currentUser.role !== 'admin') return;
+            if (!confirm('Reset this user\'s password to 1234?')) return;
+            
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var idx = users.findIndex(function(u) { return u.id === userId; });
+            if (idx !== -1) {
+                users[idx].password = '1234';
+                users[idx].mustChangePassword = true;
+                localStorage.setItem('appUsers', JSON.stringify(users));
+                showAlert('Password reset to 1234. User must change on next login.');
+                loadUsersTable();
+            }
+        }
+        
+        // Toggle user status (admin only)
+        function toggleUserStatus(userId) {
+            if (currentUser.role !== 'admin') return;
+            
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var idx = users.findIndex(function(u) { return u.id === userId; });
+            if (idx !== -1) {
+                users[idx].active = !users[idx].active;
+                localStorage.setItem('appUsers', JSON.stringify(users));
+                showAlert('User status updated');
+                loadUsersTable();
+            }
+        }
+        
+        // Forgot password flow
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.add('active');
+            document.getElementById('resetCodeSection').style.display = 'none';
+            document.getElementById('forgotEmail').value = '';
+        }
+        
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.remove('active');
+        }
+        
+        function sendResetCode() {
+            var email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+            
+            if (!email) {
+                showAlert('Please enter your email address', 'error');
+                return;
+            }
+            
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var user = users.find(function(u) { return u.email.toLowerCase() === email; });
+            
+            if (!user) {
+                showAlert('No account found with this email', 'error');
+                return;
+            }
+            
+            // Generate reset code
+            var code = Math.floor(100000 + Math.random() * 900000).toString();
+            var resetCodes = JSON.parse(localStorage.getItem('resetCodes') || '{}');
+            resetCodes[email] = { code: code, expires: Date.now() + 3600000, userId: user.id }; // 1 hour expiry
+            localStorage.setItem('resetCodes', JSON.stringify(resetCodes));
+            
+            // In real app, this would send email. For demo, show the code
+            alert('📧 Password Reset Code (In production, this would be sent to your email):\n\nCode: ' + code + '\n\nThis code expires in 1 hour.');
+            
+            document.getElementById('resetCodeSection').style.display = 'block';
+        }
+        
+        function resetPasswordWithCode() {
+            var email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+            var code = document.getElementById('resetCode').value.trim();
+            var newPwd = document.getElementById('newResetPassword').value;
+            var confirmPwd = document.getElementById('confirmResetPassword').value;
+            
+            if (!code || !newPwd || !confirmPwd) {
+                showAlert('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (newPwd.length < 4) {
+                showAlert('Password must be at least 4 characters', 'error');
+                return;
+            }
+            
+            if (newPwd !== confirmPwd) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+            
+            var resetCodes = JSON.parse(localStorage.getItem('resetCodes') || '{}');
+            var resetData = resetCodes[email];
+            
+            if (!resetData || resetData.code !== code) {
+                showAlert('Invalid reset code', 'error');
+                return;
+            }
+            
+            if (Date.now() > resetData.expires) {
+                showAlert('Reset code has expired. Please request a new one.', 'error');
+                return;
+            }
+            
+            // Update password
+            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+            var idx = users.findIndex(function(u) { return u.id === resetData.userId; });
+            if (idx !== -1) {
+                users[idx].password = newPwd;
+                users[idx].mustChangePassword = false;
+                localStorage.setItem('appUsers', JSON.stringify(users));
+            }
+            
+            // Remove used code
+            delete resetCodes[email];
+            localStorage.setItem('resetCodes', JSON.stringify(resetCodes));
+            
+            closeForgotPassword();
+            showAlert('Password reset successfully! You can now login.');
+        }
+        
+        // Load my account info
+        function loadMyAccount() {
+            if (currentUser) {
+                document.getElementById('myUsername').value = currentUser.username;
+                document.getElementById('myEmail').value = currentUser.email;
+                document.getElementById('myRole').value = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            }
+        }
+        
+        // Check for existing session on page load
+        function checkExistingSession() {
+            initializeUsers();
+            
+            var session = JSON.parse(localStorage.getItem('currentSession') || 'null');
+            if (session) {
+                var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
+                var user = users.find(function(u) { return u.id === session.userId && u.active; });
+                if (user) {
+                    currentUser = user;
+                    if (user.mustChangePassword) {
+                        document.getElementById('forcePasswordModal').classList.add('active');
+                    } else {
+                        enterMainApp();
+                    }
+                    return;
+                }
+            }
+            // No valid session, show login
+            document.getElementById('loginContainer').classList.add('active');
+        }
+
+        // ==================== END AUTHENTICATION SYSTEM ====================
+
         // Configuration - load from localStorage or use defaults
         var CONFIG = {
             monthlyRate: parseInt(localStorage.getItem('monthlyRate')) || 200000,
@@ -1515,6 +2157,8 @@
             else if (p === 'family-inheritance') loadREInheritance();
             else if (p === 'family-ledger') loadRELedgerFull();
             else if (p === 'family-settings') loadRESettings();
+            // Main settings (user management)
+            else if (p === 'main-settings') { loadMyAccount(); loadUsersTable(); }
             // Landing
             else if (p === 'landing') loadLandingStats();
         }
@@ -4145,9 +4789,8 @@
 
         // Initialize
         function init() {
-            checkDb();
-            // Start on landing page
-            goToLanding();
+            // Check for existing session - this will handle login or show login page
+            checkExistingSession();
         }
 
         init();

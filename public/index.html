@@ -32,10 +32,18 @@
         .logo-icon { width: 38px; height: 38px; background: var(--accent-gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary-dark); }
         .logo-text h1 { font-family: 'Playfair Display', serif; font-size: 1.2rem; }
         .logo-text p { font-size: 0.65rem; opacity: 0.8; }
-        .header-info { text-align: right; font-size: 0.75rem; }
+        .header-info { text-align: right; font-size: 0.75rem; flex: 1; }
         .db-status { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 10px; font-size: 0.6rem; margin-top: 0.1rem; }
         .db-status.connected { background: rgba(56,161,105,0.3); color: #9ae6b4; }
         .db-status.disconnected { background: rgba(229,62,62,0.3); color: #feb2b2; }
+        
+        /* User Profile Section */
+        .user-profile-section { display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 8px; }
+        .user-profile-info { display: flex; align-items: center; gap: 0.5rem; }
+        .user-icon { font-size: 1.2rem; }
+        .user-name { font-weight: 600; font-size: 0.85rem; color: white; }
+        .btn-logout { background: rgba(229,62,62,0.8); color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s; }
+        .btn-logout:hover { background: var(--danger-red); transform: scale(1.02); }
         
         .nav { display: flex; padding: 0 0.5rem; flex-wrap: wrap; overflow-x: auto; border-top: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: transparent; border: none; color: white; padding: 0.5rem 0.7rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
@@ -219,6 +227,17 @@
             </div>
             <div class="header-info">
                 <span>B.P 36 Mankon-Bamenda | 675299868</span>
+            </div>
+            <!-- User Profile Section -->
+            <div class="user-profile-section">
+                <div class="user-profile-info">
+                    <span class="user-icon">👤</span>
+                    <span id="loggedInUser" class="user-name">User</span>
+                    <span id="userRoleBadge" class="user-badge">USER</span>
+                </div>
+                <button class="btn btn-logout" onclick="doLogout()" title="Logout">
+                    🚪 Logout
+                </button>
             </div>
         </div>
         <!-- Main Navigation - shown on landing page -->

@@ -159,6 +159,14 @@
         .user-badge.admin { background: rgba(214,158,46,0.2); color: var(--accent-gold); }
         .user-badge.user { background: rgba(66,153,225,0.2); color: var(--primary-blue); }
         
+        /* Role-based access control */
+        .admin-only { display: none !important; }
+        body.is-admin .admin-only { display: inline-flex !important; }
+        .admin-only-section { display: none !important; }
+        body.is-admin .admin-only-section { display: block !important; }
+        .user-restricted-notice { display: none; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        body:not(.is-admin) .user-restricted-notice { display: block; }
+        
         .heir-group { background: #f7fafc; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
         .heir-group h4 { color: var(--primary-blue); margin-bottom: 0.3rem; display: flex; justify-content: space-between; font-size: 0.9rem; }
         .summary-row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dashed var(--border-color); font-size: 0.8rem; }
@@ -167,6 +175,15 @@
         .highlight-box { background: linear-gradient(135deg, rgba(214,158,46,0.15) 0%, rgba(237,137,54,0.15) 100%); border: 2px solid var(--accent-gold); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
         .highlight-box h3 { color: var(--accent-gold); font-size: 1.3rem; }
         .highlight-box p { font-size: 0.75rem; color: var(--text-gray); }
+        
+        /* Beneficiary Selection Styles */
+        .beneficiary-item { display: flex; align-items: center; padding: 10px; background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .beneficiary-item:hover { background: #edf2f7; }
+        .beneficiary-item.selected { background: #c6f6d5; border-color: #48bb78; }
+        .beneficiary-item input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; }
+        .beneficiary-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+        .beneficiary-item .heir-info { font-size: 0.75rem; color: #718096; margin-left: auto; }
+        .beneficiary-item .heir-portions { background: #4299e1; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-left: 8px; }
         
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 1rem; }
         .tab-btn { background: none; border: none; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
@@ -297,12 +314,12 @@
             <button class="nav-btn" onclick="goToLanding()">🏠 Home</button>
             <button class="nav-btn active" data-page="campost-dashboard">📊 Dashboard</button>
             <button class="nav-btn" data-page="campost-ledger">📒 Ledger</button>
-            <button class="nav-btn" data-page="campost-expenses">💸 Expenses</button>
-            <button class="nav-btn" data-page="campost-bills">📄 Bills</button>
-            <button class="nav-btn" data-page="campost-payments">💵 Payments</button>
+            <button class="nav-btn admin-only" data-page="campost-expenses">💸 Expenses</button>
+            <button class="nav-btn admin-only" data-page="campost-bills">📄 Bills</button>
+            <button class="nav-btn admin-only" data-page="campost-payments">💵 Payments</button>
             <button class="nav-btn" data-page="campost-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
             <button class="nav-btn" data-page="campost-export">📥 Export</button>
-            <button class="nav-btn" data-page="campost-settings">⚙️ Settings</button>
+            <button class="nav-btn admin-only" data-page="campost-settings">⚙️ Settings</button>
         </nav>
         <!-- FAMILY REAL ESTATES Navigation -->
         <nav class="nav module-header" id="familyNav">
@@ -310,13 +327,13 @@
             <button class="nav-btn active" data-page="family-dashboard">📊 Dashboard</button>
             <button class="nav-btn" data-page="family-properties">🏠 Properties</button>
             <button class="nav-btn" data-page="family-income">💵 Rental Income</button>
-            <button class="nav-btn" data-page="family-bills">📄 Bills</button>
-            <button class="nav-btn" data-page="family-payments">💳 Payments</button>
-            <button class="nav-btn" data-page="family-expenses">💸 Expenses</button>
+            <button class="nav-btn admin-only" data-page="family-bills">📄 Bills</button>
+            <button class="nav-btn admin-only" data-page="family-payments">💳 Payments</button>
+            <button class="nav-btn admin-only" data-page="family-expenses">💸 Expenses</button>
             <button class="nav-btn" data-page="family-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
             <button class="nav-btn" data-page="family-ledger">📒 Ledger</button>
             <button class="nav-btn" data-page="family-export">📥 Export</button>
-            <button class="nav-btn" data-page="family-settings">⚙️ Settings</button>
+            <button class="nav-btn admin-only" data-page="family-settings">⚙️ Settings</button>
         </nav>
     </header>
 
@@ -560,6 +577,11 @@
 
         <!-- EXPENSES -->
         <div id="campost-expenses" class="page">
+            <div class="user-restricted-notice">
+                <strong>🔒 Access Restricted</strong><br>
+                Only administrators can access Expenses. Please contact an admin if you need to add or modify expenses.
+            </div>
+            <div class="admin-only-section">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Expense</span></div>
                 <div class="card-body">
@@ -579,10 +601,16 @@
             </div>
             <div class="card"><div class="card-header"><span>💸 Expenses</span><button class="btn btn-print btn-sm no-print" onclick="printPage('expenses')">🖨️ Print</button></div>
             <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="expTable"></tbody><tfoot id="expTotals"></tfoot></table></div></div></div>
+            </div>
         </div>
 
         <!-- BILLS -->
         <div id="campost-bills" class="page">
+            <div class="user-restricted-notice">
+                <strong>🔒 Access Restricted</strong><br>
+                Only administrators can access Bills. Please contact an admin if you need to create or modify bills.
+            </div>
+            <div class="admin-only-section">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Bill</span></div>
                 <div class="card-body">
@@ -607,10 +635,16 @@
             </div>
             <div class="card"><div class="card-header"><span>📄 All Bills (Click to View Invoice)</span><button class="btn btn-print btn-sm no-print" onclick="printPage('bills')">🖨️ Print List</button></div>
             <div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th class="no-print">Actions</th></tr></thead><tbody id="billTable"></tbody></table></div></div></div>
+            </div>
         </div>
 
         <!-- PAYMENTS -->
         <div id="campost-payments" class="page">
+            <div class="user-restricted-notice">
+                <strong>🔒 Access Restricted</strong><br>
+                Only administrators can access Payments. Please contact an admin if you need to record payments.
+            </div>
+            <div class="admin-only-section">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Payment</span></div>
                 <div class="card-body">
@@ -627,6 +661,7 @@
             </div>
             <div class="card"><div class="card-header"><span>💵 Payments</span><button class="btn btn-print btn-sm no-print" onclick="printPage('payments')">🖨️ Print</button></div>
             <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Bill #</th><th>Period</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead><tbody id="payTable"></tbody></table></div></div></div>
+            </div>
         </div>
 
         <!-- INHERITANCE -->
@@ -641,14 +676,34 @@
                 <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="inhRes">0</div><div class="stat-label">Reserve</div></div>
                 <div class="stat-card gold"><div class="stat-icon">📊</div><div class="stat-value" id="inhPer">0</div><div class="stat-label">Per Portion</div></div>
             </div>
+            
+            <!-- Beneficiary Selection Card -->
+            <div class="card admin-only-section no-print">
+                <div class="card-header blue"><span>✅ Select Beneficiaries</span>
+                    <div>
+                        <button class="btn btn-outline btn-sm" onclick="selectAllCampostBeneficiaries(true)">Select All</button>
+                        <button class="btn btn-outline btn-sm" onclick="selectAllCampostBeneficiaries(false)">Deselect All</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                        ✅ Check the heirs who should receive inheritance. Only selected heirs will be included in the distribution.
+                    </p>
+                    <div id="campostBeneficiaryList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;"></div>
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button class="btn btn-success" onclick="saveCampostBeneficiaries()">💾 Save Selection & Recalculate</button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="card">
                 <div class="card-header gold"><span>👨‍👩‍👧‍👦 Heirs (<span id="inhPortions">24</span> portions)</span>
-                <div class="no-print"><button class="btn btn-outline btn-sm" onclick="openHeirModal()">➕ Add</button><button class="btn btn-gold btn-sm" onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button></div>
+                <div class="no-print"><button class="btn btn-outline btn-sm admin-only" onclick="openHeirModal()">➕ Add</button><button class="btn btn-gold btn-sm" onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button></div>
                 </div>
                 <div class="card-body" id="heirGroups"></div>
             </div>
-            <div class="card"><div class="card-header"><span>📋 Heir Shares</span><button class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print Summary</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share (XAF)</th><th class="no-print">Actions</th></tr></thead><tbody id="heirTable"></tbody></table></div></div></div>
+            <div class="card"><div class="card-header"><span>📋 Heir Shares (Beneficiaries Only)</span><button class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print Summary</button></div>
+            <div class="card-body"><div class="table-container"><table><thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share (XAF)</th><th class="no-print admin-only">Actions</th></tr></thead><tbody id="heirTable"></tbody></table></div></div></div>
         </div>
 
         <!-- EXPORT -->
@@ -711,11 +766,15 @@
                 <div class="card-header">
                     <span>🏠 Family Properties Portfolio</span>
                     <div class="no-print">
-                        <button class="btn btn-success btn-sm" onclick="openPropertyModal()">➕ Add Property</button>
+                        <button class="btn btn-success btn-sm admin-only" onclick="openPropertyModal()">➕ Add Property</button>
                         <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">📥 Export PDF</button>
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="user-restricted-notice" style="margin-bottom: 10px;">
+                        <strong>🔒 View Only Mode</strong><br>
+                        Only administrators can add, edit, or delete properties.
+                    </div>
                     <div style="margin-bottom: 10px;">
                         <select id="reStatusFilter" onchange="filterProperties()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                             <option value="">All Status</option>
@@ -741,7 +800,7 @@
                                     <th>Tax Rate</th>
                                     <th>Net Income</th>
                                     <th>Islamic Inh.</th>
-                                    <th class="no-print">Actions</th>
+                                    <th class="no-print admin-only">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="propertiesTable"></tbody>
@@ -787,6 +846,11 @@
 
             <!-- ========== RE BILLS TAB ========== -->
             <div id="family-bills" class="page">
+                <div class="user-restricted-notice">
+                    <strong>🔒 Access Restricted</strong><br>
+                    Only administrators can access Bills. Please contact an admin if you need to create or modify bills.
+                </div>
+                <div class="admin-only-section">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Create Property Bill</span></div>
                     <div class="card-body">
@@ -850,10 +914,16 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- ========== RE PAYMENTS TAB ========== -->
             <div id="family-payments" class="page">
+                <div class="user-restricted-notice">
+                    <strong>🔒 Access Restricted</strong><br>
+                    Only administrators can access Payments. Please contact an admin if you need to record payments.
+                </div>
+                <div class="admin-only-section">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Record Payment</span></div>
                     <div class="card-body">
@@ -897,10 +967,16 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- ========== RE EXPENSES TAB ========== -->
             <div id="family-expenses" class="page">
+                <div class="user-restricted-notice">
+                    <strong>🔒 Access Restricted</strong><br>
+                    Only administrators can access Expenses. Please contact an admin if you need to add or modify expenses.
+                </div>
+                <div class="admin-only-section">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Add Property Expense</span></div>
                     <div class="card-body">
@@ -959,31 +1035,53 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- ========== RE INHERITANCE TAB ========== -->
             <div id="family-inheritance" class="page">
                 <div class="stats-grid">
                     <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reInhPool">0</div><div class="stat-label">Inheritance Pool</div></div>
-                    <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value" id="reInhHeirs">0</div><div class="stat-label">Total Heirs</div></div>
+                    <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value" id="reInhHeirs">0</div><div class="stat-label">Beneficiaries</div></div>
                     <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-value" id="reInhPortions">0</div><div class="stat-label">Total Portions</div></div>
                     <div class="stat-card red"><div class="stat-icon">💵</div><div class="stat-value" id="reInhPerPortion">0</div><div class="stat-label">Per Portion</div></div>
                 </div>
+                
+                <!-- Beneficiary Selection Card -->
+                <div class="card admin-only-section no-print">
+                    <div class="card-header blue"><span>✅ Select Beneficiaries</span>
+                        <div>
+                            <button class="btn btn-outline btn-sm" onclick="selectAllREBeneficiaries(true)">Select All</button>
+                            <button class="btn btn-outline btn-sm" onclick="selectAllREBeneficiaries(false)">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                            ✅ Check the heirs who should receive inheritance from Family Real Estates. Only selected heirs will be included in the distribution.
+                        </p>
+                        <div id="reBeneficiaryList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;"></div>
+                        <div class="btn-group" style="margin-top: 15px;">
+                            <button class="btn btn-success" onclick="saveREBeneficiaries()">💾 Save Selection & Recalculate</button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="card">
                     <div class="card-header gold">
                         <span>👨‍👩‍👧‍👦 Real Estate Inheritance Distribution</span>
                         <div class="no-print">
-                            <button class="btn btn-success btn-sm" onclick="openREHeirModal()">➕ Add Heir</button>
+                            <button class="btn btn-success btn-sm admin-only" onclick="openREHeirModal()">➕ Add Heir</button>
                             <button class="btn btn-print btn-sm" onclick="exportREHeirsPDF()">📥 Export PDF</button>
                         </div>
                     </div>
                     <div class="card-body">
                         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
                             📌 Inheritance pool is calculated from: <strong>Total Income - Total Expenses</strong> from properties marked for Islamic Inheritance.
+                            <br>Only <strong>selected beneficiaries</strong> are included in the distribution below.
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Name</th><th>Relationship</th><th>Gender</th><th>Portions</th><th>Share Amount</th><th class="no-print">Actions</th></tr></thead>
+                                <thead><tr><th>Name</th><th>Relationship</th><th>Gender</th><th>Portions</th><th>Share Amount</th><th class="no-print admin-only">Actions</th></tr></thead>
                                 <tbody id="reHeirsTable"></tbody>
                             </table>
                         </div>
@@ -1056,6 +1154,11 @@
 
             <!-- ========== RE SETTINGS TAB ========== -->
             <div id="family-settings" class="page">
+                <div class="user-restricted-notice">
+                    <strong>🔒 Access Restricted</strong><br>
+                    Only administrators can access Settings. Please contact an admin if you need to modify system settings.
+                </div>
+                <div class="admin-only-section">
                 <div class="card">
                     <div class="card-header gold"><span>⚙️ Global Default Settings</span></div>
                     <div class="card-body">
@@ -1194,6 +1297,7 @@
                             <button class="btn btn-danger" onclick="resetREData()">🗑️ Reset All RE Data</button>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -1342,6 +1446,11 @@
 
         <!-- SETTINGS -->
         <div id="campost-settings" class="page">
+            <div class="user-restricted-notice">
+                <strong>🔒 Access Restricted</strong><br>
+                Only administrators can access Settings. Please contact an admin if you need to modify system settings.
+            </div>
+            <div class="admin-only-section">
             <div class="card">
                 <div class="card-header gold"><span>🌍 Currency & Global Settings</span></div>
                 <div class="card-body">
@@ -1411,6 +1520,7 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
     </main>
 
@@ -1465,6 +1575,47 @@
             if (!localStorage.getItem('resetCodes')) {
                 localStorage.setItem('resetCodes', JSON.stringify({}));
             }
+            // Initialize default heirs
+            initializeDefaultHeirs();
+        }
+        
+        // Initialize default heirs from family members list
+        function initializeDefaultHeirs() {
+            // Default family members from Excel file
+            var defaultFamilyMembers = [
+                { name: 'MODER PASMA IDRISU EPSE SALIFOU', relationship: 'Spouse', group: 'Wives', portions: 3 },
+                { name: 'MENJIKOUE ABIBA SPOUSE NJIKAM', relationship: 'Spouse', group: 'Wives', portions: 3 },
+                { name: 'SAHNATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'MOHAMAN SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'ABIBATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'ZAKARE SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'FERER ALIMATU SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'NTENTIE REKIATU NJIKAM', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'KAHPUI MARIAMA SALIFU', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'GHOUENZEN SOULEMANOU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'NGAMENPOUYE MAIMUNATE', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'LOUMNGAM NCHINTOUO AMINATOUO', relationship: 'Child', group: 'Daughters', portions: 1 },
+                { name: 'MENTCHA ABOUBAKAR SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'HAROUNA SALIFU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'MBALLEY ABDOU RAHAMA SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 },
+                { name: 'NGAMDAMOUN IBRAHIM SALIFOU', relationship: 'Child', group: 'Sons', portions: 2 }
+            ];
+            
+            // Initialize Family RE heirs if empty
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            if (reHeirs.length === 0) {
+                reHeirs = defaultFamilyMembers.map(function(m, idx) {
+                    return {
+                        id: idx + 1,
+                        name: m.name,
+                        relationship: m.relationship,
+                        gender: m.group === 'Sons' ? 'Male' : 'Female',
+                        group: m.group,
+                        portions: m.portions
+                    };
+                });
+                localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
+            }
         }
         
         // Current logged in user
@@ -1518,9 +1669,13 @@
             badge.textContent = currentUser.role.toUpperCase();
             badge.className = 'user-badge ' + currentUser.role;
             
-            // Show admin section if admin
+            // Set admin class on body for role-based access control
             if (currentUser.role === 'admin') {
+                document.body.classList.add('is-admin');
                 document.getElementById('adminUserManagement').style.display = 'block';
+            } else {
+                document.body.classList.remove('is-admin');
+                document.getElementById('adminUserManagement').style.display = 'none';
             }
             
             // Initialize app
@@ -1536,6 +1691,7 @@
             localStorage.removeItem('currentSession');
             
             // Reset UI
+            document.body.classList.remove('is-admin');
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('loginContainer').classList.add('active');
             document.getElementById('loginUsername').value = '';
@@ -2817,25 +2973,113 @@
 
         // Inheritance
         function loadInheritance() {
-            api('/inheritance/calculate').then(function(d) {
-                document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
-                document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
-                document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
-                document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
-                document.getElementById('inhPortions').textContent = d.totalPortions;
-                document.getElementById('inhPer').textContent = fmt(d.sharePerPortion);
+            // First load all heirs for the beneficiary selection
+            api('/heirs').then(function(allHeirs) {
+                loadCampostBeneficiaryList(allHeirs);
+                
+                // Get selected beneficiaries
+                var selectedIds = getCampostBeneficiaries();
+                
+                // Calculate inheritance only for selected beneficiaries
+                api('/inheritance/calculate').then(function(d) {
+                    // Filter heirs to only include selected beneficiaries
+                    var beneficiaries = d.heirs.filter(function(h) {
+                        return selectedIds.length === 0 || selectedIds.includes(h.id);
+                    });
+                    
+                    // Recalculate totals for beneficiaries only
+                    var totalPortions = beneficiaries.reduce(function(sum, h) { return sum + parseFloat(h.portions); }, 0);
+                    var sharePerPortion = totalPortions > 0 ? d.inheritanceAmount / totalPortions : 0;
+                    
+                    // Calculate group summary for beneficiaries
+                    var groupSummary = {};
+                    beneficiaries.forEach(function(h) {
+                        if (!groupSummary[h.heir_group]) {
+                            groupSummary[h.heir_group] = { count: 0, totalPortions: 0, totalShare: 0 };
+                        }
+                        groupSummary[h.heir_group].count++;
+                        groupSummary[h.heir_group].totalPortions += parseFloat(h.portions);
+                        groupSummary[h.heir_group].totalShare += parseFloat(h.portions) * sharePerPortion;
+                    });
+                    
+                    document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
+                    document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
+                    document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
+                    document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
+                    document.getElementById('inhPortions').textContent = totalPortions;
+                    document.getElementById('inhPer').textContent = fmt(Math.round(sharePerPortion));
 
-                var html = '';
-                for (var g in d.groupSummary) {
-                    var i = d.groupSummary[g];
-                    html += '<div class="heir-group"><h4>' + g + ' <span>' + i.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(i.totalShare / i.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(i.totalShare)) + ' XAF</span></div></div>';
-                }
-                document.getElementById('heirGroups').innerHTML = html || '<p>No heirs</p>';
+                    var html = '';
+                    for (var g in groupSummary) {
+                        var i = groupSummary[g];
+                        html += '<div class="heir-group"><h4>' + g + ' <span>' + i.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(i.totalShare / i.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(i.totalShare)) + ' XAF</span></div></div>';
+                    }
+                    document.getElementById('heirGroups').innerHTML = html || '<p>No beneficiaries selected</p>';
 
-                document.getElementById('heirTable').innerHTML = d.heirs.map(function(h) {
-                    return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td><td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td></tr>';
-                }).join('') || '<tr><td colspan="6">No heirs</td></tr>';
+                    var isAdmin = currentUser && currentUser.role === 'admin';
+                    document.getElementById('heirTable').innerHTML = beneficiaries.map(function(h) {
+                        var share = parseFloat(h.portions) * sharePerPortion;
+                        var actionsHtml = isAdmin ? '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td>' : '';
+                        return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(share)) + '</td>' + actionsHtml + '</tr>';
+                    }).join('') || '<tr><td colspan="6">No beneficiaries selected</td></tr>';
+                });
             });
+        }
+        
+        // Load CAMPOST beneficiary selection list
+        function loadCampostBeneficiaryList(heirs) {
+            var selectedIds = getCampostBeneficiaries();
+            var html = heirs.map(function(h) {
+                var isSelected = selectedIds.length === 0 || selectedIds.includes(h.id);
+                return '<div class="beneficiary-item ' + (isSelected ? 'selected' : '') + '">' +
+                    '<input type="checkbox" id="campost-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleCampostBeneficiary(' + h.id + ', this.checked)">' +
+                    '<label for="campost-ben-' + h.id + '">' + h.name + '</label>' +
+                    '<span class="heir-info">' + h.relationship + '</span>' +
+                    '<span class="heir-portions">' + h.portions + ' portions</span>' +
+                '</div>';
+            }).join('');
+            document.getElementById('campostBeneficiaryList').innerHTML = html || '<p>No heirs available</p>';
+        }
+        
+        // Get selected CAMPOST beneficiaries from localStorage
+        function getCampostBeneficiaries() {
+            var stored = localStorage.getItem('campostBeneficiaries');
+            return stored ? JSON.parse(stored) : [];
+        }
+        
+        // Toggle CAMPOST beneficiary selection
+        function toggleCampostBeneficiary(id, checked) {
+            var el = document.querySelector('#campost-ben-' + id).closest('.beneficiary-item');
+            if (checked) {
+                el.classList.add('selected');
+            } else {
+                el.classList.remove('selected');
+            }
+        }
+        
+        // Select/Deselect all CAMPOST beneficiaries
+        function selectAllCampostBeneficiaries(selectAll) {
+            var checkboxes = document.querySelectorAll('#campostBeneficiaryList input[type="checkbox"]');
+            checkboxes.forEach(function(cb) {
+                cb.checked = selectAll;
+                var el = cb.closest('.beneficiary-item');
+                if (selectAll) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
+        
+        // Save CAMPOST beneficiary selection
+        function saveCampostBeneficiaries() {
+            var checkboxes = document.querySelectorAll('#campostBeneficiaryList input[type="checkbox"]:checked');
+            var selectedIds = Array.from(checkboxes).map(function(cb) {
+                return parseInt(cb.id.replace('campost-ben-', ''));
+            });
+            localStorage.setItem('campostBeneficiaries', JSON.stringify(selectedIds));
+            showAlert('Beneficiary selection saved!');
+            loadInheritance();
         }
 
         function openHeirModal() { document.getElementById('heirModal').classList.add('active'); }
@@ -3398,6 +3642,7 @@
         function renderPropertiesTable(properties) {
             var filterStatus = document.getElementById('reStatusFilter').value;
             var filtered = filterStatus ? properties.filter(function(p) { return p.status === filterStatus; }) : properties;
+            var isAdmin = currentUser && currentUser.role === 'admin';
 
             var html = filtered.map(function(p) {
                 var isRented = p.status === 'Rented';
@@ -3410,6 +3655,12 @@
                 var taxAmount = rentAmount * taxRate / 100;
                 var netIncome = rentAmount - taxAmount;
 
+                var actionsHtml = isAdmin ? 
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteProperty(' + p.id + ')">🗑️</button>' +
+                    '</td>' : '';
+
                 return '<tr>' +
                     '<td><strong>' + p.name + '</strong></td>' +
                     '<td>' + p.location + '</td>' +
@@ -3420,14 +3671,11 @@
                     '<td>' + taxRate + '%</td>' +
                     '<td class="' + (netIncome > 0 ? 'amount-positive' : '') + '">' + fmt(Math.round(netIncome)) + '</td>' +
                     '<td>' + (p.islamic_inheritance || 'NA') + '</td>' +
-                    '<td class="no-print">' +
-                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️</button> ' +
-                        '<button class="btn btn-danger btn-sm" onclick="deleteProperty(' + p.id + ')">🗑️</button>' +
-                    '</td>' +
+                    actionsHtml +
                 '</tr>';
             }).join('');
 
-            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="10">No properties found</td></tr>';
+            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="' + (isAdmin ? '10' : '9') + '">No properties found</td></tr>';
         }
 
         // Render Rental Income Table - show ALL properties with zeros for non-rented
@@ -4187,6 +4435,17 @@
             var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
             var currency = getCurrency();
 
+            // Load beneficiary selection list
+            loadREBeneficiaryList(reHeirs);
+
+            // Get selected beneficiaries
+            var selectedIds = getREBeneficiaries();
+            
+            // Filter to only selected beneficiaries
+            var beneficiaries = reHeirs.filter(function(h) {
+                return selectedIds.length === 0 || selectedIds.includes(h.id);
+            });
+
             var totalIncome = 0; 
             rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
             
@@ -4195,8 +4454,8 @@
 
             var inheritancePool = Math.max(0, totalIncome - totalExpenses);
             
-            // Calculate total portions for Islamic distribution
-            var totalPortions = reHeirs.reduce(function(sum, h) { 
+            // Calculate total portions for selected beneficiaries only
+            var totalPortions = beneficiaries.reduce(function(sum, h) { 
                 return sum + (parseFloat(h.portions) || 0); 
             }, 0);
             
@@ -4204,11 +4463,12 @@
             var perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
 
             document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool)) + ' ' + currency;
-            document.getElementById('reInhHeirs').textContent = reHeirs.length;
+            document.getElementById('reInhHeirs').textContent = beneficiaries.length;
             document.getElementById('reInhPortions').textContent = Math.round(totalPortions * 1000) / 1000;
             document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion)) + ' ' + currency;
 
-            var html = reHeirs.map(function(h) { 
+            var isAdmin = currentUser && currentUser.role === 'admin';
+            var html = beneficiaries.map(function(h) { 
                 var shareAmount = perPortion * (parseFloat(h.portions) || 0);
                 var portionDisplay = h.portions;
                 // Show as fraction if possible
@@ -4218,20 +4478,79 @@
                 else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
                 else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
                 
+                var actionsHtml = isAdmin ? '<td class="no-print">' +
+                    '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> ' +
+                    '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button>' +
+                '</td>' : '';
+                
                 return '<tr>' +
                     '<td>' + h.name + '</td>' +
                     '<td>' + h.relationship + '</td>' +
                     '<td>' + (h.gender || '-') + '</td>' +
                     '<td>' + portionDisplay + '</td>' +
                     '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
-                    '<td class="no-print">' +
-                        '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> ' +
-                        '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button>' +
-                    '</td>' +
+                    actionsHtml +
                 '</tr>'; 
             }).join('');
 
-            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No heirs added. Add heirs to calculate Islamic inheritance distribution.</td></tr>';
+            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No beneficiaries selected. Select heirs above to calculate Islamic inheritance distribution.</td></tr>';
+        }
+        
+        // Load Family RE beneficiary selection list
+        function loadREBeneficiaryList(heirs) {
+            var selectedIds = getREBeneficiaries();
+            var currency = getCurrency();
+            var html = heirs.map(function(h) {
+                var isSelected = selectedIds.length === 0 || selectedIds.includes(h.id);
+                return '<div class="beneficiary-item ' + (isSelected ? 'selected' : '') + '">' +
+                    '<input type="checkbox" id="re-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleREBeneficiary(' + h.id + ', this.checked)">' +
+                    '<label for="re-ben-' + h.id + '">' + h.name + '</label>' +
+                    '<span class="heir-info">' + h.relationship + '</span>' +
+                    '<span class="heir-portions">' + h.portions + ' portions</span>' +
+                '</div>';
+            }).join('');
+            document.getElementById('reBeneficiaryList').innerHTML = html || '<p>No heirs available. Add heirs first.</p>';
+        }
+        
+        // Get selected Family RE beneficiaries from localStorage
+        function getREBeneficiaries() {
+            var stored = localStorage.getItem('reBeneficiaries');
+            return stored ? JSON.parse(stored) : [];
+        }
+        
+        // Toggle Family RE beneficiary selection
+        function toggleREBeneficiary(id, checked) {
+            var el = document.querySelector('#re-ben-' + id).closest('.beneficiary-item');
+            if (checked) {
+                el.classList.add('selected');
+            } else {
+                el.classList.remove('selected');
+            }
+        }
+        
+        // Select/Deselect all Family RE beneficiaries
+        function selectAllREBeneficiaries(selectAll) {
+            var checkboxes = document.querySelectorAll('#reBeneficiaryList input[type="checkbox"]');
+            checkboxes.forEach(function(cb) {
+                cb.checked = selectAll;
+                var el = cb.closest('.beneficiary-item');
+                if (selectAll) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
+        
+        // Save Family RE beneficiary selection
+        function saveREBeneficiaries() {
+            var checkboxes = document.querySelectorAll('#reBeneficiaryList input[type="checkbox"]:checked');
+            var selectedIds = Array.from(checkboxes).map(function(cb) {
+                return parseInt(cb.id.replace('re-ben-', ''));
+            });
+            localStorage.setItem('reBeneficiaries', JSON.stringify(selectedIds));
+            showAlert('Beneficiary selection saved!');
+            loadREInheritance();
         }
 
         function openREHeirModal() { 

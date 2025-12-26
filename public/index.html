@@ -893,19 +893,19 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                             <div style="padding: 15px; background: #e6fffa; border-radius: 8px; border: 2px solid #38b2ac;">
                                 <div style="font-size: 12px; color: #234e52; font-weight: bold;">TOTAL INCOME</div>
-                                <div id="reTotalIncome" style="font-size: 20px; font-weight: bold; color: #38a169;">0 XAF</div>
+                                <div id="expTotalIncome" style="font-size: 20px; font-weight: bold; color: #38a169;">0 XAF</div>
                             </div>
                             <div style="padding: 15px; background: #fed7d7; border-radius: 8px; border: 2px solid #fc8181;">
                                 <div style="font-size: 12px; color: #742a2a; font-weight: bold;">TOTAL EXPENSES</div>
-                                <div id="reTotalExpenses" style="font-size: 20px; font-weight: bold; color: #c53030;">0 XAF</div>
+                                <div id="expTotalExpenses" style="font-size: 20px; font-weight: bold; color: #c53030;">0 XAF</div>
                             </div>
                             <div style="padding: 15px; background: #fef3c7; border-radius: 8px; border: 2px solid #d69e2e;">
-                                <div style="font-size: 12px; color: #744210; font-weight: bold;">RESERVED FUNDS (<span id="reReservedPercent">10</span>%)</div>
-                                <div id="reReservedFunds" style="font-size: 20px; font-weight: bold; color: #d69e2e;">0 XAF</div>
+                                <div style="font-size: 12px; color: #744210; font-weight: bold;">RESERVED FUNDS (<span id="expReservedPercent">10</span>%)</div>
+                                <div id="expReservedFunds" style="font-size: 20px; font-weight: bold; color: #d69e2e;">0 XAF</div>
                             </div>
                             <div style="padding: 15px; background: #ebf8ff; border-radius: 8px; border: 2px solid #3182ce;">
                                 <div style="font-size: 12px; color: #2c5282; font-weight: bold;">AVAILABLE FUNDS</div>
-                                <div id="reAvailableFunds" style="font-size: 20px; font-weight: bold; color: #2b6cb0;">0 XAF</div>
+                                <div id="expAvailableFunds" style="font-size: 20px; font-weight: bold; color: #2b6cb0;">0 XAF</div>
                             </div>
                         </div>
                     </div>
@@ -4529,12 +4529,12 @@
                 var reservedFunds = totalIncome * (reservedPercent / 100);
                 var availableFunds = Math.max(0, totalIncome - totalExpenses - reservedFunds);
                 
-                // Update display
-                document.getElementById('reTotalIncome').textContent = fmt(Math.round(totalIncome)) + ' ' + currency;
-                document.getElementById('reTotalExpenses').textContent = fmt(Math.round(totalExpenses)) + ' ' + currency;
-                document.getElementById('reReservedPercent').textContent = reservedPercent;
-                document.getElementById('reReservedFunds').textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
-                document.getElementById('reAvailableFunds').textContent = fmt(Math.round(availableFunds)) + ' ' + currency;
+                // Update display in Available Funds card (Expenses section)
+                document.getElementById('expTotalIncome').textContent = fmt(Math.round(totalIncome)) + ' ' + currency;
+                document.getElementById('expTotalExpenses').textContent = fmt(Math.round(totalExpenses)) + ' ' + currency;
+                document.getElementById('expReservedPercent').textContent = reservedPercent;
+                document.getElementById('expReservedFunds').textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
+                document.getElementById('expAvailableFunds').textContent = fmt(Math.round(availableFunds)) + ' ' + currency;
             });
         }
 

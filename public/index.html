@@ -207,7 +207,7 @@
 </head>
 <body>
     <!-- ==================== MAIN APP ==================== -->
-    <div id="mainApp" style="display: block;">
+    <div id="mainApp" style="display: none;">
     <header class="header no-print">
         <div class="header-top">
             <div class="logo-section">
@@ -1592,6 +1592,9 @@
     <div id="alertBox" style="position:fixed;top:60px;right:10px;z-index:3000;max-width:280px;"></div>
 
     <script>
+        // ==================== API CONFIGURATION ====================
+        var API = window.location.origin + '/api';
+        
         // ==================== AUTHENTICATION SYSTEM ====================
         
         // Initialize default admin user if not exists
@@ -2305,8 +2308,6 @@
             'Q3': { period: 'July to September', months: 'Jul-Sep', shortPeriod: 'Q3 (Jul-Sep)' },
             'Q4': { period: 'October to December', months: 'Oct-Dec', shortPeriod: 'Q4 (Oct-Dec)' }
         };
-
-        var API = window.location.origin + '/api';
 
         function fmt(n) {
             return n ? Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0';
@@ -6331,15 +6332,13 @@
             if (taxInput) taxInput.addEventListener('change', updatePropertyCalc);
         });
 
-        // Initialize - no login required
+        // Initialize - check for existing session or show login
         function init() {
-            // Set default admin user for full access
-            currentUser = { id: 1, username: 'admin', full_name: 'Administrator', role: 'admin' };
-            document.body.classList.add('is-admin');
+            // Hide main app initially
+            document.getElementById('mainApp').style.display = 'none';
             
-            // Initialize app
-            checkDb();
-            goToLanding();
+            // Check for existing session
+            checkExistingSession();
         }
 
         init();

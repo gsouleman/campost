@@ -120,6 +120,8 @@
         .landing-card.campost:hover { border-color: var(--accent-gold); }
         .landing-card.family { border-color: var(--success-green); }
         .landing-card.family:hover { border-color: var(--accent-gold); }
+        .landing-card.assets { border-color: #805ad5; }
+        .landing-card.assets:hover { border-color: var(--accent-gold); }
         .landing-card-icon { font-size: 3rem; margin-bottom: 1rem; }
         .landing-card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--primary-dark); margin-bottom: 0.5rem; }
         .landing-card-desc { color: var(--text-gray); font-size: 0.85rem; margin-bottom: 1rem; }
@@ -273,6 +275,15 @@
             <button class="nav-btn" data-page="family-export">📥 Export</button>
             <button class="nav-btn" data-page="family-settings">⚙️ Settings</button>
         </nav>
+        <!-- RESIDENCE ASSETS Navigation -->
+        <nav class="nav module-header" id="assetsNav" style="display: none;">
+            <button class="nav-btn" onclick="goToLanding()">🏠 Home</button>
+            <button class="nav-btn active" data-page="assets-dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-page="assets-oldtown">🏘️ Old Town</button>
+            <button class="nav-btn" data-page="assets-manka">🏡 Manka</button>
+            <button class="nav-btn" data-page="assets-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
+            <button class="nav-btn" data-page="assets-export">📥 Export</button>
+        </nav>
     </header>
 
     <main class="main-content">
@@ -328,6 +339,30 @@
                         </div>
                         <div class="btn-group" style="justify-content: center; margin-top: 1rem;">
                             <button class="btn btn-success btn-lg">Enter Family Estates →</button>
+                        </div>
+                    </div>
+                    
+                    <!-- RESIDENCE ASSETS Card -->
+                    <div class="landing-card assets" onclick="openModule('assets')">
+                        <div class="landing-card-icon">🪑</div>
+                        <h2 class="landing-card-title">RESIDENCE ASSETS</h2>
+                        <p class="landing-card-desc">Inventory of household assets at Old Town & Manka Residences for inheritance distribution.</p>
+                        <div class="landing-card-stats">
+                            <div class="landing-stat">
+                                <div class="landing-stat-value" id="landingOldTownValue">0</div>
+                                <div class="landing-stat-label">Old Town</div>
+                            </div>
+                            <div class="landing-stat">
+                                <div class="landing-stat-value" id="landingMankaValue">0</div>
+                                <div class="landing-stat-label">Manka</div>
+                            </div>
+                            <div class="landing-stat">
+                                <div class="landing-stat-value amount-gold" id="landingTotalAssets">0</div>
+                                <div class="landing-stat-label">Total Value</div>
+                            </div>
+                        </div>
+                        <div class="btn-group" style="justify-content: center; margin-top: 1rem;">
+                            <button class="btn btn-warning btn-lg">Enter Residence Assets →</button>
                         </div>
                     </div>
                 </div>
@@ -1471,6 +1506,305 @@
                         </div>
                     </div>
                 </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== RESIDENCE ASSETS MODULE ==================== -->
+        
+        <!-- ASSETS DASHBOARD -->
+        <div id="assets-dashboard" class="page">
+            <div class="stats-grid">
+                <div class="stat-card blue"><div class="stat-icon">🏘️</div><div class="stat-value" id="assetsOldTownTotal">2,953,000</div><div class="stat-label">Old Town Value (XAF)</div></div>
+                <div class="stat-card green"><div class="stat-icon">🏡</div><div class="stat-value" id="assetsMankaTotal">4,650,000</div><div class="stat-label">Manka Value (XAF)</div></div>
+                <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="assetsCombinedTotal">7,603,000</div><div class="stat-label">Combined Total (XAF)</div></div>
+                <div class="stat-card red"><div class="stat-icon">📦</div><div class="stat-value" id="assetsTotalItems">0</div><div class="stat-label">Total Items</div></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%);">
+                    <span>🪑 Residence Assets Overview</span>
+                </div>
+                <div class="card-body">
+                    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px; background: #faf5ff; padding: 10px; border-radius: 6px; border-left: 4px solid #805ad5;">
+                        📌 <strong>Disclaimer:</strong> All values are approximate resale/market estimates in Central African Francs (XAF) for used items in good condition. Actual sale prices may vary. Professional appraisal is recommended for high-value items.
+                    </p>
+                    
+                    <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <!-- Old Town Summary -->
+                        <div style="background: linear-gradient(135deg, rgba(66,153,225,0.1), rgba(49,130,206,0.1)); border: 2px solid var(--primary-blue); border-radius: 10px; padding: 1rem;">
+                            <h3 style="color: var(--primary-blue); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🏘️ OLD TOWN RESIDENCE</h3>
+                            <div class="summary-row"><span>Living Room & Common Areas</span><span id="oldTownLiving">745,000</span></div>
+                            <div class="summary-row"><span>Kitchen & Dining</span><span id="oldTownKitchen">690,000</span></div>
+                            <div class="summary-row"><span>Master Bedroom</span><span id="oldTownMaster">585,000</span></div>
+                            <div class="summary-row"><span>Bedroom 2</span><span id="oldTownBed2">283,000</span></div>
+                            <div class="summary-row"><span>Bedroom 3</span><span id="oldTownBed3">295,000</span></div>
+                            <div class="summary-row"><span>Outdoor & Miscellaneous</span><span id="oldTownMisc">355,000</span></div>
+                            <div class="summary-row" style="font-size: 1.1rem; color: var(--primary-blue);"><strong>GRAND TOTAL</strong><strong id="oldTownGrand">2,953,000 XAF</strong></div>
+                        </div>
+                        
+                        <!-- Manka Summary -->
+                        <div style="background: linear-gradient(135deg, rgba(56,161,105,0.1), rgba(39,103,73,0.1)); border: 2px solid var(--success-green); border-radius: 10px; padding: 1rem;">
+                            <h3 style="color: var(--success-green); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🏡 MANKA RESIDENCE</h3>
+                            <div class="summary-row"><span>Living Room & Common Areas</span><span id="mankaLiving">995,000</span></div>
+                            <div class="summary-row"><span>Kitchen & Dining</span><span id="mankaKitchen">1,080,000</span></div>
+                            <div class="summary-row"><span>Master Bedroom</span><span id="mankaMaster">970,000</span></div>
+                            <div class="summary-row"><span>Bedroom 2 (Guest Suite)</span><span id="mankaBed2">430,000</span></div>
+                            <div class="summary-row"><span>Bedroom 3</span><span id="mankaBed3">280,000</span></div>
+                            <div class="summary-row"><span>Outdoor, Laundry & Misc</span><span id="mankaMisc">895,000</span></div>
+                            <div class="summary-row" style="font-size: 1.1rem; color: var(--success-green);"><strong>GRAND TOTAL</strong><strong id="mankaGrand">4,650,000 XAF</strong></div>
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-box" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(128,90,213,0.15), rgba(85,60,154,0.15)); border-color: #805ad5;">
+                        <p style="color: #553c9a; font-size: 0.9rem;">OVERALL GRAND TOTAL</p>
+                        <h3 style="color: #805ad5;" id="assetsOverallTotal">7,603,000 XAF</h3>
+                        <p style="color: #718096; font-size: 0.8rem;">(Seven Million Six Hundred Three Thousand Central African Francs)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- OLD TOWN RESIDENCE ASSETS -->
+        <div id="assets-oldtown" class="page">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);">
+                    <span>🏘️ Old Town Residence - Asset Inventory</span>
+                    <span class="badge badge-income" id="oldTownTotalBadge">2,953,000 XAF</span>
+                </div>
+                <div class="card-body">
+                    <!-- Living Room -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">A. Living Room & Common Areas</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="oldTownLivingTable"></tbody>
+                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>745,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Kitchen & Dining -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">B. Kitchen & Dining</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="oldTownKitchenTable"></tbody>
+                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>690,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Master Bedroom -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">C. Bedroom 1 (Master)</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="oldTownMasterTable"></tbody>
+                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>585,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Bedroom 2 -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">D. Bedroom 2</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="oldTownBed2Table"></tbody>
+                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>283,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Bedroom 3 -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">E. Bedroom 3</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="oldTownBed3Table"></tbody>
+                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>295,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Outdoor & Misc -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">F. Outdoor & Miscellaneous</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="oldTownMiscTable"></tbody>
+                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>355,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-box" style="margin-top: 1rem;">
+                        <p style="color: #744210;">OLD TOWN RESIDENCE</p>
+                        <h3 id="oldTownFinalTotal">2,953,000 XAF</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MANKA RESIDENCE ASSETS -->
+        <div id="assets-manka" class="page">
+            <div class="card">
+                <div class="card-header green">
+                    <span>🏡 Manka Residence - Asset Inventory</span>
+                    <span class="badge badge-income" id="mankaTotalBadge">4,650,000 XAF</span>
+                </div>
+                <div class="card-body">
+                    <!-- Living Room -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--success-green); border-bottom: 2px solid var(--success-green); padding-bottom: 0.5rem; margin-bottom: 1rem;">A. Living Room & Common Areas</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="mankaLivingTable"></tbody>
+                                <tfoot><tr style="background: #f0fff4;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>995,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Kitchen & Dining -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--success-green); border-bottom: 2px solid var(--success-green); padding-bottom: 0.5rem; margin-bottom: 1rem;">B. Kitchen & Dining</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="mankaKitchenTable"></tbody>
+                                <tfoot><tr style="background: #f0fff4;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>1,080,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Master Bedroom -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--success-green); border-bottom: 2px solid var(--success-green); padding-bottom: 0.5rem; margin-bottom: 1rem;">C. Bedroom 1 (Master)</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="mankaMasterTable"></tbody>
+                                <tfoot><tr style="background: #f0fff4;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>970,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Bedroom 2 -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--success-green); border-bottom: 2px solid var(--success-green); padding-bottom: 0.5rem; margin-bottom: 1rem;">D. Bedroom 2 (Guest Suite)</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="mankaBed2Table"></tbody>
+                                <tfoot><tr style="background: #f0fff4;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>430,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Bedroom 3 -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--success-green); border-bottom: 2px solid var(--success-green); padding-bottom: 0.5rem; margin-bottom: 1rem;">E. Bedroom 3</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="mankaBed3Table"></tbody>
+                                <tfoot><tr style="background: #f0fff4;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>280,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Outdoor & Misc -->
+                    <div class="asset-section">
+                        <h4 style="color: var(--success-green); border-bottom: 2px solid var(--success-green); padding-bottom: 0.5rem; margin-bottom: 1rem;">F. Outdoor, Laundry & Miscellaneous</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <tbody id="mankaMiscTable"></tbody>
+                                <tfoot><tr style="background: #f0fff4;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>895,000</strong></td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-box" style="margin-top: 1rem; background: linear-gradient(135deg, rgba(56,161,105,0.15), rgba(39,103,73,0.15)); border-color: var(--success-green);">
+                        <p style="color: #276749;">MANKA RESIDENCE</p>
+                        <h3 style="color: var(--success-green);" id="mankaFinalTotal">4,650,000 XAF</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ASSETS INHERITANCE -->
+        <div id="assets-inheritance" class="page">
+            <div class="card">
+                <div class="card-header gold">
+                    <span>👨‍👩‍👧‍👦 Assets Inheritance Distribution</span>
+                </div>
+                <div class="card-body">
+                    <div class="highlight-box">
+                        <p style="color: #744210;">Total Assets Pool for Distribution</p>
+                        <h3 id="assetsInheritancePool">7,603,000 XAF</h3>
+                        <p style="color: #718096; font-size: 0.8rem;">Combined value of Old Town + Manka Residence assets</p>
+                    </div>
+                    
+                    <p style="font-size: 0.85rem; color: #718096; margin: 15px 0; background: #fffaf0; padding: 10px; border-radius: 6px; border-left: 4px solid var(--accent-gold);">
+                        📌 <strong>Islamic Inheritance:</strong> Distribution follows the same heir portions as defined in the Family Estates module. Wives receive 1/8 collectively, Sons receive 2 portions each, Daughters receive 1 portion each.
+                    </p>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Heir Name</th>
+                                    <th>Relationship</th>
+                                    <th>Group</th>
+                                    <th>Portions</th>
+                                    <th style="text-align: right;">Share (XAF)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetsHeirsTable"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-print" onclick="printAssetsInheritance()">🖨️ Print Certificates</button>
+                        <button class="btn btn-success" onclick="exportAssetsInheritancePDF()">📥 Export PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ASSETS EXPORT -->
+        <div id="assets-export" class="page">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%);">
+                    <span>📥 Export Assets Data</span>
+                </div>
+                <div class="card-body">
+                    <p style="margin-bottom: 15px; color: #718096;">Export residence assets inventory and inheritance distribution.</p>
+                    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <button class="btn btn-primary" onclick="exportAssetsPDF()">📄 Full Assets Report (PDF)</button>
+                        <button class="btn btn-success" onclick="exportAssetsCSV()">📊 Assets List (CSV)</button>
+                        <button class="btn btn-warning" onclick="exportAssetsInheritancePDF()">👨‍👩‍👧‍👦 Inheritance Report (PDF)</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header"><span>📋 Quick Summary</span></div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-card blue"><div class="stat-icon">🏘️</div><div class="stat-value">2,953,000</div><div class="stat-label">Old Town (XAF)</div></div>
+                        <div class="stat-card green"><div class="stat-icon">🏡</div><div class="stat-value">4,650,000</div><div class="stat-label">Manka (XAF)</div></div>
+                        <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value">7,603,000</div><div class="stat-label">Combined (XAF)</div></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2900,9 +3234,17 @@
                 document.getElementById('family-dashboard').classList.add('active');
                 document.getElementById('mainTitle').textContent = 'FAMILY ESTATES';
                 document.getElementById('mainSubtitle').textContent = 'Property & Rental Management';
-                document.querySelector('.logo-icon').textContent = 'FR';
+                document.querySelector('.logo-icon').textContent = 'FE';
                 loadRealEstate();
                 loadFamilyDashboardSummary();
+            } else if (module === 'assets') {
+                // Show ASSETS nav and dashboard
+                document.getElementById('assetsNav').style.display = 'flex';
+                document.getElementById('assets-dashboard').classList.add('active');
+                document.getElementById('mainTitle').textContent = 'RESIDENCE ASSETS';
+                document.getElementById('mainSubtitle').textContent = 'Old Town & Manka Inventory';
+                document.querySelector('.logo-icon').textContent = 'RA';
+                loadAssetsDashboard();
             }
         }
         
@@ -2959,6 +3301,20 @@
                 document.getElementById('landingFamilyProperties').textContent = '0';
                 document.getElementById('landingTotalProperties').textContent = '0';
             });
+            
+            // Assets stats - calculated from hardcoded data
+            if (typeof calcAssetTotals === 'function') {
+                var totals = calcAssetTotals();
+                if (document.getElementById('landingOldTownValue')) {
+                    document.getElementById('landingOldTownValue').textContent = fmt(totals.oldTown.total);
+                }
+                if (document.getElementById('landingMankaValue')) {
+                    document.getElementById('landingMankaValue').textContent = fmt(totals.manka.total);
+                }
+                if (document.getElementById('landingTotalAssets')) {
+                    document.getElementById('landingTotalAssets').textContent = fmt(totals.grandTotal);
+                }
+            }
         }
         
         function updateCombinedTotals() {
@@ -3007,6 +3363,11 @@
             else if (p === 'family-inheritance') loadREInheritance();
             else if (p === 'family-ledger') loadRELedgerFull();
             else if (p === 'family-settings') loadRESettings();
+            // Assets pages
+            else if (p === 'assets-dashboard') loadAssetsDashboard();
+            else if (p === 'assets-oldtown') loadOldTownAssets();
+            else if (p === 'assets-manka') loadMankaAssets();
+            else if (p === 'assets-inheritance') loadAssetsInheritance();
             // System Settings (login management)
             else if (p === 'system-settings') { loadSystemUsers(); updateMyProfile(); }
             // Main settings (user management)
@@ -6793,6 +7154,376 @@
             doc.save('family_real_estates_complete_' + new Date().toISOString().split('T')[0] + '.pdf'); 
             showAlert('Complete PDF exported!'); 
         }
+
+        // ==================== RESIDENCE ASSETS MODULE ====================
+        
+        // Assets data - hardcoded based on inventory document
+        var ASSETS_DATA = {
+            oldTown: {
+                living: [
+                    { item: '3-Seater Sofa (Fabric)', value: 85000 },
+                    { item: '2-Seater Sofa (Fabric)', value: 60000 },
+                    { item: 'Coffee Table (Wood & Glass)', value: 35000 },
+                    { item: 'Side Tables (Set of 2)', value: 25000 },
+                    { item: 'TV Stand/Entertainment Unit', value: 45000 },
+                    { item: 'LCD Television (43-inch)', value: 150000 },
+                    { item: 'Area Rug (Medium)', value: 30000 },
+                    { item: 'Floor Lamp', value: 15000 },
+                    { item: 'Decorative Mirrors & Wall Art', value: 40000 },
+                    { item: 'Bookshelf (Large, Wooden)', value: 55000 },
+                    { item: 'Ceiling Fan', value: 25000 },
+                    { item: 'Air Conditioner (2.5 HP)', value: 180000 }
+                ],
+                kitchen: [
+                    { item: 'Dining Table with 6 Chairs', value: 120000 },
+                    { item: 'Sideboard/Buffet Cabinet', value: 45000 },
+                    { item: 'Refrigerator (Double Door)', value: 220000 },
+                    { item: 'Gas Cooker (4 Burner + Oven)', value: 90000 },
+                    { item: 'Microwave Oven', value: 40000 },
+                    { item: 'Blender & Food Processor Set', value: 25000 },
+                    { item: 'Complete Dinnerware Set (for 12)', value: 60000 },
+                    { item: 'Cookware Set (Pots & Pans)', value: 55000 },
+                    { item: 'Kitchen Utensils & Cutlery', value: 35000 }
+                ],
+                master: [
+                    { item: 'Queen Size Bed Frame', value: 75000 },
+                    { item: 'Quality Mattress & Box Spring', value: 130000 },
+                    { item: 'Wardrobe (Large, Built-in/Wooden)', value: 110000 },
+                    { item: 'Dressing Table with Stool', value: 45000 },
+                    { item: 'Nightstands (Set of 2)', value: 40000 },
+                    { item: 'Bedding Sets (Luxury)', value: 35000 },
+                    { item: 'Air Conditioner (1.5 HP)', value: 150000 }
+                ],
+                bed2: [
+                    { item: 'Full Size Bed Frame', value: 60000 },
+                    { item: 'Mattress', value: 85000 },
+                    { item: 'Wardrobe (Medium)', value: 70000 },
+                    { item: 'Study Desk & Chair', value: 50000 },
+                    { item: 'Nightstand', value: 18000 }
+                ],
+                bed3: [
+                    { item: 'Twin Beds (2)', value: 90000 },
+                    { item: 'Mattresses (2)', value: 110000 },
+                    { item: 'Shared Wardrobe', value: 65000 },
+                    { item: 'Study Table', value: 30000 }
+                ],
+                misc: [
+                    { item: 'Washing Machine (Automatic)', value: 125000 },
+                    { item: 'Water Heater (50L)', value: 75000 },
+                    { item: 'Vacuum Cleaner', value: 30000 },
+                    { item: 'Irons & Ironing Board', value: 20000 },
+                    { item: 'Garden Furniture Set (Table, 4 Chairs)', value: 65000 },
+                    { item: 'Basic Tools (Drill, Toolkit)', value: 40000 }
+                ]
+            },
+            manka: {
+                living: [
+                    { item: 'L-Shaped Sectional Sofa', value: 140000 },
+                    { item: 'Center Table (Solid Wood)', value: 50000 },
+                    { item: 'TV Stand (Modern Design)', value: 60000 },
+                    { item: 'Smart Television (55-inch)', value: 250000 },
+                    { item: 'Home Theater System (Soundbar & Subwoofer)', value: 120000 },
+                    { item: 'Large Decorative Rug', value: 50000 },
+                    { item: 'Reading Chair & Floor Lamp', value: 40000 },
+                    { item: 'Art Pieces & Sculptures', value: 75000 },
+                    { item: 'Air Conditioner (2.0 HP)', value: 160000 },
+                    { item: 'Ceiling Fans (2)', value: 50000 }
+                ],
+                kitchen: [
+                    { item: 'Extendable Dining Table with 8 Chairs', value: 200000 },
+                    { item: 'China Cabinet/Display', value: 80000 },
+                    { item: 'Refrigerator (French Door)', value: 320000 },
+                    { item: 'Electric Stove with Cooktop', value: 150000 },
+                    { item: 'Dishwasher', value: 100000 },
+                    { item: 'Toaster Oven & Electric Kettle', value: 25000 },
+                    { item: 'Premium Cookware Set', value: 85000 },
+                    { item: 'Fine China & Crystal Glassware', value: 120000 }
+                ],
+                master: [
+                    { item: 'King Size Bed (Ornate Frame)', value: 150000 },
+                    { item: 'Premium Orthopedic Mattress', value: 200000 },
+                    { item: 'Walk-in Closet System', value: 180000 },
+                    { item: 'Vanity with Mirror', value: 70000 },
+                    { item: 'Armchair & Ottoman', value: 55000 },
+                    { item: 'Designer Bed Linens', value: 50000 },
+                    { item: 'Air Conditioner (2.0 HP Inverter)', value: 220000 },
+                    { item: 'Safe Box (Small)', value: 45000 }
+                ],
+                bed2: [
+                    { item: 'Queen Size Bed Frame', value: 90000 },
+                    { item: 'Mattress', value: 120000 },
+                    { item: 'Wardrobe & Dresser Combo', value: 100000 },
+                    { item: 'Desk & Office Chair', value: 60000 },
+                    { item: 'En-suite Water Heater', value: 60000 }
+                ],
+                bed3: [
+                    { item: 'Bunk Bed (Metal/Wood)', value: 80000 },
+                    { item: 'Mattresses (2)', value: 90000 },
+                    { item: 'Chest of Drawers', value: 45000 },
+                    { item: 'Study Desk', value: 35000 },
+                    { item: 'Bookshelf', value: 30000 }
+                ],
+                misc: [
+                    { item: 'Washing Machine & Dryer Combo', value: 200000 },
+                    { item: 'Generator (5kVA)', value: 350000 },
+                    { item: 'Outdoor Patio Set (Lounge)', value: 150000 },
+                    { item: 'Barbecue Grill', value: 65000 },
+                    { item: 'Vacuum & Cleaning Equipment', value: 50000 },
+                    { item: 'Power Tools & Garden Tools', value: 80000 }
+                ]
+            }
+        };
+        
+        // Calculate totals
+        function calcAssetTotals() {
+            var oldTown = {
+                living: ASSETS_DATA.oldTown.living.reduce(function(s, i) { return s + i.value; }, 0),
+                kitchen: ASSETS_DATA.oldTown.kitchen.reduce(function(s, i) { return s + i.value; }, 0),
+                master: ASSETS_DATA.oldTown.master.reduce(function(s, i) { return s + i.value; }, 0),
+                bed2: ASSETS_DATA.oldTown.bed2.reduce(function(s, i) { return s + i.value; }, 0),
+                bed3: ASSETS_DATA.oldTown.bed3.reduce(function(s, i) { return s + i.value; }, 0),
+                misc: ASSETS_DATA.oldTown.misc.reduce(function(s, i) { return s + i.value; }, 0)
+            };
+            oldTown.total = oldTown.living + oldTown.kitchen + oldTown.master + oldTown.bed2 + oldTown.bed3 + oldTown.misc;
+            
+            var manka = {
+                living: ASSETS_DATA.manka.living.reduce(function(s, i) { return s + i.value; }, 0),
+                kitchen: ASSETS_DATA.manka.kitchen.reduce(function(s, i) { return s + i.value; }, 0),
+                master: ASSETS_DATA.manka.master.reduce(function(s, i) { return s + i.value; }, 0),
+                bed2: ASSETS_DATA.manka.bed2.reduce(function(s, i) { return s + i.value; }, 0),
+                bed3: ASSETS_DATA.manka.bed3.reduce(function(s, i) { return s + i.value; }, 0),
+                misc: ASSETS_DATA.manka.misc.reduce(function(s, i) { return s + i.value; }, 0)
+            };
+            manka.total = manka.living + manka.kitchen + manka.master + manka.bed2 + manka.bed3 + manka.misc;
+            
+            return { oldTown: oldTown, manka: manka, grandTotal: oldTown.total + manka.total };
+        }
+        
+        // Load Assets Dashboard
+        function loadAssetsDashboard() {
+            var totals = calcAssetTotals();
+            var totalItems = 0;
+            Object.keys(ASSETS_DATA.oldTown).forEach(function(k) { totalItems += ASSETS_DATA.oldTown[k].length; });
+            Object.keys(ASSETS_DATA.manka).forEach(function(k) { totalItems += ASSETS_DATA.manka[k].length; });
+            
+            // Update stats
+            document.getElementById('assetsOldTownTotal').textContent = fmt(totals.oldTown.total);
+            document.getElementById('assetsMankaTotal').textContent = fmt(totals.manka.total);
+            document.getElementById('assetsCombinedTotal').textContent = fmt(totals.grandTotal);
+            document.getElementById('assetsTotalItems').textContent = totalItems;
+            document.getElementById('assetsOverallTotal').textContent = fmt(totals.grandTotal) + ' XAF';
+            
+            // Update landing page stats
+            if (document.getElementById('landingOldTownValue')) {
+                document.getElementById('landingOldTownValue').textContent = fmt(totals.oldTown.total);
+                document.getElementById('landingMankaValue').textContent = fmt(totals.manka.total);
+                document.getElementById('landingTotalAssets').textContent = fmt(totals.grandTotal);
+            }
+        }
+        
+        // Render asset table
+        function renderAssetTable(items, tableId) {
+            var html = items.map(function(i) {
+                return '<tr><td>' + i.item + '</td><td style="text-align: right;">' + fmt(i.value) + '</td></tr>';
+            }).join('');
+            document.getElementById(tableId).innerHTML = html;
+        }
+        
+        // Load Old Town Assets
+        function loadOldTownAssets() {
+            renderAssetTable(ASSETS_DATA.oldTown.living, 'oldTownLivingTable');
+            renderAssetTable(ASSETS_DATA.oldTown.kitchen, 'oldTownKitchenTable');
+            renderAssetTable(ASSETS_DATA.oldTown.master, 'oldTownMasterTable');
+            renderAssetTable(ASSETS_DATA.oldTown.bed2, 'oldTownBed2Table');
+            renderAssetTable(ASSETS_DATA.oldTown.bed3, 'oldTownBed3Table');
+            renderAssetTable(ASSETS_DATA.oldTown.misc, 'oldTownMiscTable');
+        }
+        
+        // Load Manka Assets
+        function loadMankaAssets() {
+            renderAssetTable(ASSETS_DATA.manka.living, 'mankaLivingTable');
+            renderAssetTable(ASSETS_DATA.manka.kitchen, 'mankaKitchenTable');
+            renderAssetTable(ASSETS_DATA.manka.master, 'mankaMasterTable');
+            renderAssetTable(ASSETS_DATA.manka.bed2, 'mankaBed2Table');
+            renderAssetTable(ASSETS_DATA.manka.bed3, 'mankaBed3Table');
+            renderAssetTable(ASSETS_DATA.manka.misc, 'mankaMiscTable');
+        }
+        
+        // Load Assets Inheritance
+        function loadAssetsInheritance() {
+            var totals = calcAssetTotals();
+            document.getElementById('assetsInheritancePool').textContent = fmt(totals.grandTotal) + ' XAF';
+            
+            // Use the same heirs from RE module
+            api('/re/heirs').then(function(heirs) {
+                var totalPortions = heirs.reduce(function(s, h) { return s + parseFloat(h.portions); }, 0);
+                var perPortion = totals.grandTotal / totalPortions;
+                
+                var html = heirs.map(function(h) {
+                    var share = parseFloat(h.portions) * perPortion;
+                    return '<tr>' +
+                        '<td><strong>' + h.name + '</strong></td>' +
+                        '<td>' + h.relationship + '</td>' +
+                        '<td>' + h.heir_group + '</td>' +
+                        '<td style="text-align: center;">' + h.portions + '</td>' +
+                        '<td style="text-align: right; color: var(--success-green); font-weight: bold;">' + fmt(Math.round(share)) + '</td>' +
+                    '</tr>';
+                }).join('');
+                
+                document.getElementById('assetsHeirsTable').innerHTML = html;
+            });
+        }
+        
+        // Export Assets PDF
+        function exportAssetsPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var totals = calcAssetTotals();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Background
+            doc.setFillColor(250, 245, 255);
+            doc.rect(0, 0, 210, 297, 'F');
+            
+            // Header
+            doc.setFillColor(128, 90, 213);
+            doc.rect(10, 10, 190, 30, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RESIDENCE ASSETS INVENTORY', 105, 22, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text('NJIKAM SALIFU ESTATE - Old Town & Manka Residences', 105, 30, { align: 'center' });
+            
+            doc.setTextColor(128, 90, 213);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SUMMARY', 105, 50, { align: 'center' });
+            
+            // Summary table
+            doc.autoTable({
+                startY: 55,
+                head: [['Residence', 'Total Value (XAF)']],
+                body: [
+                    ['Old Town Residence', fmt(totals.oldTown.total)],
+                    ['Manka Residence', fmt(totals.manka.total)],
+                    ['GRAND TOTAL', fmt(totals.grandTotal)]
+                ],
+                styles: { fontSize: 10, cellPadding: 5 },
+                headStyles: { fillColor: [128, 90, 213], textColor: [255, 255, 255] },
+                footStyles: { fillColor: [250, 245, 255], fontStyle: 'bold' }
+            });
+            
+            // Disclaimer
+            doc.setFontSize(8);
+            doc.setTextColor(113, 128, 150);
+            doc.text('Disclaimer: All values are approximate resale/market estimates for used items in good condition.', 105, doc.lastAutoTable.finalY + 10, { align: 'center' });
+            doc.text('Generated on: ' + today, 105, doc.lastAutoTable.finalY + 15, { align: 'center' });
+            
+            doc.save('residence_assets_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Assets PDF exported!');
+        }
+        
+        // Export Assets CSV
+        function exportAssetsCSV() {
+            var totals = calcAssetTotals();
+            var csv = 'RESIDENCE ASSETS INVENTORY - NJIKAM SALIFU ESTATE\n';
+            csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
+            
+            csv += 'OLD TOWN RESIDENCE\n';
+            csv += 'Category,Item,Value (XAF)\n';
+            Object.keys(ASSETS_DATA.oldTown).forEach(function(cat) {
+                ASSETS_DATA.oldTown[cat].forEach(function(item) {
+                    csv += cat.toUpperCase() + ',"' + item.item + '",' + item.value + '\n';
+                });
+            });
+            csv += ',OLD TOWN TOTAL,' + totals.oldTown.total + '\n\n';
+            
+            csv += 'MANKA RESIDENCE\n';
+            csv += 'Category,Item,Value (XAF)\n';
+            Object.keys(ASSETS_DATA.manka).forEach(function(cat) {
+                ASSETS_DATA.manka[cat].forEach(function(item) {
+                    csv += cat.toUpperCase() + ',"' + item.item + '",' + item.value + '\n';
+                });
+            });
+            csv += ',MANKA TOTAL,' + totals.manka.total + '\n\n';
+            csv += ',GRAND TOTAL,' + totals.grandTotal + '\n';
+            
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'residence_assets_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showAlert('Assets CSV exported!');
+        }
+        
+        // Export Assets Inheritance PDF
+        function exportAssetsInheritancePDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            var totals = calcAssetTotals();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            api('/re/heirs').then(function(heirs) {
+                var totalPortions = heirs.reduce(function(s, h) { return s + parseFloat(h.portions); }, 0);
+                var perPortion = totals.grandTotal / totalPortions;
+                
+                // Background
+                doc.setFillColor(255, 250, 240);
+                doc.rect(0, 0, 210, 297, 'F');
+                
+                // Header
+                doc.setFillColor(214, 158, 46);
+                doc.rect(10, 10, 190, 30, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('ASSETS INHERITANCE DISTRIBUTION', 105, 22, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text('NJIKAM SALIFU ESTATE - Islamic Inheritance', 105, 30, { align: 'center' });
+                
+                // Pool info
+                doc.setTextColor(116, 66, 16);
+                doc.setFontSize(12);
+                doc.text('Total Assets Pool: ' + fmt(totals.grandTotal) + ' XAF', 105, 50, { align: 'center' });
+                doc.setFontSize(9);
+                doc.text('(Old Town: ' + fmt(totals.oldTown.total) + ' + Manka: ' + fmt(totals.manka.total) + ')', 105, 57, { align: 'center' });
+                
+                // Heirs table
+                var tableData = heirs.map(function(h) {
+                    var share = parseFloat(h.portions) * perPortion;
+                    return [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(share))];
+                });
+                
+                doc.autoTable({
+                    startY: 65,
+                    head: [['Heir Name', 'Relationship', 'Group', 'Portions', 'Share (XAF)']],
+                    body: tableData,
+                    styles: { fontSize: 9, cellPadding: 4 },
+                    headStyles: { fillColor: [214, 158, 46], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [255, 250, 240] }
+                });
+                
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('Generated on: ' + today, 105, doc.lastAutoTable.finalY + 10, { align: 'center' });
+                
+                doc.save('assets_inheritance_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Assets Inheritance PDF exported!');
+            });
+        }
+        
+        // Print Assets Inheritance
+        function printAssetsInheritance() {
+            window.print();
+        }
+        
+        // ==================== END RESIDENCE ASSETS MODULE ====================
 
         // Setup property form listeners
         document.addEventListener('DOMContentLoaded', function() {

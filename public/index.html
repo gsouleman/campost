@@ -173,6 +173,8 @@
         body.is-admin .admin-only { display: inline-flex !important; }
         .admin-only-section { display: none !important; }
         body.is-admin .admin-only-section { display: block !important; }
+        .admin-only-nav { display: none !important; }
+        body.is-admin .admin-only-nav { display: inline-block !important; }
         .user-restricted-notice { display: none; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
         body:not(.is-admin) .user-restricted-notice { display: block; }
         .guest-restricted-notice { display: none; background: #fed7d7; border: 1px solid #fc8181; color: #c53030; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
@@ -243,6 +245,7 @@
         <!-- Main Navigation - shown on landing page -->
         <nav class="nav" id="mainNav">
             <button class="nav-btn active" data-page="landing">🏠 Home</button>
+            <button class="nav-btn admin-only-nav" data-page="system-settings">⚙️ System Settings</button>
         </nav>
         <!-- CAMPOST MANKON Navigation -->
         <nav class="nav module-header" id="campostNav">
@@ -441,6 +444,205 @@
                                 </thead>
                                 <tbody id="usersTable"></tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SYSTEM SETTINGS PAGE ==================== -->
+        <div id="system-settings" class="page">
+            <h2 style="color: var(--primary-blue); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                ⚙️ System Settings
+                <span class="badge badge-inheritance">ADMIN ONLY</span>
+            </h2>
+            
+            <!-- Access Control Notice for Non-Admins -->
+            <div class="user-restricted-notice">
+                <strong>🔒 Access Restricted</strong><br>
+                Only administrators can access system settings. Please contact your system administrator.
+            </div>
+            
+            <div class="admin-only-section">
+                <!-- User Management Section -->
+                <div class="card">
+                    <div class="card-header gold">
+                        <span>👥 User Management</span>
+                        <button class="btn btn-sm" onclick="loadSystemUsers()" style="background: rgba(255,255,255,0.2);">🔄 Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Create New User -->
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin-bottom: 0.75rem;">➕ Create New User</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Username *</label>
+                                    <input type="text" id="sysNewUsername" placeholder="Enter username">
+                                </div>
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" id="sysNewFullName" placeholder="Enter full name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" id="sysNewEmail" placeholder="Enter email address">
+                                </div>
+                                <div class="form-group">
+                                    <label>Role *</label>
+                                    <select id="sysNewRole">
+                                        <option value="guest">Guest (Limited Access)</option>
+                                        <option value="user" selected>User (View Only)</option>
+                                        <option value="admin">Admin (Full Access)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="background: #ebf8ff; border: 1px solid #4299e1; border-radius: 6px; padding: 0.75rem; margin: 0.75rem 0;">
+                                <strong>📌 Password Policy:</strong>
+                                <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 0.85rem;">
+                                    <li>Default password for new users: <code style="background: #e2e8f0; padding: 0.1rem 0.3rem; border-radius: 3px;">1234</code></li>
+                                    <li>Users must change password on first login</li>
+                                    <li>Minimum password length: 6 characters</li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-success" onclick="createSystemUser()">👤 Create User</button>
+                        </div>
+                        
+                        <!-- Users Table -->
+                        <h4 style="color: var(--primary-blue); margin-bottom: 0.75rem;">📋 All Users</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Password</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="systemUsersTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Role Permissions Info -->
+                <div class="card">
+                    <div class="card-header"><span>🔐 Role Permissions</span></div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <!-- Admin -->
+                            <div style="background: linear-gradient(135deg, rgba(214,158,46,0.1), rgba(237,137,54,0.1)); border: 2px solid var(--accent-gold); border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: var(--accent-gold); margin-bottom: 0.5rem;">👑 ADMIN</h4>
+                                <p style="font-size: 0.8rem; color: #744210; margin-bottom: 0.5rem;"><strong>Full System Access</strong></p>
+                                <ul style="font-size: 0.75rem; margin-left: 1rem; color: #744210;">
+                                    <li>✅ Create, edit, delete all data</li>
+                                    <li>✅ Manage users & roles</li>
+                                    <li>✅ Access all modules</li>
+                                    <li>✅ Export & settings</li>
+                                    <li>✅ Inheritance management</li>
+                                </ul>
+                            </div>
+                            <!-- User -->
+                            <div style="background: linear-gradient(135deg, rgba(66,153,225,0.1), rgba(49,130,206,0.1)); border: 2px solid var(--primary-blue); border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: var(--primary-blue); margin-bottom: 0.5rem;">👤 USER</h4>
+                                <p style="font-size: 0.8rem; color: #2c5282; margin-bottom: 0.5rem;"><strong>View Only Access</strong></p>
+                                <ul style="font-size: 0.75rem; margin-left: 1rem; color: #2c5282;">
+                                    <li>✅ View all data</li>
+                                    <li>✅ View dashboards</li>
+                                    <li>✅ View reports</li>
+                                    <li>❌ Cannot edit data</li>
+                                    <li>❌ Cannot manage users</li>
+                                </ul>
+                            </div>
+                            <!-- Guest -->
+                            <div style="background: linear-gradient(135deg, rgba(160,174,192,0.1), rgba(113,128,150,0.1)); border: 2px solid #a0aec0; border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: #718096; margin-bottom: 0.5rem;">👁️ GUEST</h4>
+                                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 0.5rem;"><strong>Limited Access</strong></p>
+                                <ul style="font-size: 0.75rem; margin-left: 1rem; color: #4a5568;">
+                                    <li>✅ View dashboards only</li>
+                                    <li>✅ View properties</li>
+                                    <li>❌ Cannot view finances</li>
+                                    <li>❌ Cannot edit data</li>
+                                    <li>❌ Cannot access settings</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- My Profile Section -->
+                <div class="card">
+                    <div class="card-header green"><span>👤 My Profile</span></div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="myProfileUsername" readonly style="background: #f7fafc;">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="myProfileFullName" readonly style="background: #f7fafc;">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="text" id="myProfileEmail" readonly style="background: #f7fafc;">
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <input type="text" id="myProfileRole" readonly style="background: #f7fafc;">
+                            </div>
+                        </div>
+                        
+                        <h4 style="color: var(--primary-blue); margin: 1rem 0 0.75rem;">🔑 Change My Password</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="myCurrentPassword" placeholder="Enter current password">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="myNewPassword" placeholder="Enter new password (min 6 chars)">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="myConfirmPassword" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        <button class="btn btn-warning" onclick="changeMyPassword()">🔐 Change Password</button>
+                    </div>
+                </div>
+                
+                <!-- Security Settings -->
+                <div class="card">
+                    <div class="card-header red"><span>🛡️ Security Actions</span></div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                            <div style="background: #fff5f5; border: 1px solid #fc8181; border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: #c53030; margin-bottom: 0.5rem;">🔄 Force Password Reset</h4>
+                                <p style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0.75rem;">
+                                    Reset all non-admin users' passwords to default and force them to change on next login.
+                                </p>
+                                <button class="btn btn-danger btn-sm" onclick="forceAllPasswordReset()">Reset All Passwords</button>
+                            </div>
+                            <div style="background: #fffff0; border: 1px solid #ecc94b; border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: #744210; margin-bottom: 0.5rem;">📋 Export User List</h4>
+                                <p style="font-size: 0.8rem; color: #744210; margin-bottom: 0.75rem;">
+                                    Download a CSV file of all users (passwords excluded for security).
+                                </p>
+                                <button class="btn btn-warning btn-sm" onclick="exportUserList()">Export Users CSV</button>
+                            </div>
+                            <div style="background: #f0fff4; border: 1px solid #68d391; border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: #276749; margin-bottom: 0.5rem;">📊 Login Statistics</h4>
+                                <p style="font-size: 0.8rem; color: #276749; margin-bottom: 0.75rem;">
+                                    Total Users: <strong id="statTotalUsers">0</strong> | 
+                                    Active: <strong id="statActiveUsers">0</strong> | 
+                                    Admins: <strong id="statAdminUsers">0</strong>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2026,6 +2228,245 @@
             });
         }
         
+        // ==================== SYSTEM SETTINGS FUNCTIONS ====================
+        
+        // Load system users table
+        function loadSystemUsers() {
+            api('/users').then(function(users) {
+                var html = users.map(function(u) {
+                    var statusClass = u.active ? 'badge-paid' : 'badge-unpaid';
+                    var statusText = u.active ? 'Active' : 'Inactive';
+                    var roleClass = u.role === 'admin' ? 'badge-inheritance' : (u.role === 'guest' ? 'badge-expense' : 'badge-new');
+                    var pwdStatus = u.must_change_password ? 
+                        '<span class="badge" style="background:#fed7d7;color:#c53030;">Must Change</span>' : 
+                        '<span class="badge" style="background:#c6f6d5;color:#276749;">OK</span>';
+                    var isCurrentUser = u.id === currentUser.id;
+                    
+                    return '<tr' + (isCurrentUser ? ' style="background:#ebf8ff;"' : '') + '>' +
+                        '<td><strong>#' + u.id + '</strong></td>' +
+                        '<td><strong>' + u.username + '</strong>' + (isCurrentUser ? ' <span style="color:#4299e1;font-size:0.7rem;">(You)</span>' : '') + '</td>' +
+                        '<td>' + (u.full_name || '-') + '</td>' +
+                        '<td>' + (u.email || '-') + '</td>' +
+                        '<td><span class="badge ' + roleClass + '">' + u.role.toUpperCase() + '</span></td>' +
+                        '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                        '<td>' + pwdStatus + '</td>' +
+                        '<td>' +
+                            (isCurrentUser ? 
+                                '<span style="color:#718096;font-size:0.75rem;">Current User</span>' :
+                                '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')" title="Reset Password">🔑</button> ' +
+                                '<button class="btn btn-primary btn-sm" onclick="editSystemUser(' + u.id + ')" title="Edit User">✏️</button> ' +
+                                '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ', ' + u.active + ')" title="' + (u.active ? 'Disable' : 'Enable') + '">' + (u.active ? '🚫' : '✅') + '</button> ' +
+                                (u.role !== 'admin' ? '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.id + ')" title="Delete">🗑️</button>' : '')
+                            ) +
+                        '</td>' +
+                    '</tr>';
+                }).join('');
+                
+                document.getElementById('systemUsersTable').innerHTML = html || '<tr><td colspan="8">No users found</td></tr>';
+                
+                // Update statistics
+                document.getElementById('statTotalUsers').textContent = users.length;
+                document.getElementById('statActiveUsers').textContent = users.filter(function(u) { return u.active; }).length;
+                document.getElementById('statAdminUsers').textContent = users.filter(function(u) { return u.role === 'admin'; }).length;
+                
+                // Update my profile section
+                updateMyProfile();
+            });
+        }
+        
+        // Create system user
+        function createSystemUser() {
+            if (currentUser.role !== 'admin') {
+                showAlert('Only admins can create users', 'error');
+                return;
+            }
+            
+            var username = document.getElementById('sysNewUsername').value.trim().toLowerCase();
+            var fullName = document.getElementById('sysNewFullName').value.trim();
+            var email = document.getElementById('sysNewEmail').value.trim().toLowerCase();
+            var role = document.getElementById('sysNewRole').value;
+            
+            if (!username) {
+                showAlert('Username is required', 'error');
+                return;
+            }
+            
+            if (!fullName) {
+                showAlert('Full name is required', 'error');
+                return;
+            }
+            
+            if (!email || !email.includes('@')) {
+                showAlert('Valid email is required', 'error');
+                return;
+            }
+            
+            api('/users', {
+                method: 'POST',
+                body: JSON.stringify({
+                    username: username,
+                    password: '1234',
+                    fullName: fullName,
+                    email: email,
+                    role: role,
+                    active: true
+                })
+            }).then(function(result) {
+                if (result.error) {
+                    showAlert(result.error, 'error');
+                } else {
+                    document.getElementById('sysNewUsername').value = '';
+                    document.getElementById('sysNewFullName').value = '';
+                    document.getElementById('sysNewEmail').value = '';
+                    document.getElementById('sysNewRole').value = 'user';
+                    showAlert('User "' + username + '" created successfully! Default password: 1234');
+                    loadSystemUsers();
+                    loadUsersTable(); // Also refresh the other table
+                }
+            }).catch(function(err) {
+                showAlert('Error: ' + (err.error || err.message), 'error');
+            });
+        }
+        
+        // Edit system user
+        function editSystemUser(userId) {
+            api('/users').then(function(users) {
+                var user = users.find(function(u) { return u.id === userId; });
+                if (!user) return;
+                
+                var newFullName = prompt('Edit Full Name:', user.full_name || '');
+                if (newFullName === null) return;
+                
+                var newEmail = prompt('Edit Email:', user.email || '');
+                if (newEmail === null) return;
+                
+                var newRole = prompt('Edit Role (admin/user/guest):', user.role || 'user');
+                if (newRole === null) return;
+                
+                if (!['admin', 'user', 'guest'].includes(newRole.toLowerCase())) {
+                    showAlert('Invalid role. Use: admin, user, or guest', 'error');
+                    return;
+                }
+                
+                api('/users/' + userId, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        username: user.username,
+                        fullName: newFullName,
+                        email: newEmail,
+                        role: newRole.toLowerCase(),
+                        active: user.active
+                    })
+                }).then(function() {
+                    showAlert('User updated successfully');
+                    loadSystemUsers();
+                    loadUsersTable();
+                });
+            });
+        }
+        
+        // Update my profile display
+        function updateMyProfile() {
+            if (currentUser) {
+                document.getElementById('myProfileUsername').value = currentUser.username || '';
+                document.getElementById('myProfileFullName').value = currentUser.full_name || '';
+                document.getElementById('myProfileEmail').value = currentUser.email || '';
+                document.getElementById('myProfileRole').value = (currentUser.role || 'user').charAt(0).toUpperCase() + (currentUser.role || 'user').slice(1);
+            }
+        }
+        
+        // Change my password
+        function changeMyPassword() {
+            var currentPwd = document.getElementById('myCurrentPassword').value;
+            var newPwd = document.getElementById('myNewPassword').value;
+            var confirmPwd = document.getElementById('myConfirmPassword').value;
+            
+            if (!currentPwd) {
+                showAlert('Please enter your current password', 'error');
+                return;
+            }
+            
+            if (newPwd.length < 6) {
+                showAlert('New password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (newPwd !== confirmPwd) {
+                showAlert('New passwords do not match', 'error');
+                return;
+            }
+            
+            api('/users/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userId: currentUser.id,
+                    currentPassword: currentPwd,
+                    newPassword: newPwd
+                })
+            }).then(function(result) {
+                if (result.success) {
+                    document.getElementById('myCurrentPassword').value = '';
+                    document.getElementById('myNewPassword').value = '';
+                    document.getElementById('myConfirmPassword').value = '';
+                    showAlert('Password changed successfully!');
+                } else {
+                    showAlert(result.error || 'Failed to change password', 'error');
+                }
+            }).catch(function(err) {
+                showAlert('Error: ' + (err.error || 'Current password is incorrect'), 'error');
+            });
+        }
+        
+        // Force all users to reset passwords
+        function forceAllPasswordReset() {
+            if (currentUser.role !== 'admin') return;
+            
+            if (!confirm('This will reset ALL non-admin users\' passwords to "1234" and force them to change on next login. Continue?')) return;
+            
+            api('/users').then(function(users) {
+                var promises = users
+                    .filter(function(u) { return u.role !== 'admin'; })
+                    .map(function(u) {
+                        return api('/users/' + u.id, {
+                            method: 'PUT',
+                            body: JSON.stringify({ password: '1234', mustChangePassword: true })
+                        });
+                    });
+                
+                Promise.all(promises).then(function() {
+                    showAlert('All non-admin passwords reset to 1234');
+                    loadSystemUsers();
+                });
+            });
+        }
+        
+        // Export user list as CSV
+        function exportUserList() {
+            api('/users').then(function(users) {
+                var csv = 'ID,Username,Full Name,Email,Role,Status,Created At\n';
+                users.forEach(function(u) {
+                    csv += u.id + ',' + 
+                           '"' + u.username + '",' + 
+                           '"' + (u.full_name || '') + '",' + 
+                           '"' + (u.email || '') + '",' + 
+                           u.role + ',' + 
+                           (u.active ? 'Active' : 'Inactive') + ',' + 
+                           (u.created_at || '') + '\n';
+                });
+                
+                var blob = new Blob([csv], { type: 'text/csv' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'users_' + new Date().toISOString().split('T')[0] + '.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+                showAlert('User list exported!');
+            });
+        }
+        
+        // ==================== END SYSTEM SETTINGS FUNCTIONS ====================
+        
         // Reset user password (admin only)
         function resetUserPassword(userId) {
             if (currentUser.role !== 'admin') return;
@@ -2037,6 +2478,7 @@
             }).then(function() {
                 showAlert('Password reset to 1234. User must change it on next login.');
                 loadUsersTable();
+                loadSystemUsers();
             });
         }
         
@@ -2050,17 +2492,19 @@
             }).then(function() {
                 showAlert('User status updated');
                 loadUsersTable();
+                loadSystemUsers();
             });
         }
         
         // Delete user
         function deleteUser(userId) {
             if (currentUser.role !== 'admin') return;
-            if (!confirm('Are you sure you want to delete this user?')) return;
+            if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
             
             api('/users/' + userId, { method: 'DELETE' }).then(function() {
                 showAlert('User deleted');
                 loadUsersTable();
+                loadSystemUsers();
             });
         }
         
@@ -2563,6 +3007,8 @@
             else if (p === 'family-inheritance') loadREInheritance();
             else if (p === 'family-ledger') loadRELedgerFull();
             else if (p === 'family-settings') loadRESettings();
+            // System Settings (login management)
+            else if (p === 'system-settings') { loadSystemUsers(); updateMyProfile(); }
             // Main settings (user management)
             else if (p === 'main-settings') { loadMyAccount(); loadUsersTable(); }
             // Landing

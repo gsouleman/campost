@@ -4511,9 +4511,9 @@
                 api('/re/expenses'),
                 api('/re/settings')
             ]).then(function(results) {
-                var payments = results[0];
-                var expenses = results[1];
-                var settings = results[2];
+                var payments = results[0] || [];
+                var expenses = results[1] || [];
+                var settings = results[2] || [];
                 
                 // Get reserved funds percentage from settings
                 var reservedPercent = 10; // default
@@ -4530,11 +4530,19 @@
                 var availableFunds = Math.max(0, totalIncome - totalExpenses - reservedFunds);
                 
                 // Update display in Available Funds card (Expenses section)
-                document.getElementById('expTotalIncome').textContent = fmt(Math.round(totalIncome)) + ' ' + currency;
-                document.getElementById('expTotalExpenses').textContent = fmt(Math.round(totalExpenses)) + ' ' + currency;
-                document.getElementById('expReservedPercent').textContent = reservedPercent;
-                document.getElementById('expReservedFunds').textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
-                document.getElementById('expAvailableFunds').textContent = fmt(Math.round(availableFunds)) + ' ' + currency;
+                var elIncome = document.getElementById('expTotalIncome');
+                var elExpenses = document.getElementById('expTotalExpenses');
+                var elPercent = document.getElementById('expReservedPercent');
+                var elReserved = document.getElementById('expReservedFunds');
+                var elAvailable = document.getElementById('expAvailableFunds');
+                
+                if (elIncome) elIncome.textContent = fmt(Math.round(totalIncome)) + ' ' + currency;
+                if (elExpenses) elExpenses.textContent = fmt(Math.round(totalExpenses)) + ' ' + currency;
+                if (elPercent) elPercent.textContent = reservedPercent;
+                if (elReserved) elReserved.textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
+                if (elAvailable) elAvailable.textContent = fmt(Math.round(availableFunds)) + ' ' + currency;
+            }).catch(function(err) {
+                console.error('Error loading available funds:', err);
             });
         }
 

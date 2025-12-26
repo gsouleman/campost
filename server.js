@@ -97,7 +97,7 @@ async function initDatabase() {
             )
         `);
 
-        // ==================== FAMILY REAL ESTATES TABLES ====================
+        // ==================== FAMILY ESTATES TABLES ====================
         
         // RE Heirs (separate from CAMPOST heirs)
         await pool.query(`
@@ -1016,7 +1016,7 @@ app.get('/api/properties/rented', async (req, res) => {
 });
 
 // ==========================================
-// FAMILY REAL ESTATES API ENDPOINTS
+// FAMILY ESTATES API ENDPOINTS
 // ==========================================
 
 // ============== RE HEIRS API ==============

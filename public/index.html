@@ -259,7 +259,7 @@
             <button class="nav-btn" data-page="campost-export">📥 Export</button>
             <button class="nav-btn" data-page="campost-settings">⚙️ Settings</button>
         </nav>
-        <!-- FAMILY REAL ESTATES Navigation -->
+        <!-- FAMILY ESTATES Navigation -->
         <nav class="nav module-header" id="familyNav">
             <button class="nav-btn" onclick="goToLanding()">🏠 Home</button>
             <button class="nav-btn active" data-page="family-dashboard">📊 Dashboard</button>
@@ -307,10 +307,10 @@
                         </div>
                     </div>
                     
-                    <!-- FAMILY REAL ESTATES Card -->
+                    <!-- FAMILY ESTATES Card -->
                     <div class="landing-card family" onclick="openModule('family')">
                         <div class="landing-card-icon">🏠</div>
-                        <h2 class="landing-card-title">FAMILY REAL ESTATES</h2>
+                        <h2 class="landing-card-title">FAMILY ESTATES</h2>
                         <p class="landing-card-desc">Manage family properties, rental income, bills, payments, and Islamic inheritance.</p>
                         <div class="landing-card-stats">
                             <div class="landing-stat">
@@ -327,7 +327,7 @@
                             </div>
                         </div>
                         <div class="btn-group" style="justify-content: center; margin-top: 1rem;">
-                            <button class="btn btn-success btn-lg">Enter Family Real Estates →</button>
+                            <button class="btn btn-success btn-lg">Enter Family Estates →</button>
                         </div>
                     </div>
                 </div>
@@ -874,7 +874,7 @@
             </div></div>
         </div>
 
-        <!-- ==================== FAMILY REAL ESTATES MODULE ==================== -->
+        <!-- ==================== FAMILY ESTATES MODULE ==================== -->
         
         <!-- FAMILY DASHBOARD -->
         <div id="family-dashboard" class="page">
@@ -887,7 +887,7 @@
                 <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="reNetBalance">0</div><div class="stat-label">Net Balance</div></div>
             </div>
             <div class="card">
-                <div class="card-header gold"><span>📊 Family Real Estate Summary</span></div>
+                <div class="card-header gold"><span>📊 Family Estate Summary</span></div>
                 <div class="card-body">
                     <div class="summary-row"><span>Total Properties:</span><span id="familySummaryProps">0</span></div>
                     <div class="summary-row"><span>Rented Properties:</span><span class="amount-positive" id="familySummaryRented">0</span></div>
@@ -1224,7 +1224,7 @@
                     </div>
                     <div class="card-body">
                         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                            ✅ Check the heirs who should receive inheritance from Family Real Estates. Only selected heirs will be included in the distribution.
+                            ✅ Check the heirs who should receive inheritance from Family Estates. Only selected heirs will be included in the distribution.
                         </p>
                         <div id="reBeneficiaryList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;"></div>
                         <div class="btn-group" style="margin-top: 15px;">
@@ -1261,7 +1261,7 @@
             <div id="family-ledger" class="page">
                 <div class="card">
                     <div class="card-header">
-                        <span>📒 Real Estate Ledger (Auto-Generated)</span>
+                        <span>📒 Estate Ledger</span>
                         <div class="no-print">
                             <button class="btn btn-print btn-sm" onclick="exportRELedgerPDF()">📥 Export PDF</button>
                             <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">📥 Export CSV</button>
@@ -1295,9 +1295,9 @@
             <!-- ========== RE EXPORT TAB ========== -->
             <div id="family-export" class="page">
                 <div class="card">
-                    <div class="card-header"><span>📥 Export Real Estate Data</span></div>
+                    <div class="card-header"><span>📥 Export Estate Data</span></div>
                     <div class="card-body">
-                        <p style="margin-bottom: 15px; color: #718096;">Export all Real Estate data with headers.</p>
+                        <p style="margin-bottom: 15px; color: #718096;">Export all Estate data with headers.</p>
                         <div class="btn-group" style="flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="exportAllRECSV()">📄 All Data CSV</button>
                             <button class="btn btn-print" onclick="exportAllREPDF()">📑 All Data PDF</button>
@@ -2898,7 +2898,7 @@
                 // Show FAMILY nav and dashboard
                 document.getElementById('familyNav').style.display = 'flex';
                 document.getElementById('family-dashboard').classList.add('active');
-                document.getElementById('mainTitle').textContent = 'FAMILY REAL ESTATES';
+                document.getElementById('mainTitle').textContent = 'FAMILY ESTATES';
                 document.getElementById('mainSubtitle').textContent = 'Property & Rental Management';
                 document.querySelector('.logo-icon').textContent = 'FR';
                 loadRealEstate();
@@ -4056,7 +4056,7 @@
                 var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATE PORTFOLIO', 105, 35, { align: 'center' });
+                doc.text('FAMILY ESTATE PORTFOLIO', 105, 35, { align: 'center' });
                 doc.setFontSize(9);
                 doc.text('Total Properties: ' + properties.length + ' | Rented: ' + properties.filter(function(p) { return p.status === 'Rented'; }).length, 105, 42, { align: 'center' });
                 doc.autoTable({ 
@@ -4201,7 +4201,7 @@
         }
 
         // ==========================================
-        // FAMILY REAL ESTATES MODULE
+        // FAMILY ESTATES MODULE
         // ==========================================
 
         // Show RE Tab
@@ -5017,7 +5017,7 @@
                     var modalHtml = '<div id="paymentViewModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">' +
                         '<div style="background: linear-gradient(135deg, #fef9e7 0%, #fdebd0 100%); max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 3px solid #c9a227;">' +
                             '<div style="background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">' +
-                                '<div style="font-size: 24px; font-weight: bold;">🏠 FAMILY REAL ESTATES</div>' +
+                                '<div style="font-size: 24px; font-weight: bold;">🏠 FAMILY ESTATES</div>' +
                                 '<div style="font-size: 14px; margin-top: 5px;">NJIKAM SALIFU REAL ESTATE PROPERTIES</div>' +
                                 '<div style="font-size: 12px; font-style: italic; color: #90cdf4; margin-top: 5px;">Payment Receipt</div>' +
                             '</div>' +
@@ -5061,7 +5061,7 @@
                             '</div>' +
                             '<div style="background: #f7fafc; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">' +
                                 '<div style="font-size: 10px; color: #718096;">This receipt is issued as acknowledgment of payment received</div>' +
-                                '<div style="font-size: 10px; color: #718096;">for the Family Real Estate properties of the late NJIKAM SALIFU</div>' +
+                                '<div style="font-size: 10px; color: #718096;">for the Family Estate properties of the late NJIKAM SALIFU</div>' +
                                 '<div style="font-size: 10px; color: #a0aec0; margin-top: 5px;">Generated on: ' + today + '</div>' +
                                 '<button onclick="document.getElementById(\'paymentViewModal\').remove()" style="margin-top: 15px; background: #2c5282; color: white; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer; font-weight: bold;">Close</button>' +
                             '</div>' +
@@ -5119,7 +5119,7 @@
                     doc.setTextColor(255, 255, 255);
                     doc.setFontSize(20);
                     doc.setFont('helvetica', 'bold');
-                    doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                    doc.text('FAMILY ESTATES', 105, 22, { align: 'center' });
                     doc.setFontSize(11);
                     doc.setFont('helvetica', 'normal');
                     doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 30, { align: 'center' });
@@ -5236,7 +5236,7 @@
                     doc.setFontSize(8);
                     doc.setTextColor(113, 128, 150);
                     doc.text('This receipt is issued as acknowledgment of payment received', 105, 263, { align: 'center' });
-                    doc.text('for the Family Real Estate properties of the late NJIKAM SALIFU', 105, 269, { align: 'center' });
+                    doc.text('for the Family Estate properties of the late NJIKAM SALIFU', 105, 269, { align: 'center' });
                     doc.setTextColor(160, 174, 192);
                     doc.text('Generated on: ' + today, 105, 278, { align: 'center' });
                     
@@ -5661,7 +5661,7 @@
             }).join('<div style="page-break-after: always;"></div>');
             
             var w = window.open('', '_blank');
-            w.document.write('<html><head><title>Family Real Estate - All Heir Certificates</title></head><body>' + allCerts + '</body></html>');
+            w.document.write('<html><head><title>Family Estate - All Heir Certificates</title></head><body>' + allCerts + '</body></html>');
             w.document.close();
             w.print();
         }
@@ -5674,7 +5674,7 @@
             return (isPartOfBatch ? '' : '<html><head><title>Heir Certificate - ' + heir.name + '</title></head><body>') +
                 '<div style="max-width: 800px; margin: 0 auto; padding: 40px; font-family: Georgia, serif; border: 3px double #d69e2e; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">' +
                     '<div style="text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 20px; margin-bottom: 30px;">' +
-                        '<h1 style="color: #92400e; margin: 0; font-size: 28px;">🏠 FAMILY REAL ESTATES</h1>' +
+                        '<h1 style="color: #92400e; margin: 0; font-size: 28px;">🏠 FAMILY ESTATES</h1>' +
                         '<h2 style="color: #78350f; margin: 10px 0; font-size: 20px;">NJIKAM SALIFU REAL ESTATE PROPERTIES</h2>' +
                         '<p style="color: #a16207; font-style: italic; margin: 5px 0;">Islamic Inheritance Distribution Certificate</p>' +
                     '</div>' +
@@ -5688,7 +5688,7 @@
                         '<p style="font-size: 16px; line-height: 1.8; text-align: justify;">' +
                             'This is to certify that <strong style="color: #1e40af; font-size: 18px;">' + heir.name + '</strong>, ' +
                             'being a <strong>' + heir.relationship + '</strong> (' + (heir.gender || 'N/A') + ') of the deceased, ' +
-                            'is entitled to receive their rightful share of the Family Real Estate inheritance ' +
+                            'is entitled to receive their rightful share of the Family Estate inheritance ' +
                             'in accordance with Islamic law (Sharia).' +
                         '</p>' +
                     '</div>' +
@@ -5727,7 +5727,7 @@
                     
                     '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #d69e2e;">' +
                         '<p style="color: #92400e; font-size: 11px; margin: 0;">This certificate is issued as part of the Islamic inheritance distribution</p>' +
-                        '<p style="color: #92400e; font-size: 11px; margin: 5px 0;">for the Family Real Estate properties of the late NJIKAM SALIFU</p>' +
+                        '<p style="color: #92400e; font-size: 11px; margin: 5px 0;">for the Family Estate properties of the late NJIKAM SALIFU</p>' +
                         '<p style="color: #6b7280; font-size: 10px; margin-top: 10px;">Generated on: ' + today + '</p>' +
                     '</div>' +
                 '</div>' +
@@ -6022,7 +6022,7 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.text('FAMILY ESTATES', 105, 22, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
@@ -6089,7 +6089,7 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES - BILLS REPORT', 148, 20, { align: 'center' });
+                doc.text('FAMILY ESTATES - BILLS REPORT', 148, 20, { align: 'center' });
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 148, 28, { align: 'center' });
@@ -6160,7 +6160,7 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.text('FAMILY ESTATES', 105, 22, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
@@ -6209,7 +6209,7 @@
                 doc.rect(10, finalY + 15, 190, 20, 'F');
                 doc.setFontSize(8);
                 doc.setTextColor(113, 128, 150);
-                doc.text('This report shows all recorded payments for Family Real Estate properties', 105, finalY + 23, { align: 'center' });
+                doc.text('This report shows all recorded payments for Family Estate properties', 105, finalY + 23, { align: 'center' });
                 doc.text('Generated on: ' + today, 105, finalY + 29, { align: 'center' });
                 
                 doc.save('re_payments_' + new Date().toISOString().split('T')[0] + '.pdf');
@@ -6238,7 +6238,7 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.text('FAMILY ESTATES', 105, 22, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
@@ -6286,7 +6286,7 @@
                 doc.rect(10, finalY + 15, 190, 20, 'F');
                 doc.setFontSize(8);
                 doc.setTextColor(113, 128, 150);
-                doc.text('This report shows all recorded expenses for Family Real Estate properties', 105, finalY + 23, { align: 'center' });
+                doc.text('This report shows all recorded expenses for Family Estate properties', 105, finalY + 23, { align: 'center' });
                 doc.text('Generated on: ' + today, 105, finalY + 29, { align: 'center' });
                 
                 doc.save('re_expenses_' + new Date().toISOString().split('T')[0] + '.pdf');
@@ -6301,11 +6301,13 @@
             var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
             Promise.all([api('/re/payments'), api('/re/expenses'), api('/re/bills'), api('/properties'), api('/re/settings')]).then(function(results) {
-                var rePayments = results[0] || [];
-                var reExpenses = results[1] || [];
-                var reBills = results[2] || [];
-                var properties = results[3] || [];
+                var rePayments = Array.isArray(results[0]) ? results[0] : [];
+                var reExpenses = Array.isArray(results[1]) ? results[1] : [];
+                var reBills = Array.isArray(results[2]) ? results[2] : [];
+                var properties = Array.isArray(results[3]) ? results[3] : [];
                 var settings = results[4] || {};
+                
+                console.log('Ledger PDF Data:', { payments: rePayments.length, expenses: reExpenses.length, bills: reBills.length, properties: properties.length });
                 
                 // Background
                 doc.setFillColor(254, 249, 231);
@@ -6318,20 +6320,20 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES', 148, 20, { align: 'center' });
+                doc.text('FAMILY ESTATES', 148, 20, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 148, 27, { align: 'center' });
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'italic');
                 doc.setTextColor(144, 205, 244);
-                doc.text('Financial Ledger Report', 148, 34, { align: 'center' });
+                doc.text('Estate Ledger Report', 148, 34, { align: 'center' });
                 
                 // Title
                 doc.setTextColor(44, 82, 130);
                 doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
-                doc.text('TRANSACTION LEDGER', 148, 48, { align: 'center' });
+                doc.text('ESTATE LEDGER', 148, 48, { align: 'center' });
                 
                 var ledgerEntries = [];
                 
@@ -6356,8 +6358,8 @@
                     ledgerEntries.push({ 
                         date: e.expense_date, 
                         property: prop ? prop.name : 'General', 
-                        desc: e.description, 
-                        type: e.category, 
+                        desc: e.description || 'Expense', 
+                        type: e.category || 'Other', 
                         income: 0, 
                         expense: parseFloat(e.amount) || 0 
                     });
@@ -6444,8 +6446,11 @@
                 doc.setTextColor(113, 128, 150);
                 doc.text('Generated on: ' + today, 148, finalY + 30, { align: 'center' });
                 
-                doc.save('re_ledger_' + new Date().toISOString().split('T')[0] + '.pdf');
-                showAlert('Ledger PDF exported!');
+                doc.save('estate_ledger_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Estate Ledger PDF exported!');
+            }).catch(function(err) {
+                console.error('Ledger PDF export error:', err);
+                showAlert('Error exporting ledger: ' + (err.message || 'Unknown error'), 'error');
             });
         }
 
@@ -6474,7 +6479,7 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.text('FAMILY ESTATES', 105, 22, { align: 'center' });
                 doc.setFontSize(11);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 30, { align: 'center' });
@@ -6588,7 +6593,7 @@
                 doc.setFontSize(8);
                 doc.setTextColor(113, 128, 150);
                 doc.text('This report is generated as part of the Islamic inheritance distribution', 105, footerY + 8, { align: 'center' });
-                doc.text('for the Family Real Estate properties of the late NJIKAM SALIFU', 105, footerY + 14, { align: 'center' });
+                doc.text('for the Family Estate properties of the late NJIKAM SALIFU', 105, footerY + 14, { align: 'center' });
                 doc.setTextColor(160, 174, 192);
                 doc.text('Generated on: ' + today, 105, footerY + 21, { align: 'center' });
                 
@@ -6617,7 +6622,7 @@
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.text('FAMILY ESTATES', 105, 22, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
@@ -6716,7 +6721,7 @@
             var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
             
-            var csv = 'FAMILY REAL ESTATES - GHOUENZEN Soulemanou\nGenerated: ' + new Date().toLocaleDateString() + '\n\n';
+            var csv = 'FAMILY ESTATES - GHOUENZEN Soulemanou\nGenerated: ' + new Date().toLocaleDateString() + '\n\n';
             
             csv += 'PROPERTIES\nName,Location,Type,Status,Rent,Period,Tax,Net,Islamic Inh\n'; 
             properties.forEach(function(p) { 
@@ -6762,7 +6767,7 @@
             
             doc.setFontSize(18); 
             doc.setFont('helvetica', 'bold');
-            doc.text('FAMILY REAL ESTATES - COMPLETE REPORT', 105, 15, { align: 'center' }); 
+            doc.text('FAMILY ESTATES - COMPLETE REPORT', 105, 15, { align: 'center' }); 
             doc.setFontSize(10); 
             doc.setFont('helvetica', 'normal');
             doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' }); 

@@ -97,6 +97,116 @@ async function initDatabase() {
             )
         `);
 
+        // ==================== FAMILY REAL ESTATES TABLES ====================
+        
+        // RE Heirs (separate from CAMPOST heirs)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS re_heirs (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                relationship VARCHAR(50) NOT NULL,
+                gender VARCHAR(20) NOT NULL,
+                heir_group VARCHAR(50) NOT NULL,
+                portions NUMERIC(10,3) NOT NULL,
+                is_beneficiary BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // RE Bills
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS re_bills (
+                id SERIAL PRIMARY KEY,
+                property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+                tenant_name VARCHAR(255) NOT NULL,
+                bill_date DATE NOT NULL,
+                due_date DATE NOT NULL,
+                amount NUMERIC(12,2) NOT NULL,
+                status VARCHAR(20) DEFAULT 'Unpaid',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // RE Payments
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS re_payments (
+                id SERIAL PRIMARY KEY,
+                bill_id INTEGER REFERENCES re_bills(id) ON DELETE CASCADE,
+                amount NUMERIC(12,2) NOT NULL,
+                payment_date DATE NOT NULL,
+                payment_method VARCHAR(50) DEFAULT 'Cash',
+                reference VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // RE Expenses
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS re_expenses (
+                id SERIAL PRIMARY KEY,
+                property_id INTEGER REFERENCES properties(id) ON DELETE SET NULL,
+                expense_date DATE NOT NULL,
+                description TEXT NOT NULL,
+                category VARCHAR(50) NOT NULL,
+                amount NUMERIC(12,2) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // RE Settings
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS re_settings (
+                id SERIAL PRIMARY KEY,
+                setting_key VARCHAR(50) UNIQUE NOT NULL,
+                setting_value TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // CAMPOST Settings
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS campost_settings (
+                id SERIAL PRIMARY KEY,
+                setting_key VARCHAR(50) UNIQUE NOT NULL,
+                setting_value TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // Users table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS app_users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                full_name VARCHAR(100) NOT NULL,
+                role VARCHAR(20) DEFAULT 'user',
+                active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // CAMPOST Beneficiaries selection
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS campost_beneficiaries (
+                id SERIAL PRIMARY KEY,
+                heir_id INTEGER REFERENCES heirs(id) ON DELETE CASCADE,
+                is_selected BOOLEAN DEFAULT TRUE,
+                UNIQUE(heir_id)
+            )
+        `);
+        
+        // RE Beneficiaries selection
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS re_beneficiaries (
+                id SERIAL PRIMARY KEY,
+                heir_id INTEGER REFERENCES re_heirs(id) ON DELETE CASCADE,
+                is_selected BOOLEAN DEFAULT TRUE,
+                UNIQUE(heir_id)
+            )
+        `);
+
         await initializeDefaultData();
         dbConnected = true;
         console.log('✓ Connected to PostgreSQL database');
@@ -172,6 +282,69 @@ async function initializeDefaultData() {
                 [name, rel, group, portions]
             );
         }
+    }
+
+    // Initialize RE Heirs (same family members)
+    const reHeirResult = await pool.query('SELECT COUNT(*) FROM re_heirs');
+    if (parseInt(reHeirResult.rows[0].count) === 0) {
+        const reHeirs = [
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 3],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 3],
+            ['SAHNATU SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['MOHAMAN SALIFU', 'Child', 'Male', 'Sons', 2],
+            ['ABIBATU SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['ZAKARE SALIFU', 'Child', 'Male', 'Sons', 2],
+            ['FERER ALIMATU SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['NTENTIE REKIATU NJIKAM', 'Child', 'Female', 'Daughters', 1],
+            ['KAHPUI MARIAMA SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['GHOUENZEN SOULEMANOU', 'Child', 'Male', 'Sons', 2],
+            ['NGAMENPOUYE MAIMUNATE', 'Child', 'Female', 'Daughters', 1],
+            ['LOUMNGAM NCHINTOUO AMINATOUO', 'Child', 'Female', 'Daughters', 1],
+            ['MENTCHA ABOUBAKAR SALIFOU', 'Child', 'Male', 'Sons', 2],
+            ['HAROUNA SALIFU', 'Child', 'Male', 'Sons', 2],
+            ['MBALLEY ABDOU RAHAMA SALIFOU', 'Child', 'Male', 'Sons', 2],
+            ['NGAMDAMOUN IBRAHIM SALIFOU', 'Child', 'Male', 'Sons', 2]
+        ];
+        for (const [name, rel, gender, group, portions] of reHeirs) {
+            await pool.query(
+                'INSERT INTO re_heirs (name, relationship, gender, heir_group, portions) VALUES ($1, $2, $3, $4, $5)',
+                [name, rel, gender, group, portions]
+            );
+        }
+    }
+    
+    // Initialize default users - only if table is empty, otherwise ensure admin exists
+    const userResult = await pool.query('SELECT COUNT(*) FROM app_users');
+    if (parseInt(userResult.rows[0].count) === 0) {
+        await pool.query(
+            'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',
+            ['admin', '12345', 'Administrator', 'admin', true]
+        );
+        await pool.query(
+            'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',
+            ['user', 'user123', 'Standard User', 'user', true]
+        );
+    } else {
+        // Ensure admin user exists with correct password (in case it was deleted or password changed)
+        await pool.query(
+            `INSERT INTO app_users (username, password, full_name, role, active) 
+             VALUES ($1, $2, $3, $4, $5) 
+             ON CONFLICT (username) DO UPDATE SET password = $2`,
+            ['admin', '12345', 'Administrator', 'admin', true]
+        );
+    }
+    
+    // Initialize default settings
+    const settingsResult = await pool.query('SELECT COUNT(*) FROM re_settings');
+    if (parseInt(settingsResult.rows[0].count) === 0) {
+        await pool.query("INSERT INTO re_settings (setting_key, setting_value) VALUES ('currency', 'XAF') ON CONFLICT (setting_key) DO NOTHING");
+        await pool.query("INSERT INTO re_settings (setting_key, setting_value) VALUES ('reservedFundsPercent', '10') ON CONFLICT (setting_key) DO NOTHING");
+    }
+    
+    const campostSettingsResult = await pool.query('SELECT COUNT(*) FROM campost_settings');
+    if (parseInt(campostSettingsResult.rows[0].count) === 0) {
+        await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('currency', 'XAF') ON CONFLICT (setting_key) DO NOTHING");
+        await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('reservedFundsPercent', '10') ON CONFLICT (setting_key) DO NOTHING");
     }
 
     const billResult = await pool.query('SELECT COUNT(*) FROM bills');
@@ -814,6 +987,592 @@ app.get('/api/properties/rented', async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM properties WHERE status = 'Rented' ORDER BY name");
         res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// FAMILY REAL ESTATES API ENDPOINTS
+// ==========================================
+
+// ============== RE HEIRS API ==============
+app.get('/api/re/heirs', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM re_heirs ORDER BY heir_group, name');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/re/heirs', async (req, res) => {
+    try {
+        const { name, relationship, gender, heirGroup, portions } = req.body;
+        const result = await pool.query(
+            'INSERT INTO re_heirs (name, relationship, gender, heir_group, portions) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name, relationship, gender, heirGroup, portions]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/re/heirs/:id', async (req, res) => {
+    try {
+        const { name, relationship, gender, heirGroup, portions } = req.body;
+        await pool.query(
+            'UPDATE re_heirs SET name = $1, relationship = $2, gender = $3, heir_group = $4, portions = $5 WHERE id = $6',
+            [name, relationship, gender, heirGroup, portions, req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/re/heirs/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM re_heirs WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Reset RE heirs to defaults
+app.post('/api/re/heirs/reset-defaults', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM re_heirs');
+        const reHeirs = [
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 3],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 3],
+            ['SAHNATU SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['MOHAMAN SALIFU', 'Child', 'Male', 'Sons', 2],
+            ['ABIBATU SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['ZAKARE SALIFU', 'Child', 'Male', 'Sons', 2],
+            ['FERER ALIMATU SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['NTENTIE REKIATU NJIKAM', 'Child', 'Female', 'Daughters', 1],
+            ['KAHPUI MARIAMA SALIFU', 'Child', 'Female', 'Daughters', 1],
+            ['GHOUENZEN SOULEMANOU', 'Child', 'Male', 'Sons', 2],
+            ['NGAMENPOUYE MAIMUNATE', 'Child', 'Female', 'Daughters', 1],
+            ['LOUMNGAM NCHINTOUO AMINATOUO', 'Child', 'Female', 'Daughters', 1],
+            ['MENTCHA ABOUBAKAR SALIFOU', 'Child', 'Male', 'Sons', 2],
+            ['HAROUNA SALIFU', 'Child', 'Male', 'Sons', 2],
+            ['MBALLEY ABDOU RAHAMA SALIFOU', 'Child', 'Male', 'Sons', 2],
+            ['NGAMDAMOUN IBRAHIM SALIFOU', 'Child', 'Male', 'Sons', 2]
+        ];
+        for (const [name, rel, gender, group, portions] of reHeirs) {
+            await pool.query(
+                'INSERT INTO re_heirs (name, relationship, gender, heir_group, portions) VALUES ($1, $2, $3, $4, $5)',
+                [name, rel, gender, group, portions]
+            );
+        }
+        await pool.query('DELETE FROM re_beneficiaries');
+        res.json({ success: true, message: 'RE Heirs reset to defaults', count: reHeirs.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE BILLS API ==============
+app.get('/api/re/bills', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT b.*, p.name as property_name 
+            FROM re_bills b 
+            LEFT JOIN properties p ON b.property_id = p.id 
+            ORDER BY b.bill_date DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/re/bills', async (req, res) => {
+    try {
+        const { propertyId, tenantName, billDate, dueDate, amount, status, notes } = req.body;
+        const result = await pool.query(
+            'INSERT INTO re_bills (property_id, tenant_name, bill_date, due_date, amount, status, notes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [propertyId, tenantName, billDate, dueDate, amount, status || 'Unpaid', notes]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/re/bills/:id', async (req, res) => {
+    try {
+        const { propertyId, tenantName, billDate, dueDate, amount, status, notes } = req.body;
+        await pool.query(
+            'UPDATE re_bills SET property_id = $1, tenant_name = $2, bill_date = $3, due_date = $4, amount = $5, status = $6, notes = $7 WHERE id = $8',
+            [propertyId, tenantName, billDate, dueDate, amount, status, notes, req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/re/bills/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM re_bills WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE PAYMENTS API ==============
+app.get('/api/re/payments', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT pay.*, b.tenant_name, p.name as property_name 
+            FROM re_payments pay 
+            LEFT JOIN re_bills b ON pay.bill_id = b.id 
+            LEFT JOIN properties p ON b.property_id = p.id 
+            ORDER BY pay.payment_date DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/re/payments', async (req, res) => {
+    try {
+        const { billId, amount, paymentDate, paymentMethod, reference } = req.body;
+        const result = await pool.query(
+            'INSERT INTO re_payments (bill_id, amount, payment_date, payment_method, reference) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [billId, amount, paymentDate, paymentMethod || 'Cash', reference]
+        );
+        
+        // Update bill status based on payments
+        const billPayments = await pool.query('SELECT SUM(amount) as total FROM re_payments WHERE bill_id = $1', [billId]);
+        const billInfo = await pool.query('SELECT amount FROM re_bills WHERE id = $1', [billId]);
+        if (billInfo.rows.length > 0) {
+            const totalPaid = parseFloat(billPayments.rows[0].total) || 0;
+            const billAmount = parseFloat(billInfo.rows[0].amount);
+            let status = 'Unpaid';
+            if (totalPaid >= billAmount) status = 'Paid';
+            else if (totalPaid > 0) status = 'Partial';
+            await pool.query('UPDATE re_bills SET status = $1 WHERE id = $2', [status, billId]);
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/re/payments/:id', async (req, res) => {
+    try {
+        const { billId, amount, paymentDate, paymentMethod, reference } = req.body;
+        await pool.query(
+            'UPDATE re_payments SET bill_id = $1, amount = $2, payment_date = $3, payment_method = $4, reference = $5 WHERE id = $6',
+            [billId, amount, paymentDate, paymentMethod, reference, req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/re/payments/:id', async (req, res) => {
+    try {
+        // Get bill_id before deleting
+        const payment = await pool.query('SELECT bill_id FROM re_payments WHERE id = $1', [req.params.id]);
+        await pool.query('DELETE FROM re_payments WHERE id = $1', [req.params.id]);
+        
+        // Recalculate bill status
+        if (payment.rows.length > 0) {
+            const billId = payment.rows[0].bill_id;
+            const billPayments = await pool.query('SELECT SUM(amount) as total FROM re_payments WHERE bill_id = $1', [billId]);
+            const billInfo = await pool.query('SELECT amount FROM re_bills WHERE id = $1', [billId]);
+            if (billInfo.rows.length > 0) {
+                const totalPaid = parseFloat(billPayments.rows[0].total) || 0;
+                const billAmount = parseFloat(billInfo.rows[0].amount);
+                let status = 'Unpaid';
+                if (totalPaid >= billAmount) status = 'Paid';
+                else if (totalPaid > 0) status = 'Partial';
+                await pool.query('UPDATE re_bills SET status = $1 WHERE id = $2', [status, billId]);
+            }
+        }
+        
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE EXPENSES API ==============
+app.get('/api/re/expenses', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT e.*, p.name as property_name 
+            FROM re_expenses e 
+            LEFT JOIN properties p ON e.property_id = p.id 
+            ORDER BY e.expense_date DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/re/expenses', async (req, res) => {
+    try {
+        const { propertyId, expenseDate, description, category, amount } = req.body;
+        const result = await pool.query(
+            'INSERT INTO re_expenses (property_id, expense_date, description, category, amount) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [propertyId, expenseDate, description, category, amount]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/re/expenses/:id', async (req, res) => {
+    try {
+        const { propertyId, expenseDate, description, category, amount } = req.body;
+        await pool.query(
+            'UPDATE re_expenses SET property_id = $1, expense_date = $2, description = $3, category = $4, amount = $5 WHERE id = $6',
+            [propertyId, expenseDate, description, category, amount, req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/re/expenses/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM re_expenses WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE SETTINGS API ==============
+app.get('/api/re/settings', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM re_settings');
+        const settings = {};
+        result.rows.forEach(row => { settings[row.setting_key] = row.setting_value; });
+        res.json(settings);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/re/settings', async (req, res) => {
+    try {
+        const { key, value } = req.body;
+        await pool.query(
+            'INSERT INTO re_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP',
+            [key, value]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== CAMPOST SETTINGS API ==============
+app.get('/api/campost/settings', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM campost_settings');
+        const settings = {};
+        result.rows.forEach(row => { settings[row.setting_key] = row.setting_value; });
+        res.json(settings);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/campost/settings', async (req, res) => {
+    try {
+        const { key, value } = req.body;
+        await pool.query(
+            'INSERT INTO campost_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP',
+            [key, value]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE BENEFICIARIES API ==============
+app.get('/api/re/beneficiaries', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT heir_id FROM re_beneficiaries WHERE is_selected = TRUE');
+        res.json(result.rows.map(r => r.heir_id));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/re/beneficiaries', async (req, res) => {
+    try {
+        const { selectedIds } = req.body;
+        await pool.query('DELETE FROM re_beneficiaries');
+        for (const id of selectedIds) {
+            await pool.query('INSERT INTO re_beneficiaries (heir_id, is_selected) VALUES ($1, TRUE)', [id]);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== CAMPOST BENEFICIARIES API ==============
+app.get('/api/campost/beneficiaries', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT heir_id FROM campost_beneficiaries WHERE is_selected = TRUE');
+        res.json(result.rows.map(r => r.heir_id));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/campost/beneficiaries', async (req, res) => {
+    try {
+        const { selectedIds } = req.body;
+        await pool.query('DELETE FROM campost_beneficiaries');
+        for (const id of selectedIds) {
+            await pool.query('INSERT INTO campost_beneficiaries (heir_id, is_selected) VALUES ($1, TRUE)', [id]);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== USERS API ==============
+app.get('/api/users', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT id, username, full_name, role, active, created_at FROM app_users ORDER BY created_at');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/users', async (req, res) => {
+    try {
+        const { username, password, fullName, role, active } = req.body;
+        const result = await pool.query(
+            'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, full_name, role, active',
+            [username.toLowerCase(), password, fullName, role || 'user', active !== false]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        if (err.code === '23505') {
+            res.status(400).json({ error: 'Username already exists' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const { username, password, fullName, role, active } = req.body;
+        if (password) {
+            await pool.query(
+                'UPDATE app_users SET username = $1, password = $2, full_name = $3, role = $4, active = $5 WHERE id = $6',
+                [username.toLowerCase(), password, fullName, role, active, req.params.id]
+            );
+        } else {
+            await pool.query(
+                'UPDATE app_users SET username = $1, full_name = $2, role = $3, active = $4 WHERE id = $5',
+                [username.toLowerCase(), fullName, role, active, req.params.id]
+            );
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM app_users WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/users/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const result = await pool.query(
+            'SELECT id, username, full_name, role, active FROM app_users WHERE LOWER(username) = LOWER($1) AND password = $2 AND active = TRUE',
+            [username, password]
+        );
+        if (result.rows.length > 0) {
+            res.json({ success: true, user: result.rows[0] });
+        } else {
+            res.status(401).json({ success: false, error: 'Invalid credentials or inactive account' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/users/change-password', async (req, res) => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body;
+        const user = await pool.query('SELECT * FROM app_users WHERE id = $1 AND password = $2', [userId, currentPassword]);
+        if (user.rows.length === 0) {
+            res.status(400).json({ error: 'Current password is incorrect' });
+            return;
+        }
+        await pool.query('UPDATE app_users SET password = $1 WHERE id = $2', [newPassword, userId]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE INHERITANCE CALCULATION ==============
+app.get('/api/re/inheritance/calculate', async (req, res) => {
+    try {
+        // Get total payments (income)
+        const paymentsResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM re_payments');
+        const totalIncome = parseFloat(paymentsResult.rows[0].total) || 0;
+        
+        // Get total expenses
+        const expensesResult = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM re_expenses');
+        const totalExpenses = parseFloat(expensesResult.rows[0].total) || 0;
+        
+        // Get reserved funds percentage
+        const settingsResult = await pool.query("SELECT setting_value FROM re_settings WHERE setting_key = 'reservedFundsPercent'");
+        const reservedPercent = settingsResult.rows.length > 0 ? parseFloat(settingsResult.rows[0].setting_value) : 10;
+        
+        // Calculate inheritance pool
+        const netBalance = totalIncome - totalExpenses;
+        const reservedFunds = netBalance * (reservedPercent / 100);
+        const inheritancePool = Math.max(0, netBalance - reservedFunds);
+        
+        // Get selected beneficiaries
+        const beneficiariesResult = await pool.query('SELECT heir_id FROM re_beneficiaries WHERE is_selected = TRUE');
+        const selectedIds = beneficiariesResult.rows.map(r => r.heir_id);
+        
+        // Get heirs (filtered by beneficiaries if any selected)
+        let heirsQuery = 'SELECT * FROM re_heirs ORDER BY heir_group, name';
+        const heirsResult = await pool.query(heirsQuery);
+        let heirs = heirsResult.rows;
+        
+        if (selectedIds.length > 0) {
+            heirs = heirs.filter(h => selectedIds.includes(h.id));
+        }
+        
+        // Calculate portions
+        const totalPortions = heirs.reduce((sum, h) => sum + parseFloat(h.portions), 0);
+        const perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
+        
+        // Calculate shares
+        const heirShares = heirs.map(h => ({
+            ...h,
+            shareAmount: parseFloat(h.portions) * perPortion
+        }));
+        
+        // Group summary
+        const groupSummary = {};
+        heirShares.forEach(h => {
+            if (!groupSummary[h.heir_group]) {
+                groupSummary[h.heir_group] = { count: 0, totalPortions: 0, totalShare: 0 };
+            }
+            groupSummary[h.heir_group].count++;
+            groupSummary[h.heir_group].totalPortions += parseFloat(h.portions);
+            groupSummary[h.heir_group].totalShare += h.shareAmount;
+        });
+        
+        res.json({
+            totalIncome,
+            totalExpenses,
+            netBalance,
+            reservedFunds,
+            inheritancePool,
+            totalPortions,
+            perPortion,
+            heirs: heirShares,
+            groupSummary
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE DASHBOARD ==============
+app.get('/api/re/dashboard', async (req, res) => {
+    try {
+        const totalProps = await pool.query('SELECT COUNT(*) as count FROM properties');
+        const rentedProps = await pool.query("SELECT COUNT(*) as count FROM properties WHERE status = 'Rented'");
+        const totalIncome = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM re_payments');
+        const totalExpenses = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM re_expenses');
+        
+        const settingsResult = await pool.query("SELECT setting_value FROM re_settings WHERE setting_key = 'reservedFundsPercent'");
+        const reservedPercent = settingsResult.rows.length > 0 ? parseFloat(settingsResult.rows[0].setting_value) : 10;
+        
+        const income = parseFloat(totalIncome.rows[0].total) || 0;
+        const expenses = parseFloat(totalExpenses.rows[0].total) || 0;
+        const netBalance = income - expenses;
+        const reservedFunds = netBalance * (reservedPercent / 100);
+        
+        res.json({
+            totalProperties: parseInt(totalProps.rows[0].count),
+            rentedProperties: parseInt(rentedProps.rows[0].count),
+            totalIncome: income,
+            totalExpenses: expenses,
+            netBalance: netBalance,
+            reservedFunds: reservedFunds
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============== RE LEDGER ==============
+app.get('/api/re/ledger', async (req, res) => {
+    try {
+        // Get all payments as income
+        const payments = await pool.query(`
+            SELECT pay.payment_date as date, p.name as property, 
+                   'Payment: ' || b.tenant_name as description, 
+                   'Income' as type, pay.amount as income, 0 as expense
+            FROM re_payments pay
+            LEFT JOIN re_bills b ON pay.bill_id = b.id
+            LEFT JOIN properties p ON b.property_id = p.id
+        `);
+        
+        // Get all expenses
+        const expenses = await pool.query(`
+            SELECT e.expense_date as date, COALESCE(p.name, 'General') as property,
+                   e.description, 'Expense' as type, 0 as income, e.amount as expense
+            FROM re_expenses e
+            LEFT JOIN properties p ON e.property_id = p.id
+        `);
+        
+        // Combine and sort
+        const ledger = [...payments.rows, ...expenses.rows].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Calculate running balance
+        let balance = 0;
+        const ledgerWithBalance = ledger.map(entry => {
+            balance += (parseFloat(entry.income) || 0) - (parseFloat(entry.expense) || 0);
+            return { ...entry, balance };
+        });
+        
+        res.json(ledgerWithBalance);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

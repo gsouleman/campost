@@ -4513,19 +4513,29 @@
             ]).then(function(results) {
                 var payments = results[0] || [];
                 var expenses = results[1] || [];
-                var settings = results[2] || [];
+                var settings = results[2] || {};
                 
-                // Get reserved funds percentage from settings
-                var reservedPercent = 10; // default
-                settings.forEach(function(s) {
-                    if (s.setting_key === 'reservedFundsPercent') {
-                        reservedPercent = parseFloat(s.setting_value) || 10;
-                    }
-                });
+                // Get reserved funds percentage from settings (settings is an object, not array)
+                var reservedPercent = parseFloat(settings.reservedFundsPercent) || 10;
                 
                 // Calculate totals
-                var totalIncome = payments.reduce(function(sum, p) { return sum + (parseFloat(p.amount) || 0); }, 0);
-                var totalExpenses = expenses.reduce(function(sum, e) { return sum + (parseFloat(e.amount) || 0); }, 0);
+                var totalIncome = 0;
+                var totalExpenses = 0;
+                
+                // Sum all payments
+                if (Array.isArray(payments)) {
+                    payments.forEach(function(p) {
+                        totalIncome += parseFloat(p.amount) || 0;
+                    });
+                }
+                
+                // Sum all expenses
+                if (Array.isArray(expenses)) {
+                    expenses.forEach(function(e) {
+                        totalExpenses += parseFloat(e.amount) || 0;
+                    });
+                }
+                
                 var reservedFunds = totalIncome * (reservedPercent / 100);
                 var availableFunds = Math.max(0, totalIncome - totalExpenses - reservedFunds);
                 
@@ -4541,6 +4551,8 @@
                 if (elPercent) elPercent.textContent = reservedPercent;
                 if (elReserved) elReserved.textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
                 if (elAvailable) elAvailable.textContent = fmt(Math.round(availableFunds)) + ' ' + currency;
+                
+                console.log('Available Funds loaded:', { totalIncome: totalIncome, totalExpenses: totalExpenses, reservedFunds: reservedFunds, availableFunds: availableFunds });
             }).catch(function(err) {
                 console.error('Error loading available funds:', err);
             });

@@ -4602,23 +4602,6 @@
                     '</tr>';
             });
         }
-                '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
-                '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
-                '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
-                '</tr>' +
-                '<tr style="background: #fed7d7; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right; color: #c53030;">🏦 Reserved Funds (' + reservedPercent + '% of Income):</td>' +
-                '<td></td>' +
-                '<td style="color: #c53030;">-' + fmt(Math.round(reservedFunds)) + '</td>' +
-                '<td></td>' +
-                '</tr>' +
-                '<tr style="background: #fc8181; font-weight: bold;">' +
-                '<td colspan="4" style="text-align: right; color: #742a2a;">📊 NET BALANCE:</td>' +
-                '<td></td>' +
-                '<td></td>' +
-                '<td style="color: #742a2a;">' + fmt(Math.round(netBalance)) + '</td>' +
-                '</tr>';
-        }
 
         // ========== RE SETTINGS & EXPORT ==========
         // ========== RE SETTINGS FUNCTIONS ==========
@@ -4798,24 +4781,25 @@
                 doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
                 doc.line(20, 25, 190, 25);
             
-            var tableData = properties.map(function(p) {
-                var isRented = p.status === 'Rented';
-                var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
-                var tax = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
-                var net = rent - (rent * tax / 100);
-                return [p.name, p.location, p.type, p.status, fmt(rent), tax + '%', fmt(Math.round(net)), p.islamic_inheritance || 'NA'];
+                var tableData = properties.map(function(p) {
+                    var isRented = p.status === 'Rented';
+                    var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
+                    var tax = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
+                    var net = rent - (rent * tax / 100);
+                    return [p.name, p.location, p.type, p.status, fmt(rent), tax + '%', fmt(Math.round(net)), p.islamic_inheritance || 'NA'];
+                });
+                
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Property', 'Location', 'Type', 'Status', 'Rent', 'Tax', 'Net Income', 'Islamic Inh.']],
+                    body: tableData,
+                    styles: { fontSize: 7 },
+                    headStyles: { fillColor: [44, 82, 130] }
+                });
+                
+                doc.save('re_properties_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Properties PDF exported!');
             });
-            
-            doc.autoTable({
-                startY: 30,
-                head: [['Property', 'Location', 'Type', 'Status', 'Rent', 'Tax', 'Net Income', 'Islamic Inh.']],
-                body: tableData,
-                styles: { fontSize: 7 },
-                headStyles: { fillColor: [44, 82, 130] }
-            });
-            
-            doc.save('re_properties_' + new Date().toISOString().split('T')[0] + '.pdf');
-            showAlert('Properties PDF exported!');
         }
 
         function exportREBillsPDF() {

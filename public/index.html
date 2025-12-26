@@ -772,21 +772,18 @@
                                 <input type="date" id="reBillDate">
                             </div>
                             <div class="form-group">
-                                <label>Period (from Property)</label>
-                                <input type="text" id="reBillPeriod" readonly placeholder="Auto from property" style="background: #e2e8f0;">
+                                <label>Period</label>
+                                <input type="text" id="reBillPeriod" readonly style="background: #e2e8f0;">
                             </div>
                             <div class="form-group">
-                                <label>Gross Rent (XAF) - From Property</label>
-                                <input type="number" id="reBillGrossAmount" readonly placeholder="Auto from property" style="background: #e2e8f0; font-weight: bold;">
+                                <label>Gross Rent (XAF)</label>
+                                <input type="number" id="reBillGrossAmount" readonly style="background: #e2e8f0; font-weight: bold;">
                             </div>
                             <div class="form-group">
                                 <label>Tax Rate (%)</label>
                                 <input type="text" id="reBillTaxRate" readonly style="background: #e2e8f0;" value="0%">
                             </div>
-                            <div class="form-group">
-                                <label>Tax Amount (XAF)</label>
-                                <input type="text" id="reBillTaxAmount" readonly style="background: #fed7d7; color: #e53e3e;" value="0">
-                            </div>
+                            <input type="hidden" id="reBillTaxAmount" value="0">
                             <div class="form-group">
                                 <label>Net Amount Due (After Tax)</label>
                                 <input type="text" id="reBillAmount" readonly style="background: #c6f6d5; font-weight: bold; color: #276749;" value="0">
@@ -810,7 +807,7 @@
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Bill #</th><th>Property</th><th>Period</th><th>Date</th><th>Gross</th><th>Tax</th><th>Net Due</th><th class="no-print">Actions</th></tr></thead>
+                                <thead><tr><th>Bill #</th><th>Property</th><th>Period</th><th>Date</th><th>Gross</th><th>Tax</th><th>Net Due</th><th>Description</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="reBillsTable"></tbody>
                                 <tfoot id="reBillsTotals"></tfoot>
                             </table>
@@ -3790,10 +3787,26 @@
                 var reBills = results[1];
                 var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
                 var currency = getCurrency();
+                
+                // Get IDs of properties that already have bills
+                var billedPropertyIds = reBills.map(function(b) { return b.property_id; });
+                
+                // Get currently editing bill ID (if any)
+                var editingBillId = document.getElementById('reBillId').value;
+                var editingPropertyId = null;
+                if (editingBillId) {
+                    var editingBill = reBills.find(function(b) { return b.id === parseInt(editingBillId); });
+                    if (editingBill) editingPropertyId = editingBill.property_id;
+                }
+                
+                // Filter out properties that already have bills (except the one being edited)
+                var availableProps = rentedProps.filter(function(p) {
+                    return !billedPropertyIds.includes(p.id) || p.id === editingPropertyId;
+                });
 
-                // Populate property dropdown with rented properties only, showing period and tax
+                // Populate property dropdown with available rented properties only
                 document.getElementById('reBillProperty').innerHTML = '<option value="">Select Rented Property</option>' + 
-                    rentedProps.map(function(p) {
+                    availableProps.map(function(p) {
                         var taxRate = parseFloat(p.tax_rate) || 0;
                         var grossRent = parseFloat(p.rent_amount) || 0;
                         var netRent = grossRent - (grossRent * taxRate / 100);
@@ -3821,6 +3834,9 @@
                     var taxAmount = grossAmount * taxRate / 100;
                     var netAmount = grossAmount - taxAmount;
                     
+                    // Get description from bill
+                    var description = b.notes || b.description || '-';
+                    
                     totalGross += grossAmount;
                     totalTax += taxAmount;
                     totalNet += netAmount;
@@ -3843,11 +3859,12 @@
                         '<td>' + fmt(Math.round(grossAmount)) + '</td>' +
                         '<td class="amount-negative">' + fmt(Math.round(taxAmount)) + ' (' + taxRate + '%)</td>' +
                         '<td><strong>' + fmt(Math.round(netAmount)) + '</strong></td>' +
+                        '<td>' + description + '</td>' +
                         actionsHtml +
                     '</tr>';
                 }).join('');
 
-                document.getElementById('reBillsTable').innerHTML = html || '<tr><td colspan="8">No bills</td></tr>';
+                document.getElementById('reBillsTable').innerHTML = html || '<tr><td colspan="9">No bills</td></tr>';
                 
                 // Add totals row
                 document.getElementById('reBillsTotals').innerHTML = 
@@ -3856,7 +3873,7 @@
                     '<td>' + fmt(Math.round(totalGross)) + '</td>' +
                     '<td class="amount-negative">' + fmt(Math.round(totalTax)) + '</td>' +
                     '<td>' + fmt(Math.round(totalNet)) + '</td>' +
-                    '<td></td>' +
+                    '<td colspan="2"></td>' +
                     '</tr>';
             });
         }

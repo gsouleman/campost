@@ -122,6 +122,15 @@
         .landing-card.family:hover { border-color: var(--accent-gold); }
         .landing-card.assets { border-color: #805ad5; }
         .landing-card.assets:hover { border-color: var(--accent-gold); }
+        
+        /* Asset Tab Styles */
+        .asset-tab { padding: 0.5rem 1rem; border: none; background: #e2e8f0; color: #4a5568; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        .asset-tab:hover { background: #cbd5e0; }
+        .asset-tab.active { background: var(--primary-blue); color: white; }
+        .asset-tab-content { display: none; }
+        .asset-tab-content.active { display: block; }
+        .asset-actions { display: flex; gap: 0.25rem; justify-content: center; }
+        .asset-actions .btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
         .landing-card-icon { font-size: 3rem; margin-bottom: 1rem; }
         .landing-card-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--primary-dark); margin-bottom: 0.5rem; }
         .landing-card-desc { color: var(--text-gray); font-size: 0.85rem; margin-bottom: 1rem; }
@@ -1573,80 +1582,180 @@
                     <span class="badge badge-income" id="oldTownTotalBadge">2,953,000 XAF</span>
                 </div>
                 <div class="card-body">
-                    <!-- Living Room -->
-                    <div class="asset-section">
-                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">A. Living Room & Common Areas</h4>
+                    <!-- Category Tabs -->
+                    <div class="asset-tabs" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <button class="asset-tab active" onclick="showOldTownTab('living')" data-tab="living">🛋️ Living Room</button>
+                        <button class="asset-tab" onclick="showOldTownTab('kitchen')" data-tab="kitchen">🍽️ Kitchen & Dining</button>
+                        <button class="asset-tab" onclick="showOldTownTab('master')" data-tab="master">🛏️ Master Bedroom</button>
+                        <button class="asset-tab" onclick="showOldTownTab('bed2')" data-tab="bed2">🛏️ Bedroom 2</button>
+                        <button class="asset-tab" onclick="showOldTownTab('bed3')" data-tab="bed3">🛏️ Bedroom 3</button>
+                        <button class="asset-tab" onclick="showOldTownTab('misc')" data-tab="misc">🌳 Outdoor & Misc</button>
+                    </div>
+                    
+                    <!-- Living Room Tab -->
+                    <div id="oldtown-tab-living" class="asset-tab-content active">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin: 0;">🛋️ Living Room & Common Areas</h4>
+                            <button class="btn btn-success btn-sm admin-only" onclick="showAddAssetModal('oldTown', 'living')">➕ Add Item</button>
+                        </div>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item</th>
+                                        <th style="width: 25%; text-align: right;">Value (XAF)</th>
+                                        <th style="width: 25%; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="oldTownLivingTable"></tbody>
-                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>745,000</strong></td></tr></tfoot>
+                                <tfoot>
+                                    <tr style="background: #ebf8ff;">
+                                        <td><strong>Subtotal</strong></td>
+                                        <td style="text-align: right;"><strong id="oldTownLivingSubtotal">745,000</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- Kitchen & Dining -->
-                    <div class="asset-section">
-                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">B. Kitchen & Dining</h4>
+                    <!-- Kitchen Tab -->
+                    <div id="oldtown-tab-kitchen" class="asset-tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin: 0;">🍽️ Kitchen & Dining</h4>
+                            <button class="btn btn-success btn-sm admin-only" onclick="showAddAssetModal('oldTown', 'kitchen')">➕ Add Item</button>
+                        </div>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item</th>
+                                        <th style="width: 25%; text-align: right;">Value (XAF)</th>
+                                        <th style="width: 25%; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="oldTownKitchenTable"></tbody>
-                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>690,000</strong></td></tr></tfoot>
+                                <tfoot>
+                                    <tr style="background: #ebf8ff;">
+                                        <td><strong>Subtotal</strong></td>
+                                        <td style="text-align: right;"><strong id="oldTownKitchenSubtotal">690,000</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- Master Bedroom -->
-                    <div class="asset-section">
-                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">C. Bedroom 1 (Master)</h4>
+                    <!-- Master Bedroom Tab -->
+                    <div id="oldtown-tab-master" class="asset-tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin: 0;">🛏️ Bedroom 1 (Master)</h4>
+                            <button class="btn btn-success btn-sm admin-only" onclick="showAddAssetModal('oldTown', 'master')">➕ Add Item</button>
+                        </div>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item</th>
+                                        <th style="width: 25%; text-align: right;">Value (XAF)</th>
+                                        <th style="width: 25%; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="oldTownMasterTable"></tbody>
-                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>585,000</strong></td></tr></tfoot>
+                                <tfoot>
+                                    <tr style="background: #ebf8ff;">
+                                        <td><strong>Subtotal</strong></td>
+                                        <td style="text-align: right;"><strong id="oldTownMasterSubtotal">585,000</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- Bedroom 2 -->
-                    <div class="asset-section">
-                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">D. Bedroom 2</h4>
+                    <!-- Bedroom 2 Tab -->
+                    <div id="oldtown-tab-bed2" class="asset-tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin: 0;">🛏️ Bedroom 2</h4>
+                            <button class="btn btn-success btn-sm admin-only" onclick="showAddAssetModal('oldTown', 'bed2')">➕ Add Item</button>
+                        </div>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item</th>
+                                        <th style="width: 25%; text-align: right;">Value (XAF)</th>
+                                        <th style="width: 25%; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="oldTownBed2Table"></tbody>
-                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>283,000</strong></td></tr></tfoot>
+                                <tfoot>
+                                    <tr style="background: #ebf8ff;">
+                                        <td><strong>Subtotal</strong></td>
+                                        <td style="text-align: right;"><strong id="oldTownBed2Subtotal">283,000</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- Bedroom 3 -->
-                    <div class="asset-section">
-                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">E. Bedroom 3</h4>
+                    <!-- Bedroom 3 Tab -->
+                    <div id="oldtown-tab-bed3" class="asset-tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin: 0;">🛏️ Bedroom 3</h4>
+                            <button class="btn btn-success btn-sm admin-only" onclick="showAddAssetModal('oldTown', 'bed3')">➕ Add Item</button>
+                        </div>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item</th>
+                                        <th style="width: 25%; text-align: right;">Value (XAF)</th>
+                                        <th style="width: 25%; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="oldTownBed3Table"></tbody>
-                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>295,000</strong></td></tr></tfoot>
+                                <tfoot>
+                                    <tr style="background: #ebf8ff;">
+                                        <td><strong>Subtotal</strong></td>
+                                        <td style="text-align: right;"><strong id="oldTownBed3Subtotal">295,000</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- Outdoor & Misc -->
-                    <div class="asset-section">
-                        <h4 style="color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.5rem; margin-bottom: 1rem;">F. Outdoor & Miscellaneous</h4>
+                    <!-- Outdoor & Misc Tab -->
+                    <div id="oldtown-tab-misc" class="asset-tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="color: var(--primary-blue); margin: 0;">🌳 Outdoor & Miscellaneous</h4>
+                            <button class="btn btn-success btn-sm admin-only" onclick="showAddAssetModal('oldTown', 'misc')">➕ Add Item</button>
+                        </div>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Item</th><th style="text-align: right;">Value (XAF)</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Item</th>
+                                        <th style="width: 25%; text-align: right;">Value (XAF)</th>
+                                        <th style="width: 25%; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody id="oldTownMiscTable"></tbody>
-                                <tfoot><tr style="background: #ebf8ff;"><td><strong>Subtotal</strong></td><td style="text-align: right;"><strong>355,000</strong></td></tr></tfoot>
+                                <tfoot>
+                                    <tr style="background: #ebf8ff;">
+                                        <td><strong>Subtotal</strong></td>
+                                        <td style="text-align: right;"><strong id="oldTownMiscSubtotal">355,000</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
                     
-                    <div class="highlight-box" style="margin-top: 1rem;">
-                        <p style="color: #744210;">OLD TOWN RESIDENCE</p>
+                    <div class="highlight-box" style="margin-top: 1.5rem;">
+                        <p style="color: #744210;">OLD TOWN RESIDENCE GRAND TOTAL</p>
                         <h3 id="oldTownFinalTotal">2,953,000 XAF</h3>
                     </div>
                 </div>
@@ -1804,6 +1913,70 @@
                         <div class="stat-card blue"><div class="stat-icon">🏘️</div><div class="stat-value">2,953,000</div><div class="stat-label">Old Town (XAF)</div></div>
                         <div class="stat-card green"><div class="stat-icon">🏡</div><div class="stat-value">4,650,000</div><div class="stat-label">Manka (XAF)</div></div>
                         <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value">7,603,000</div><div class="stat-label">Combined (XAF)</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asset Modal -->
+        <div class="modal-overlay" id="assetModal">
+            <div class="modal" style="max-width: 500px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);">
+                    <h3 id="assetModalTitle">🪑 Add Asset</h3>
+                    <button class="modal-close" onclick="closeAssetModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="assetResidence">
+                    <input type="hidden" id="assetCategory">
+                    <input type="hidden" id="assetIndex">
+                    <div class="form-group">
+                        <label>Item Name *</label>
+                        <select id="assetItemSelect" onchange="handleAssetItemChange()">
+                            <option value="">-- Select or Add New --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="assetCustomItemGroup" style="display: none;">
+                        <label>Custom Item Name *</label>
+                        <input type="text" id="assetCustomItem" placeholder="Enter item name">
+                    </div>
+                    <div class="form-group">
+                        <label>Value (XAF) *</label>
+                        <input type="number" id="assetValue" placeholder="Enter value" min="0">
+                    </div>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-success" onclick="saveAsset()">💾 Save</button>
+                        <button class="btn btn-outline" onclick="closeAssetModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Asset View Modal -->
+        <div class="modal-overlay" id="assetViewModal">
+            <div class="modal" style="max-width: 400px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #805ad5 0%, #553c9a 100%);">
+                    <h3>📋 Asset Details</h3>
+                    <button class="modal-close" onclick="closeAssetViewModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Item</label>
+                        <input type="text" id="assetViewItem" readonly style="background: #f7fafc;">
+                    </div>
+                    <div class="form-group">
+                        <label>Value (XAF)</label>
+                        <input type="text" id="assetViewValue" readonly style="background: #f7fafc;">
+                    </div>
+                    <div class="form-group">
+                        <label>Residence</label>
+                        <input type="text" id="assetViewResidence" readonly style="background: #f7fafc;">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="assetViewCategory" readonly style="background: #f7fafc;">
+                    </div>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-outline" onclick="closeAssetViewModal()">Close</button>
                     </div>
                 </div>
             </div>
@@ -7321,32 +7494,225 @@
             }
         }
         
-        // Render asset table
-        function renderAssetTable(items, tableId) {
-            var html = items.map(function(i) {
-                return '<tr><td>' + i.item + '</td><td style="text-align: right;">' + fmt(i.value) + '</td></tr>';
-            }).join('');
-            document.getElementById(tableId).innerHTML = html;
+        // Category labels
+        var ASSET_CATEGORIES = {
+            living: 'Living Room & Common Areas',
+            kitchen: 'Kitchen & Dining',
+            master: 'Bedroom 1 (Master)',
+            bed2: 'Bedroom 2',
+            bed3: 'Bedroom 3',
+            misc: 'Outdoor & Miscellaneous'
+        };
+        
+        // Show Old Town Tab
+        function showOldTownTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('#assets-oldtown .asset-tab-content').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('#assets-oldtown .asset-tab').forEach(function(t) { t.classList.remove('active'); });
+            
+            // Show selected tab
+            document.getElementById('oldtown-tab-' + tabName).classList.add('active');
+            document.querySelector('#assets-oldtown .asset-tab[data-tab="' + tabName + '"]').classList.add('active');
         }
         
-        // Load Old Town Assets
+        // Render asset table with actions
+        function renderAssetTableWithActions(items, tableId, residence, category) {
+            var html = items.map(function(item, index) {
+                return '<tr>' +
+                    '<td>' +
+                        '<select class="asset-item-dropdown" style="width: 100%; padding: 0.4rem; border: 1px solid #e2e8f0; border-radius: 4px;" disabled>' +
+                            '<option selected>' + item.item + '</option>' +
+                        '</select>' +
+                    '</td>' +
+                    '<td style="text-align: right; font-weight: 600;">' + fmt(item.value) + '</td>' +
+                    '<td>' +
+                        '<div class="asset-actions">' +
+                            '<button class="btn btn-primary btn-sm" onclick="viewAsset(\'' + residence + '\', \'' + category + '\', ' + index + ')" title="View">👁️</button>' +
+                            '<button class="btn btn-warning btn-sm admin-only" onclick="editAsset(\'' + residence + '\', \'' + category + '\', ' + index + ')" title="Edit">✏️</button>' +
+                            '<button class="btn btn-danger btn-sm admin-only" onclick="deleteAsset(\'' + residence + '\', \'' + category + '\', ' + index + ')" title="Delete">🗑️</button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+            document.getElementById(tableId).innerHTML = html || '<tr><td colspan="3" style="text-align: center; color: #718096;">No items in this category</td></tr>';
+        }
+        
+        // Load Old Town Assets with actions
         function loadOldTownAssets() {
-            renderAssetTable(ASSETS_DATA.oldTown.living, 'oldTownLivingTable');
-            renderAssetTable(ASSETS_DATA.oldTown.kitchen, 'oldTownKitchenTable');
-            renderAssetTable(ASSETS_DATA.oldTown.master, 'oldTownMasterTable');
-            renderAssetTable(ASSETS_DATA.oldTown.bed2, 'oldTownBed2Table');
-            renderAssetTable(ASSETS_DATA.oldTown.bed3, 'oldTownBed3Table');
-            renderAssetTable(ASSETS_DATA.oldTown.misc, 'oldTownMiscTable');
+            renderAssetTableWithActions(ASSETS_DATA.oldTown.living, 'oldTownLivingTable', 'oldTown', 'living');
+            renderAssetTableWithActions(ASSETS_DATA.oldTown.kitchen, 'oldTownKitchenTable', 'oldTown', 'kitchen');
+            renderAssetTableWithActions(ASSETS_DATA.oldTown.master, 'oldTownMasterTable', 'oldTown', 'master');
+            renderAssetTableWithActions(ASSETS_DATA.oldTown.bed2, 'oldTownBed2Table', 'oldTown', 'bed2');
+            renderAssetTableWithActions(ASSETS_DATA.oldTown.bed3, 'oldTownBed3Table', 'oldTown', 'bed3');
+            renderAssetTableWithActions(ASSETS_DATA.oldTown.misc, 'oldTownMiscTable', 'oldTown', 'misc');
+            updateOldTownSubtotals();
+        }
+        
+        // Update Old Town subtotals
+        function updateOldTownSubtotals() {
+            var totals = calcAssetTotals();
+            document.getElementById('oldTownLivingSubtotal').textContent = fmt(totals.oldTown.living);
+            document.getElementById('oldTownKitchenSubtotal').textContent = fmt(totals.oldTown.kitchen);
+            document.getElementById('oldTownMasterSubtotal').textContent = fmt(totals.oldTown.master);
+            document.getElementById('oldTownBed2Subtotal').textContent = fmt(totals.oldTown.bed2);
+            document.getElementById('oldTownBed3Subtotal').textContent = fmt(totals.oldTown.bed3);
+            document.getElementById('oldTownMiscSubtotal').textContent = fmt(totals.oldTown.misc);
+            document.getElementById('oldTownFinalTotal').textContent = fmt(totals.oldTown.total) + ' XAF';
+            document.getElementById('oldTownTotalBadge').textContent = fmt(totals.oldTown.total) + ' XAF';
         }
         
         // Load Manka Assets
         function loadMankaAssets() {
-            renderAssetTable(ASSETS_DATA.manka.living, 'mankaLivingTable');
-            renderAssetTable(ASSETS_DATA.manka.kitchen, 'mankaKitchenTable');
-            renderAssetTable(ASSETS_DATA.manka.master, 'mankaMasterTable');
-            renderAssetTable(ASSETS_DATA.manka.bed2, 'mankaBed2Table');
-            renderAssetTable(ASSETS_DATA.manka.bed3, 'mankaBed3Table');
-            renderAssetTable(ASSETS_DATA.manka.misc, 'mankaMiscTable');
+            renderAssetTableWithActions(ASSETS_DATA.manka.living, 'mankaLivingTable', 'manka', 'living');
+            renderAssetTableWithActions(ASSETS_DATA.manka.kitchen, 'mankaKitchenTable', 'manka', 'kitchen');
+            renderAssetTableWithActions(ASSETS_DATA.manka.master, 'mankaMasterTable', 'manka', 'master');
+            renderAssetTableWithActions(ASSETS_DATA.manka.bed2, 'mankaBed2Table', 'manka', 'bed2');
+            renderAssetTableWithActions(ASSETS_DATA.manka.bed3, 'mankaBed3Table', 'manka', 'bed3');
+            renderAssetTableWithActions(ASSETS_DATA.manka.misc, 'mankaMiscTable', 'manka', 'misc');
+        }
+        
+        // Show Add Asset Modal
+        function showAddAssetModal(residence, category) {
+            document.getElementById('assetResidence').value = residence;
+            document.getElementById('assetCategory').value = category;
+            document.getElementById('assetIndex').value = '-1';
+            document.getElementById('assetValue').value = '';
+            document.getElementById('assetCustomItem').value = '';
+            document.getElementById('assetCustomItemGroup').style.display = 'none';
+            
+            // Populate dropdown with common items
+            var select = document.getElementById('assetItemSelect');
+            select.innerHTML = '<option value="">-- Select or Add New --</option>' +
+                '<option value="__custom__">➕ Add Custom Item</option>' +
+                '<option value="Sofa">Sofa</option>' +
+                '<option value="Table">Table</option>' +
+                '<option value="Chair">Chair</option>' +
+                '<option value="Bed">Bed</option>' +
+                '<option value="Mattress">Mattress</option>' +
+                '<option value="Wardrobe">Wardrobe</option>' +
+                '<option value="Television">Television</option>' +
+                '<option value="Refrigerator">Refrigerator</option>' +
+                '<option value="Air Conditioner">Air Conditioner</option>' +
+                '<option value="Washing Machine">Washing Machine</option>' +
+                '<option value="Microwave">Microwave</option>' +
+                '<option value="Fan">Fan</option>';
+            
+            document.getElementById('assetModalTitle').textContent = '➕ Add Asset to ' + ASSET_CATEGORIES[category];
+            document.getElementById('assetModal').classList.add('active');
+        }
+        
+        // Handle asset item dropdown change
+        function handleAssetItemChange() {
+            var select = document.getElementById('assetItemSelect');
+            var customGroup = document.getElementById('assetCustomItemGroup');
+            
+            if (select.value === '__custom__') {
+                customGroup.style.display = 'block';
+                document.getElementById('assetCustomItem').focus();
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+        
+        // Close asset modal
+        function closeAssetModal() {
+            document.getElementById('assetModal').classList.remove('active');
+        }
+        
+        // Save asset
+        function saveAsset() {
+            var residence = document.getElementById('assetResidence').value;
+            var category = document.getElementById('assetCategory').value;
+            var index = parseInt(document.getElementById('assetIndex').value);
+            var selectValue = document.getElementById('assetItemSelect').value;
+            var customItem = document.getElementById('assetCustomItem').value.trim();
+            var value = parseInt(document.getElementById('assetValue').value);
+            
+            var itemName = selectValue === '__custom__' ? customItem : selectValue;
+            
+            if (!itemName) {
+                showAlert('Please select or enter an item name', 'error');
+                return;
+            }
+            
+            if (!value || value <= 0) {
+                showAlert('Please enter a valid value', 'error');
+                return;
+            }
+            
+            if (index === -1) {
+                // Add new
+                ASSETS_DATA[residence][category].push({ item: itemName, value: value });
+                showAlert('Asset added successfully!');
+            } else {
+                // Update existing
+                ASSETS_DATA[residence][category][index] = { item: itemName, value: value };
+                showAlert('Asset updated successfully!');
+            }
+            
+            closeAssetModal();
+            
+            // Reload the appropriate table
+            if (residence === 'oldTown') {
+                loadOldTownAssets();
+            } else {
+                loadMankaAssets();
+            }
+            
+            // Update dashboard
+            loadAssetsDashboard();
+        }
+        
+        // View asset
+        function viewAsset(residence, category, index) {
+            var item = ASSETS_DATA[residence][category][index];
+            document.getElementById('assetViewItem').value = item.item;
+            document.getElementById('assetViewValue').value = fmt(item.value) + ' XAF';
+            document.getElementById('assetViewResidence').value = residence === 'oldTown' ? 'Old Town Residence' : 'Manka Residence';
+            document.getElementById('assetViewCategory').value = ASSET_CATEGORIES[category];
+            document.getElementById('assetViewModal').classList.add('active');
+        }
+        
+        // Close view modal
+        function closeAssetViewModal() {
+            document.getElementById('assetViewModal').classList.remove('active');
+        }
+        
+        // Edit asset
+        function editAsset(residence, category, index) {
+            var item = ASSETS_DATA[residence][category][index];
+            
+            document.getElementById('assetResidence').value = residence;
+            document.getElementById('assetCategory').value = category;
+            document.getElementById('assetIndex').value = index;
+            document.getElementById('assetValue').value = item.value;
+            
+            // Set dropdown to custom and show the item name
+            var select = document.getElementById('assetItemSelect');
+            select.innerHTML = '<option value="">-- Select or Add New --</option>' +
+                '<option value="__custom__">➕ Add Custom Item</option>' +
+                '<option value="' + item.item + '" selected>' + item.item + '</option>';
+            
+            document.getElementById('assetCustomItemGroup').style.display = 'none';
+            document.getElementById('assetModalTitle').textContent = '✏️ Edit Asset';
+            document.getElementById('assetModal').classList.add('active');
+        }
+        
+        // Delete asset
+        function deleteAsset(residence, category, index) {
+            var item = ASSETS_DATA[residence][category][index];
+            if (!confirm('Delete "' + item.item + '" (' + fmt(item.value) + ' XAF)?')) return;
+            
+            ASSETS_DATA[residence][category].splice(index, 1);
+            showAlert('Asset deleted!');
+            
+            if (residence === 'oldTown') {
+                loadOldTownAssets();
+            } else {
+                loadMankaAssets();
+            }
+            
+            loadAssetsDashboard();
         }
         
         // Load Assets Inheritance

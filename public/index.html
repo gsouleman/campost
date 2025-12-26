@@ -139,34 +139,6 @@
         .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
         .modal-body { padding: 1.25rem; }
         
-        /* Login Page Styles */
-        .login-container { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 1rem; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%); }
-        .login-container.active { display: flex; }
-        .login-box { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 400px; width: 100%; overflow: hidden; }
-        .login-header { background: linear-gradient(135deg, var(--accent-gold) 0%, #b7791f 100%); color: white; padding: 1.5rem; text-align: center; }
-        .login-header h1 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.25rem; }
-        .login-header p { font-size: 0.8rem; opacity: 0.9; }
-        .login-body { padding: 1.5rem; }
-        .login-body .form-group { margin-bottom: 1rem; }
-        .login-body .form-group label { font-size: 0.85rem; }
-        .login-body .form-group input { padding: 0.6rem; font-size: 0.9rem; }
-        .login-btn { width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem; }
-        .login-footer { text-align: center; padding: 1rem; background: #f7fafc; font-size: 0.75rem; color: var(--text-gray); }
-        .login-footer a { color: var(--primary-blue); cursor: pointer; text-decoration: underline; }
-        .login-error { background: rgba(229,62,62,0.15); color: var(--danger-red); padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.8rem; display: none; }
-        .login-error.show { display: block; }
-        .user-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.65rem; margin-left: 0.5rem; }
-        .user-badge.admin { background: rgba(214,158,46,0.2); color: var(--accent-gold); }
-        .user-badge.user { background: rgba(66,153,225,0.2); color: var(--primary-blue); }
-        
-        /* Role-based access control */
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: inline-flex !important; }
-        .admin-only-section { display: none !important; }
-        body.is-admin .admin-only-section { display: block !important; }
-        .user-restricted-notice { display: none; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
-        body:not(.is-admin) .user-restricted-notice { display: block; }
-        
         .heir-group { background: #f7fafc; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
         .heir-group h4 { color: var(--primary-blue); margin-bottom: 0.3rem; display: flex; justify-content: space-between; font-size: 0.9rem; }
         .summary-row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dashed var(--border-color); font-size: 0.8rem; }
@@ -175,15 +147,6 @@
         .highlight-box { background: linear-gradient(135deg, rgba(214,158,46,0.15) 0%, rgba(237,137,54,0.15) 100%); border: 2px solid var(--accent-gold); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
         .highlight-box h3 { color: var(--accent-gold); font-size: 1.3rem; }
         .highlight-box p { font-size: 0.75rem; color: var(--text-gray); }
-        
-        /* Beneficiary Selection Styles */
-        .beneficiary-item { display: flex; align-items: center; padding: 10px; background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0; transition: all 0.2s; }
-        .beneficiary-item:hover { background: #edf2f7; }
-        .beneficiary-item.selected { background: #c6f6d5; border-color: #48bb78; }
-        .beneficiary-item input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; }
-        .beneficiary-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
-        .beneficiary-item .heir-info { font-size: 0.75rem; color: #718096; margin-left: auto; }
-        .beneficiary-item .heir-portions { background: #4299e1; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-left: 8px; }
         
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 1rem; }
         .tab-btn { background: none; border: none; padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
@@ -196,8 +159,6 @@
     </style>
 </head>
 <body>
-    <!-- ==================== MAIN APP ==================== -->
-    <div id="mainApp" style="display: block;">
     <header class="header no-print">
         <div class="header-top">
             <div class="logo-section">
@@ -208,7 +169,9 @@
                 </div>
             </div>
             <div class="header-info">
+                <strong>GHOUENZEN Soulemanou</strong><br>
                 <span>B.P 36 Mankon-Bamenda | 675299868</span>
+                <div class="db-status disconnected" id="dbStatus">Connecting...</div>
             </div>
         </div>
         <!-- Main Navigation - shown on landing page -->
@@ -314,109 +277,6 @@
             </div>
         </div>
 
-        <!-- ==================== MAIN SETTINGS PAGE ==================== -->
-        <div id="main-settings" class="page">
-            <div class="card">
-                <div class="card-header gold"><span>👤 My Account</span></div>
-                <div class="card-body">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" id="myUsername" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="myEmail" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Role</label>
-                            <input type="text" id="myRole" readonly>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><span>🔐 Change My Password</span></div>
-                <div class="card-body">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Current Password</label>
-                            <input type="password" id="changeCurrentPwd" placeholder="Enter current password">
-                        </div>
-                        <div class="form-group">
-                            <label>New Password</label>
-                            <input type="password" id="changeNewPwd" placeholder="Enter new password">
-                        </div>
-                        <div class="form-group">
-                            <label>Confirm New Password</label>
-                            <input type="password" id="changeConfirmPwd" placeholder="Confirm new password">
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-success" onclick="changeMyPassword()">🔐 Change Password</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Only: User Management -->
-            <div id="adminUserManagement" style="display: none;">
-                <div class="card">
-                    <div class="card-header green"><span>➕ Create New User</span><span class="badge badge-income">ADMIN ONLY</span></div>
-                    <div class="card-body">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Username *</label>
-                                <input type="text" id="newUserUsername" placeholder="Enter username">
-                            </div>
-                            <div class="form-group">
-                                <label>Email *</label>
-                                <input type="email" id="newUserEmail" placeholder="Enter email address">
-                            </div>
-                            <div class="form-group">
-                                <label>Full Name</label>
-                                <input type="text" id="newUserFullName" placeholder="Enter full name">
-                            </div>
-                            <div class="form-group">
-                                <label>Role *</label>
-                                <select id="newUserRole">
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                        </div>
-                        <p style="font-size: 0.8rem; color: #718096; margin: 10px 0; background: #ebf8ff; padding: 8px; border-radius: 6px;">
-                            📌 Default password for new users is <strong>1234</strong>. User must change it on first login.
-                        </p>
-                        <div class="btn-group">
-                            <button class="btn btn-success" onclick="createNewUser()">👤 Create User</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><span>👥 All Users</span><span class="badge badge-income">ADMIN ONLY</span></div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Username</th>
-                                        <th>Full Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- ==================== CAMPOST MANKON MODULE ==================== -->
         
         <!-- CAMPOST DASHBOARD -->
@@ -424,8 +284,7 @@
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="dashIncome">0</div><div class="stat-label">Total Income</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="dashExp">0</div><div class="stat-label">Total Expenses</div></div>
-                <div class="stat-card red"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserved Funds</div></div>
-                <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="dashNetBalance">0</div><div class="stat-label">Net Balance</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserve Funds</div></div>
                 <div class="stat-card gold"><div class="stat-icon">👨‍👩‍👧‍👦</div><div class="stat-value" id="dashInh">0</div><div class="stat-label">Inheritance Pool</div></div>
             </div>
             <div class="card">
@@ -433,8 +292,7 @@
                 <div class="card-body">
                     <div class="summary-row"><span>Total Income (Bills Paid):</span><span class="amount-positive" id="dashIncomeSum">0 XAF</span></div>
                     <div class="summary-row"><span>Total Expenses:</span><span class="amount-negative" id="dashExpSum">0 XAF</span></div>
-                    <div class="summary-row"><span>Reserved Funds (<span id="dashReservePercent">10</span>% of Income):</span><span class="amount-negative" id="dashReserveSum">0 XAF</span></div>
-                    <div class="summary-row" style="font-size: 1rem; background: #fed7d7; padding: 8px; border-radius: 6px;"><span><strong>📊 Net Balance (Income - Expenses - Reserved):</strong></span><span id="dashNetBalanceSum" style="font-weight: bold; color: #c53030;">0 XAF</span></div>
+                    <div class="summary-row" style="font-size: 1rem;"><span><strong>Reserve Funds (Income - Expenses):</strong></span><span id="dashReserveSum" style="font-weight: bold;">0 XAF</span></div>
                     <div class="summary-row"><span>Inheritance Pool (from distributions):</span><span class="amount-gold" id="dashInhSum">0 XAF</span></div>
                 </div>
             </div>
@@ -445,8 +303,7 @@
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income (from Bills)</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="ledgerExpense">0</div><div class="stat-label">Total Expenses</div></div>
-                <div class="stat-card red"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerReserved">0</div><div class="stat-label">Reserved Funds</div></div>
-                <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="ledgerNetBalance">0</div><div class="stat-label">Net Balance</div></div>
+                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerBalance">0</div><div class="stat-label">Balance (Reserve)</div></div>
             </div>
             <div class="card">
                 <div class="card-header">
@@ -459,7 +316,7 @@
                 </div>
                 <div class="card-body">
                     <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
-                        📌 <strong>Income</strong> = Bills with status Paid or Partial | <strong>Expenses</strong> = All recorded expenses | <strong>Net Balance</strong> = Income - Expenses - Reserved Funds
+                        📌 <strong>Income</strong> = Bills with status Paid or Partial | <strong>Expenses</strong> = All recorded expenses
                     </p>
                     <div class="table-container">
                         <table>
@@ -483,40 +340,25 @@
 
         <!-- EXPENSES -->
         <div id="campost-expenses" class="page">
-            <div class="user-restricted-notice">
-                <strong>🔒 Access Restricted</strong><br>
-                Only administrators can access Expenses. Please contact an admin if you need to add or modify expenses.
-            </div>
-            <div class="admin-only-section">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Expense</span></div>
                 <div class="card-body">
-                    <div id="campostExpenseWarning" style="display: none; background: #fed7d7; border: 1px solid #fc8181; color: #c53030; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                        <strong>⚠️ Expenses Disabled:</strong> Net Balance is zero. You cannot add more expenses until more income is received. 
-                        <br><small>Net Balance = Total Income - Total Expenses - Reserved Funds</small>
-                    </div>
                     <input type="hidden" id="expId">
                     <div class="form-grid">
                         <div class="form-group"><label>Date</label><input type="date" id="expDate"></div>
                         <div class="form-group"><label>Description</label><input type="text" id="expDesc" placeholder="Description"></div>
                         <div class="form-group"><label>Category</label><select id="expCat"></select></div>
-                        <div class="form-group"><label>Amount</label><input type="number" id="expAmt" placeholder="Amount"></div>
+                        <div class="form-group"><label>Amount (XAF)</label><input type="number" id="expAmt" placeholder="Amount"></div>
                     </div>
-                    <div class="btn-group"><button class="btn btn-success" id="campostSaveExpenseBtn" onclick="saveExpense()">💾 Save</button><button class="btn btn-outline" onclick="clearExpenseForm()">🔄 Clear</button></div>
+                    <div class="btn-group"><button class="btn btn-success" onclick="saveExpense()">💾 Save</button><button class="btn btn-outline" onclick="clearExpenseForm()">🔄 Clear</button></div>
                 </div>
             </div>
             <div class="card"><div class="card-header"><span>💸 Expenses</span><button class="btn btn-print btn-sm no-print" onclick="printPage('expenses')">🖨️ Print</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="expTable"></tbody><tfoot id="expTotals"></tfoot></table></div></div></div>
-            </div>
+            <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="expTable"></tbody></table></div></div></div>
         </div>
 
         <!-- BILLS -->
         <div id="campost-bills" class="page">
-            <div class="user-restricted-notice">
-                <strong>🔒 Access Restricted</strong><br>
-                Only administrators can access Bills. Please contact an admin if you need to create or modify bills.
-            </div>
-            <div class="admin-only-section">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Bill</span></div>
                 <div class="card-body">
@@ -541,16 +383,10 @@
             </div>
             <div class="card"><div class="card-header"><span>📄 All Bills (Click to View Invoice)</span><button class="btn btn-print btn-sm no-print" onclick="printPage('bills')">🖨️ Print List</button></div>
             <div class="card-body"><div class="table-container"><table><thead><tr><th>Bill #</th><th>Period</th><th>Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th class="no-print">Actions</th></tr></thead><tbody id="billTable"></tbody></table></div></div></div>
-            </div>
         </div>
 
         <!-- PAYMENTS -->
         <div id="campost-payments" class="page">
-            <div class="user-restricted-notice">
-                <strong>🔒 Access Restricted</strong><br>
-                Only administrators can access Payments. Please contact an admin if you need to record payments.
-            </div>
-            <div class="admin-only-section">
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Payment</span></div>
                 <div class="card-body">
@@ -567,7 +403,6 @@
             </div>
             <div class="card"><div class="card-header"><span>💵 Payments</span><button class="btn btn-print btn-sm no-print" onclick="printPage('payments')">🖨️ Print</button></div>
             <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Bill #</th><th>Period</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead><tbody id="payTable"></tbody></table></div></div></div>
-            </div>
         </div>
 
         <!-- INHERITANCE -->
@@ -582,35 +417,14 @@
                 <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="inhRes">0</div><div class="stat-label">Reserve</div></div>
                 <div class="stat-card gold"><div class="stat-icon">📊</div><div class="stat-value" id="inhPer">0</div><div class="stat-label">Per Portion</div></div>
             </div>
-            
-            <!-- Beneficiary Selection Card -->
-            <div class="card admin-only-section no-print">
-                <div class="card-header blue"><span>✅ Select Beneficiaries</span>
-                    <div>
-                        <button class="btn btn-outline btn-sm" onclick="selectAllCampostBeneficiaries(true)">Select All</button>
-                        <button class="btn btn-outline btn-sm" onclick="selectAllCampostBeneficiaries(false)">Deselect All</button>
-                        <button class="btn btn-warning btn-sm" onclick="resetCampostHeirsToDefaults()">🔄 Reset to Defaults</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                        ✅ Check the heirs who should receive inheritance. Only selected heirs will be included in the distribution.
-                    </p>
-                    <div id="campostBeneficiaryList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;"></div>
-                    <div class="btn-group" style="margin-top: 15px;">
-                        <button class="btn btn-success" onclick="saveCampostBeneficiaries()">💾 Save Selection & Recalculate</button>
-                    </div>
-                </div>
-            </div>
-            
             <div class="card">
                 <div class="card-header gold"><span>👨‍👩‍👧‍👦 Heirs (<span id="inhPortions">24</span> portions)</span>
-                <div class="no-print"><button class="btn btn-outline btn-sm admin-only" onclick="openHeirModal()">➕ Add</button><button class="btn btn-gold btn-sm" onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button></div>
+                <div class="no-print"><button class="btn btn-outline btn-sm" onclick="openHeirModal()">➕ Add</button><button class="btn btn-gold btn-sm" onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button></div>
                 </div>
                 <div class="card-body" id="heirGroups"></div>
             </div>
-            <div class="card"><div class="card-header"><span>📋 Heir Shares (Beneficiaries Only)</span><button class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print Summary</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share (XAF)</th><th class="no-print admin-only">Actions</th></tr></thead><tbody id="heirTable"></tbody></table></div></div></div>
+            <div class="card"><div class="card-header"><span>📋 Heir Shares</span><button class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print Summary</button></div>
+            <div class="card-body"><div class="table-container"><table><thead><tr><th>Name</th><th>Relationship</th><th>Group</th><th>Portions</th><th>Share (XAF)</th><th class="no-print">Actions</th></tr></thead><tbody id="heirTable"></tbody></table></div></div></div>
         </div>
 
         <!-- EXPORT -->
@@ -673,15 +487,11 @@
                 <div class="card-header">
                     <span>🏠 Family Properties Portfolio</span>
                     <div class="no-print">
-                        <button class="btn btn-success btn-sm admin-only" onclick="openPropertyModal()">➕ Add Property</button>
+                        <button class="btn btn-success btn-sm" onclick="openPropertyModal()">➕ Add Property</button>
                         <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">📥 Export PDF</button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="user-restricted-notice" style="margin-bottom: 10px;">
-                        <strong>🔒 View Only Mode</strong><br>
-                        Only administrators can add, edit, or delete properties.
-                    </div>
                     <div style="margin-bottom: 10px;">
                         <select id="reStatusFilter" onchange="filterProperties()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                             <option value="">All Status</option>
@@ -707,7 +517,7 @@
                                     <th>Tax Rate</th>
                                     <th>Net Income</th>
                                     <th>Islamic Inh.</th>
-                                    <th class="no-print admin-only">Actions</th>
+                                    <th class="no-print">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="propertiesTable"></tbody>
@@ -753,11 +563,6 @@
 
             <!-- ========== RE BILLS TAB ========== -->
             <div id="family-bills" class="page">
-                <div class="user-restricted-notice">
-                    <strong>🔒 Access Restricted</strong><br>
-                    Only administrators can access Bills. Please contact an admin if you need to create or modify bills.
-                </div>
-                <div class="admin-only-section">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Create Property Bill</span></div>
                     <div class="card-body">
@@ -821,16 +626,10 @@
                         </div>
                     </div>
                 </div>
-                </div>
             </div>
 
             <!-- ========== RE PAYMENTS TAB ========== -->
             <div id="family-payments" class="page">
-                <div class="user-restricted-notice">
-                    <strong>🔒 Access Restricted</strong><br>
-                    Only administrators can access Payments. Please contact an admin if you need to record payments.
-                </div>
-                <div class="admin-only-section">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Record Payment</span></div>
                     <div class="card-body">
@@ -874,16 +673,10 @@
                         </div>
                     </div>
                 </div>
-                </div>
             </div>
 
             <!-- ========== RE EXPENSES TAB ========== -->
             <div id="family-expenses" class="page">
-                <div class="user-restricted-notice">
-                    <strong>🔒 Access Restricted</strong><br>
-                    Only administrators can access Expenses. Please contact an admin if you need to add or modify expenses.
-                </div>
-                <div class="admin-only-section">
                 <div class="card no-print">
                     <div class="card-header green"><span>➕ Add Property Expense</span></div>
                     <div class="card-body">
@@ -942,51 +735,27 @@
                         </div>
                     </div>
                 </div>
-                </div>
             </div>
 
             <!-- ========== RE INHERITANCE TAB ========== -->
             <div id="family-inheritance" class="page">
                 <div class="stats-grid">
                     <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value" id="reInhPool">0</div><div class="stat-label">Inheritance Pool</div></div>
-                    <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value" id="reInhHeirs">0</div><div class="stat-label">Beneficiaries</div></div>
+                    <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-value" id="reInhHeirs">0</div><div class="stat-label">Total Heirs</div></div>
                     <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-value" id="reInhPortions">0</div><div class="stat-label">Total Portions</div></div>
                     <div class="stat-card red"><div class="stat-icon">💵</div><div class="stat-value" id="reInhPerPortion">0</div><div class="stat-label">Per Portion</div></div>
                 </div>
-                
-                <!-- Beneficiary Selection Card -->
-                <div class="card admin-only-section no-print">
-                    <div class="card-header blue"><span>✅ Select Beneficiaries</span>
-                        <div>
-                            <button class="btn btn-outline btn-sm" onclick="selectAllREBeneficiaries(true)">Select All</button>
-                            <button class="btn btn-outline btn-sm" onclick="selectAllREBeneficiaries(false)">Deselect All</button>
-                            <button class="btn btn-warning btn-sm" onclick="resetREHeirsToDefaults()">🔄 Reset to Defaults</button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                            ✅ Check the heirs who should receive inheritance from Family Real Estates. Only selected heirs will be included in the distribution.
-                        </p>
-                        <div id="reBeneficiaryList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;"></div>
-                        <div class="btn-group" style="margin-top: 15px;">
-                            <button class="btn btn-success" onclick="saveREBeneficiaries()">💾 Save Selection & Recalculate</button>
-                        </div>
-                    </div>
-                </div>
-                
                 <div class="card">
                     <div class="card-header gold">
                         <span>👨‍👩‍👧‍👦 Real Estate Inheritance Distribution</span>
                         <div class="no-print">
-                            <button class="btn btn-success btn-sm admin-only" onclick="openREHeirModal()">➕ Add Heir</button>
-                            <button class="btn btn-gold btn-sm" onclick="printAllREHeirCertificates()">🖨️ Print All Certificates</button>
+                            <button class="btn btn-success btn-sm" onclick="openREHeirModal()">➕ Add Heir</button>
                             <button class="btn btn-print btn-sm" onclick="exportREHeirsPDF()">📥 Export PDF</button>
                         </div>
                     </div>
                     <div class="card-body">
                         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
                             📌 Inheritance pool is calculated from: <strong>Total Income - Total Expenses</strong> from properties marked for Islamic Inheritance.
-                            <br>Only <strong>selected beneficiaries</strong> are included in the distribution below.
                         </p>
                         <div class="table-container">
                             <table>
@@ -1063,11 +832,6 @@
 
             <!-- ========== RE SETTINGS TAB ========== -->
             <div id="family-settings" class="page">
-                <div class="user-restricted-notice">
-                    <strong>🔒 Access Restricted</strong><br>
-                    Only administrators can access Settings. Please contact an admin if you need to modify system settings.
-                </div>
-                <div class="admin-only-section">
                 <div class="card">
                     <div class="card-header gold"><span>⚙️ Global Default Settings</span></div>
                     <div class="card-body">
@@ -1206,7 +970,6 @@
                             <button class="btn btn-danger" onclick="resetREData()">🗑️ Reset All RE Data</button>
                         </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>
@@ -1355,48 +1118,12 @@
 
         <!-- SETTINGS -->
         <div id="campost-settings" class="page">
-            <div class="user-restricted-notice">
-                <strong>🔒 Access Restricted</strong><br>
-                Only administrators can access Settings. Please contact an admin if you need to modify system settings.
-            </div>
-            <div class="admin-only-section">
-            <div class="card">
-                <div class="card-header gold"><span>🌍 Currency & Global Settings</span></div>
-                <div class="card-body">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Currency</label>
-                            <select id="campostCurrency" onchange="updateCampostCalcDisplays()">
-                                <option value="XAF" selected>XAF - Central African CFA Franc</option>
-                                <option value="EUR">EUR - Euro</option>
-                                <option value="USD">USD - US Dollar</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Reserved Funds (% of Income)</label>
-                            <select id="campostReservedPercent" onchange="updateCampostCalcDisplays()">
-                                <option value="0">0% - No Reserve</option>
-                                <option value="5">5%</option>
-                                <option value="10" selected>10%</option>
-                                <option value="15">15%</option>
-                                <option value="20">20%</option>
-                                <option value="25">25%</option>
-                                <option value="30">30%</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p style="font-size: 0.8rem; color: #718096; margin: 10px 0; background: #ebf8ff; padding: 10px; border-radius: 6px;">
-                        🏦 <strong>Reserved Funds:</strong> A percentage of total income set aside for maintenance, emergencies, or future investments.<br>
-                        📊 <strong>Net Balance</strong> = Total Income - Total Expenses - Reserved Funds
-                    </p>
-                </div>
-            </div>
             <div class="card">
                 <div class="card-header gold"><span>💰 Rent Configuration</span></div>
                 <div class="card-body">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Monthly Rent</label>
+                            <label>Monthly Rent (XAF)</label>
                             <input type="number" id="settingMonthlyRent" value="200000">
                         </div>
                         <div class="form-group">
@@ -1415,7 +1142,7 @@
                         <div class="summary-row" style="font-weight: bold; color: #38a169;"><span>Net Amount Due:</span><span id="calcNet">510,000 XAF</span></div>
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-success" onclick="saveSettings()">💾 Save All Settings</button>
+                        <button class="btn btn-success" onclick="saveSettings()">💾 Save Settings</button>
                     </div>
                 </div>
             </div>
@@ -1428,7 +1155,6 @@
                         <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset All Data</button>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
     </main>
@@ -1455,379 +1181,10 @@
             </div>
         </div>
     </div>
-    </div> <!-- End mainApp -->
 
     <div id="alertBox" style="position:fixed;top:60px;right:10px;z-index:3000;max-width:280px;"></div>
 
     <script>
-        // ==================== AUTHENTICATION SYSTEM ====================
-        
-        // Initialize default admin user if not exists
-        function initializeUsers() {
-            // Users are now initialized in PostgreSQL
-            // No localStorage initialization needed
-        }
-        
-        // Initialize default heirs - now handled by server
-        function initializeDefaultHeirs() {
-            // RE heirs are now initialized in PostgreSQL
-            // No localStorage initialization needed
-        }
-        
-        // Current logged in user
-        var currentUser = null;
-        
-        // Login function
-        function doLogin() {
-            var username = document.getElementById('loginUsername').value.trim().toLowerCase();
-            var password = document.getElementById('loginPassword').value;
-            var errorEl = document.getElementById('loginError');
-            
-            if (!username || !password) {
-                errorEl.textContent = 'Please enter username and password';
-                errorEl.classList.add('show');
-                return;
-            }
-            
-            fetch(API + '/users/login', { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username, password: password }) 
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(result) {
-                if (result.success && result.user) {
-                    currentUser = result.user;
-                    localStorage.setItem('currentSession', JSON.stringify({ userId: result.user.id, loginTime: new Date().toISOString() }));
-                    enterMainApp();
-                } else {
-                    errorEl.textContent = result.error || 'Invalid username or password';
-                    errorEl.classList.add('show');
-                }
-            }).catch(function(err) {
-                errorEl.textContent = 'Login failed: ' + (err.error || err.message || 'Connection error');
-                errorEl.classList.add('show');
-            });
-        }
-        
-        // Enter main app after successful login
-        function enterMainApp() {
-            document.getElementById('loginContainer').classList.remove('active');
-            document.getElementById('mainApp').style.display = 'block';
-            
-            // Update UI with user info
-            document.getElementById('loggedInUser').textContent = currentUser.full_name || currentUser.username;
-            var badge = document.getElementById('userRoleBadge');
-            badge.textContent = currentUser.role.toUpperCase();
-            badge.className = 'user-badge ' + currentUser.role;
-            
-            // Set admin class on body for role-based access control
-            if (currentUser.role === 'admin') {
-                document.body.classList.add('is-admin');
-                document.getElementById('adminUserManagement').style.display = 'block';
-            } else {
-                document.body.classList.remove('is-admin');
-                document.getElementById('adminUserManagement').style.display = 'none';
-            }
-            
-            // Initialize app
-            checkDb();
-            goToLanding();
-        }
-        
-        // Logout function
-        function doLogout() {
-            if (!confirm('Are you sure you want to logout?')) return;
-            
-            currentUser = null;
-            localStorage.removeItem('currentSession');
-            
-            // Reset UI
-            document.body.classList.remove('is-admin');
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginContainer').classList.add('active');
-            document.getElementById('loginUsername').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').classList.remove('show');
-            document.getElementById('adminUserManagement').style.display = 'none';
-        }
-        
-        // Force password change
-        function forceChangePassword() {
-            var currentPwd = document.getElementById('forceCurrentPassword').value;
-            var newPwd = document.getElementById('forceNewPassword').value;
-            var confirmPwd = document.getElementById('forceConfirmPassword').value;
-            
-            if (currentPwd !== currentUser.password) {
-                showAlert('Current password is incorrect', 'error');
-                return;
-            }
-            
-            if (newPwd.length < 4) {
-                showAlert('New password must be at least 4 characters', 'error');
-                return;
-            }
-            
-            if (newPwd !== confirmPwd) {
-                showAlert('New passwords do not match', 'error');
-                return;
-            }
-            
-            if (newPwd === currentPwd) {
-                showAlert('New password must be different from current password', 'error');
-                return;
-            }
-            
-            // Update password
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var idx = users.findIndex(function(u) { return u.id === currentUser.id; });
-            if (idx !== -1) {
-                users[idx].password = newPwd;
-                users[idx].mustChangePassword = false;
-                localStorage.setItem('appUsers', JSON.stringify(users));
-                currentUser = users[idx];
-            }
-            
-            document.getElementById('forcePasswordModal').classList.remove('active');
-            showAlert('Password changed successfully!');
-            enterMainApp();
-        }
-        
-        // Change my password (from settings)
-        function changeMyPassword() {
-            var currentPwd = document.getElementById('changeCurrentPwd').value;
-            var newPwd = document.getElementById('changeNewPwd').value;
-            var confirmPwd = document.getElementById('changeConfirmPwd').value;
-            
-            if (newPwd.length < 4) {
-                showAlert('New password must be at least 4 characters', 'error');
-                return;
-            }
-            
-            if (newPwd !== confirmPwd) {
-                showAlert('New passwords do not match', 'error');
-                return;
-            }
-            
-            api('/users/change-password', {
-                method: 'POST',
-                body: JSON.stringify({ 
-                    userId: currentUser.id, 
-                    currentPassword: currentPwd, 
-                    newPassword: newPwd 
-                })
-            }).then(function(result) {
-                if (result.success) {
-                    document.getElementById('changeCurrentPwd').value = '';
-                    document.getElementById('changeNewPwd').value = '';
-                    document.getElementById('changeConfirmPwd').value = '';
-                    showAlert('Password changed successfully!');
-                } else {
-                    showAlert(result.error || 'Failed to change password', 'error');
-                }
-            }).catch(function(err) {
-                showAlert('Current password is incorrect', 'error');
-            });
-        }
-        
-        // Create new user (admin only)
-        function createNewUser() {
-            if (currentUser.role !== 'admin') {
-                showAlert('Only admins can create users', 'error');
-                return;
-            }
-            
-            var username = document.getElementById('newUserUsername').value.trim().toLowerCase();
-            var fullName = document.getElementById('newUserFullName').value.trim();
-            var role = document.getElementById('newUserRole').value;
-            
-            if (!username) {
-                showAlert('Username is required', 'error');
-                return;
-            }
-            
-            api('/users', {
-                method: 'POST',
-                body: JSON.stringify({
-                    username: username,
-                    password: '1234',
-                    fullName: fullName || username,
-                    role: role,
-                    active: true
-                })
-            }).then(function(result) {
-                if (result.error) {
-                    showAlert(result.error, 'error');
-                } else {
-                    document.getElementById('newUserUsername').value = '';
-                    document.getElementById('newUserFullName').value = '';
-                    document.getElementById('newUserRole').value = 'user';
-                    showAlert('User created successfully! Default password is 1234');
-                    loadUsersTable();
-                }
-            }).catch(function(err) {
-                showAlert('Error creating user: ' + err.message, 'error');
-            });
-        }
-        
-        // Load users table (admin only)
-        function loadUsersTable() {
-            api('/users').then(function(users) {
-                var html = users.map(function(u) {
-                    var statusClass = u.active ? 'badge-paid' : 'badge-unpaid';
-                    var statusText = u.active ? 'Active' : 'Inactive';
-                    var roleClass = u.role === 'admin' ? 'badge-inheritance' : 'badge-new';
-                    
-                    return '<tr>' +
-                        '<td><strong>' + u.username + '</strong></td>' +
-                        '<td>' + (u.full_name || '-') + '</td>' +
-                        '<td><span class="badge ' + roleClass + '">' + u.role.toUpperCase() + '</span></td>' +
-                        '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
-                        '<td>' +
-                            (u.id !== currentUser.id ? 
-                                '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')">🔑 Reset Pwd</button> ' +
-                                '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ', ' + u.active + ')">' + (u.active ? '🚫 Disable' : '✅ Enable') + '</button> ' +
-                                '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.id + ')">🗑️</button>'
-                                : '<span style="color:#718096;font-size:0.75rem;">Current User</span>') +
-                        '</td>' +
-                    '</tr>';
-                }).join('');
-                
-                document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="5">No users</td></tr>';
-            });
-        }
-        
-        // Reset user password (admin only)
-        function resetUserPassword(userId) {
-            if (currentUser.role !== 'admin') return;
-            if (!confirm('Reset this user\'s password to 1234?')) return;
-            
-            api('/users/' + userId, { 
-                method: 'PUT', 
-                body: JSON.stringify({ password: '1234' }) 
-            }).then(function() {
-                showAlert('Password reset to 1234');
-                loadUsersTable();
-            });
-        }
-        
-        // Toggle user status (admin only)
-        function toggleUserStatus(userId, currentActive) {
-            if (currentUser.role !== 'admin') return;
-            
-            api('/users/' + userId, { 
-                method: 'PUT', 
-                body: JSON.stringify({ active: !currentActive }) 
-            }).then(function() {
-                showAlert('User status updated');
-                loadUsersTable();
-            });
-        }
-        
-        // Delete user
-        function deleteUser(userId) {
-            if (currentUser.role !== 'admin') return;
-            if (!confirm('Are you sure you want to delete this user?')) return;
-            
-            api('/users/' + userId, { method: 'DELETE' }).then(function() {
-                showAlert('User deleted');
-                loadUsersTable();
-            });
-        }
-        
-        // Forgot password flow - simplified for demo
-        function showForgotPassword() {
-            showAlert('Please contact an administrator to reset your password.', 'error');
-        }
-        
-        function closeForgotPassword() {
-            document.getElementById('forgotPasswordModal').classList.remove('active');
-        }
-        
-        function resetPasswordWithCode() {
-            var email = document.getElementById('forgotEmail').value.trim().toLowerCase();
-            var code = document.getElementById('resetCode').value.trim();
-            var newPwd = document.getElementById('newResetPassword').value;
-            var confirmPwd = document.getElementById('confirmResetPassword').value;
-            
-            if (!code || !newPwd || !confirmPwd) {
-                showAlert('Please fill all fields', 'error');
-                return;
-            }
-            
-            if (newPwd.length < 4) {
-                showAlert('Password must be at least 4 characters', 'error');
-                return;
-            }
-            
-            if (newPwd !== confirmPwd) {
-                showAlert('Passwords do not match', 'error');
-                return;
-            }
-            
-            var resetCodes = JSON.parse(localStorage.getItem('resetCodes') || '{}');
-            var resetData = resetCodes[email];
-            
-            if (!resetData || resetData.code !== code) {
-                showAlert('Invalid reset code', 'error');
-                return;
-            }
-            
-            if (Date.now() > resetData.expires) {
-                showAlert('Reset code has expired. Please request a new one.', 'error');
-                return;
-            }
-            
-            // Update password
-            var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-            var idx = users.findIndex(function(u) { return u.id === resetData.userId; });
-            if (idx !== -1) {
-                users[idx].password = newPwd;
-                users[idx].mustChangePassword = false;
-                localStorage.setItem('appUsers', JSON.stringify(users));
-            }
-            
-            // Remove used code
-            delete resetCodes[email];
-            localStorage.setItem('resetCodes', JSON.stringify(resetCodes));
-            
-            closeForgotPassword();
-            showAlert('Password reset successfully! You can now login.');
-        }
-        
-        // Load my account info
-        function loadMyAccount() {
-            if (currentUser) {
-                document.getElementById('myUsername').value = currentUser.username;
-                document.getElementById('myEmail').value = currentUser.email;
-                document.getElementById('myRole').value = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
-            }
-        }
-        
-        // Check for existing session on page load
-        function checkExistingSession() {
-            initializeUsers();
-            
-            var session = JSON.parse(localStorage.getItem('currentSession') || 'null');
-            if (session) {
-                var users = JSON.parse(localStorage.getItem('appUsers') || '[]');
-                var user = users.find(function(u) { return u.id === session.userId && u.active; });
-                if (user) {
-                    currentUser = user;
-                    if (user.mustChangePassword) {
-                        document.getElementById('forcePasswordModal').classList.add('active');
-                    } else {
-                        enterMainApp();
-                    }
-                    return;
-                }
-            }
-            // No valid session, show login
-            document.getElementById('loginContainer').classList.add('active');
-        }
-
-        // ==================== END AUTHENTICATION SYSTEM ====================
-
         // Configuration - load from localStorage or use defaults
         var CONFIG = {
             monthlyRate: parseInt(localStorage.getItem('monthlyRate')) || 200000,
@@ -1870,9 +1227,6 @@
         function saveSettings() {
             var rate = parseInt(document.getElementById('settingMonthlyRent').value);
             var tax = parseFloat(document.getElementById('settingTaxRate').value) / 100;
-            var currency = document.getElementById('campostCurrency').value;
-            var reservedPercent = document.getElementById('campostReservedPercent').value;
-            
             if (rate < 1000) {
                 showAlert('Invalid monthly rate', 'error');
                 return;
@@ -1881,67 +1235,43 @@
             CONFIG.taxRate = tax;
             localStorage.setItem('monthlyRate', rate);
             localStorage.setItem('taxRate', tax);
-            localStorage.setItem('campostCurrency', currency);
-            localStorage.setItem('campostReservedPercent', reservedPercent);
             updateCalcDisplays();
-            showAlert('All settings saved! Currency: ' + currency + ', Reserved: ' + reservedPercent + '%');
+            showAlert('Settings saved!');
         }
 
         // Load settings into form
         function loadSettings() {
             document.getElementById('settingMonthlyRent').value = CONFIG.monthlyRate;
             document.getElementById('settingTaxRate').value = Math.round(CONFIG.taxRate * 100);
-            
-            // Load currency and reserved percent
-            var currency = localStorage.getItem('campostCurrency') || 'XAF';
-            var reservedPercent = localStorage.getItem('campostReservedPercent') || '10';
-            document.getElementById('campostCurrency').value = currency;
-            document.getElementById('campostReservedPercent').value = reservedPercent;
-            
             updateCalcDisplays();
-        }
-        
-        // Update CAMPOST calc displays with currency
-        function updateCampostCalcDisplays() {
-            var currency = document.getElementById('campostCurrency').value;
-            var gross = CONFIG.monthlyRate * CONFIG.months;
-            var tax = Math.round(gross * CONFIG.taxRate);
-            var net = gross - tax;
-            document.getElementById('calcGross').textContent = fmt(gross) + ' ' + currency;
-            document.getElementById('calcTax').textContent = fmt(tax) + ' ' + currency;
-            document.getElementById('calcNet').textContent = fmt(net) + ' ' + currency;
         }
 
         // Add event listeners for real-time calculation in settings
         function setupSettingsListeners() {
             var rateInput = document.getElementById('settingMonthlyRent');
             var taxInput = document.getElementById('settingTaxRate');
-            var currencySelect = document.getElementById('campostCurrency');
-            
             if (rateInput) {
                 rateInput.addEventListener('input', function() {
-                    var currency = currencySelect ? currencySelect.value : 'XAF';
                     var tempRate = parseInt(this.value) || 0;
                     var tempTax = parseFloat(taxInput.value) / 100 || 0.15;
                     var gross = tempRate * CONFIG.months;
                     var tax = Math.round(gross * tempTax);
                     var net = gross - tax;
-                    document.getElementById('calcGross').textContent = fmt(gross) + ' ' + currency;
-                    document.getElementById('calcTax').textContent = fmt(tax) + ' ' + currency;
-                    document.getElementById('calcNet').textContent = fmt(net) + ' ' + currency;
+                    document.getElementById('calcGross').textContent = fmt(gross) + ' XAF';
+                    document.getElementById('calcTax').textContent = fmt(tax) + ' XAF';
+                    document.getElementById('calcNet').textContent = fmt(net) + ' XAF';
                 });
             }
             if (taxInput) {
                 taxInput.addEventListener('input', function() {
-                    var currency = currencySelect ? currencySelect.value : 'XAF';
                     var tempRate = parseInt(rateInput.value) || CONFIG.monthlyRate;
                     var tempTax = parseFloat(this.value) / 100 || 0.15;
                     var gross = tempRate * CONFIG.months;
                     var tax = Math.round(gross * tempTax);
                     var net = gross - tax;
-                    document.getElementById('calcGross').textContent = fmt(gross) + ' ' + currency;
-                    document.getElementById('calcTax').textContent = fmt(tax) + ' ' + currency;
-                    document.getElementById('calcNet').textContent = fmt(net) + ' ' + currency;
+                    document.getElementById('calcGross').textContent = fmt(gross) + ' XAF';
+                    document.getElementById('calcTax').textContent = fmt(tax) + ' XAF';
+                    document.getElementById('calcNet').textContent = fmt(net) + ' XAF';
                 });
             }
         }
@@ -2009,14 +1339,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 method: opts.method || 'GET',
                 body: opts.body
-            }).then(function(res) { 
-                return res.json().then(function(data) {
-                    if (!res.ok) {
-                        return Promise.reject(data);
-                    }
-                    return data;
-                });
-            });
+            }).then(function(res) { return res.json(); });
         }
 
         // Tabs
@@ -2192,26 +1515,12 @@
             else if (p === 'family-inheritance') loadREInheritance();
             else if (p === 'family-ledger') loadRELedgerFull();
             else if (p === 'family-settings') loadRESettings();
-            // Main settings (user management)
-            else if (p === 'main-settings') { loadMyAccount(); loadUsersTable(); }
             // Landing
             else if (p === 'landing') loadLandingStats();
         }
 
         // Dashboard
-        // Get CAMPOST settings
-        function getCampostSettings() {
-            return {
-                currency: localStorage.getItem('campostCurrency') || 'XAF',
-                reservedPercent: parseFloat(localStorage.getItem('campostReservedPercent')) || 10
-            };
-        }
-        
         function loadDashboard() {
-            var settings = getCampostSettings();
-            var currency = settings.currency;
-            var reservedPercent = settings.reservedPercent;
-            
             // Get total income from bills (paid amounts from bills with paid or partial status)
             api('/bills').then(function(bills) {
                 var totalIncome = 0;
@@ -2222,7 +1531,7 @@
                     }
                 });
                 document.getElementById('dashIncome').textContent = fmt(totalIncome);
-                document.getElementById('dashIncomeSum').textContent = fmt(totalIncome) + ' ' + currency;
+                document.getElementById('dashIncomeSum').textContent = fmt(totalIncome) + ' XAF';
                 
                 // Get expenses
                 api('/expenses').then(function(expenses) {
@@ -2231,82 +1540,25 @@
                         totalExpenses += e.amount;
                     });
                     document.getElementById('dashExp').textContent = fmt(totalExpenses);
-                    document.getElementById('dashExpSum').textContent = fmt(totalExpenses) + ' ' + currency;
+                    document.getElementById('dashExpSum').textContent = fmt(totalExpenses) + ' XAF';
                     
-                    // Calculate reserved funds = percentage of income
-                    var reservedFunds = Math.round(totalIncome * reservedPercent / 100);
-                    document.getElementById('dashReserve').textContent = fmt(reservedFunds);
-                    document.getElementById('dashReserveSum').textContent = fmt(reservedFunds) + ' ' + currency;
-                    document.getElementById('dashReservePercent').textContent = reservedPercent;
-                    
-                    // Calculate net balance = Income - Expenses - Reserved (minimum 0)
-                    var netBalance = Math.max(0, totalIncome - totalExpenses - reservedFunds);
-                    document.getElementById('dashNetBalance').textContent = fmt(netBalance);
-                    document.getElementById('dashNetBalanceSum').textContent = fmt(netBalance) + ' ' + currency;
-                    
-                    // Update expense form state
-                    updateCampostExpenseFormState(netBalance);
+                    // Calculate reserve funds = Income - Expenses
+                    var reserveFunds = totalIncome - totalExpenses;
+                    document.getElementById('dashReserve').textContent = fmt(reserveFunds);
+                    document.getElementById('dashReserveSum').textContent = fmt(reserveFunds) + ' XAF';
+                    if (reserveFunds < 0) {
+                        document.getElementById('dashReserveSum').className = 'amount-negative';
+                    } else {
+                        document.getElementById('dashReserveSum').className = 'amount-positive';
+                    }
                 });
             });
             
             // Get inheritance amount
             api('/inheritance/calculate').then(function(d) {
                 document.getElementById('dashInh').textContent = fmt(d.inheritanceAmount);
-                document.getElementById('dashInhSum').textContent = fmt(d.inheritanceAmount) + ' ' + currency;
+                document.getElementById('dashInhSum').textContent = fmt(d.inheritanceAmount) + ' XAF';
             });
-        }
-        
-        // Enable/Disable CAMPOST expense form based on net balance
-        function updateCampostExpenseFormState(netBalance) {
-            var expenseFields = ['expDate', 'expDesc', 'expCat', 'expAmt'];
-            var saveBtn = document.getElementById('campostSaveExpenseBtn');
-            var warningEl = document.getElementById('campostExpenseWarning');
-            
-            if (netBalance <= 0) {
-                // Disable all expense input fields
-                expenseFields.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (el) {
-                        el.disabled = true;
-                        el.style.backgroundColor = '#f0f0f0';
-                        el.style.cursor = 'not-allowed';
-                    }
-                });
-                
-                // Disable save button
-                if (saveBtn) {
-                    saveBtn.disabled = true;
-                    saveBtn.style.opacity = '0.5';
-                    saveBtn.style.cursor = 'not-allowed';
-                }
-                
-                // Show warning message
-                if (warningEl) {
-                    warningEl.style.display = 'block';
-                }
-            } else {
-                // Enable all expense input fields
-                expenseFields.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (el) {
-                        el.disabled = false;
-                        el.style.backgroundColor = '';
-                        el.style.cursor = '';
-                    }
-                });
-                
-                // Enable save button
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.style.opacity = '1';
-                    saveBtn.style.cursor = '';
-                }
-                
-                // Hide warning message
-                if (warningEl) {
-                    warningEl.style.display = 'none';
-                }
-            }
         }
 
         // Ledger - combines income (from bills paid/partial) and expenses
@@ -2380,47 +1632,24 @@
                 
                 document.getElementById('ledgerTable').innerHTML = tableHtml || '<tr><td colspan="6">No transactions</td></tr>';
                 
-                // Calculate reserved funds and net balance
-                var settings = getCampostSettings();
-                var currency = settings.currency;
-                var reservedPercent = settings.reservedPercent;
-                var reservedFunds = Math.round(totalIncome * reservedPercent / 100);
-                var netBalance = Math.max(0, runningBalance - reservedFunds);
-                
-                // Totals footer with 3 rows
+                // Totals footer
                 document.getElementById('ledgerTotals').innerHTML = 
                     '<tr style="background: #f7fafc; font-weight: bold;">' +
-                    '<td colspan="3" style="text-align: right;">SUBTOTAL (' + currency + '):</td>' +
+                    '<td colspan="3" style="text-align: right;">TOTALS:</td>' +
                     '<td class="amount-positive">' + fmt(totalIncome) + '</td>' +
                     '<td class="amount-negative">' + fmt(totalExpense) + '</td>' +
                     '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(runningBalance) + '</td>' +
-                    '</tr>' +
-                    '<tr style="background: #fed7d7; font-weight: bold;">' +
-                    '<td colspan="3" style="text-align: right; color: #c53030;">🏦 Reserved Funds (' + reservedPercent + '% of Income):</td>' +
-                    '<td></td>' +
-                    '<td style="color: #c53030;">-' + fmt(reservedFunds) + '</td>' +
-                    '<td></td>' +
-                    '</tr>' +
-                    '<tr style="background: #fc8181; font-weight: bold;">' +
-                    '<td colspan="3" style="text-align: right; color: #742a2a;">📊 NET BALANCE:</td>' +
-                    '<td></td>' +
-                    '<td></td>' +
-                    '<td style="color: #742a2a;">' + fmt(netBalance) + '</td>' +
                     '</tr>';
                 
                 // Update stats
                 document.getElementById('ledgerIncome').textContent = fmt(totalIncome);
                 document.getElementById('ledgerExpense').textContent = fmt(totalExpense);
-                document.getElementById('ledgerReserved').textContent = fmt(reservedFunds);
-                document.getElementById('ledgerNetBalance').textContent = fmt(netBalance);
+                document.getElementById('ledgerBalance').textContent = fmt(runningBalance);
             });
         }
 
         // Expenses
         function loadExpenses() {
-            var settings = getCampostSettings();
-            var currency = settings.currency;
-            
             api('/categories').then(function(cats) {
                 document.getElementById('expCat').innerHTML = cats.map(function(c) {
                     return '<option value="' + c.id + '">' + c.name + '</option>';
@@ -2430,23 +1659,10 @@
                 document.getElementById('expDate').valueAsDate = new Date();
             }
             api('/expenses').then(function(expenses) {
-                var totalExp = 0;
-                var html = expenses.map(function(e) {
+                document.getElementById('expTable').innerHTML = expenses.map(function(e) {
                     var isInh = e.categoryName === 'Inheritance Share';
-                    totalExp += e.amount;
                     return '<tr><td>' + fmtDate(e.date) + '</td><td>' + e.description + '</td><td>' + e.categoryName + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editExpense(' + e.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteExpense(' + e.id + ')">🗑️</button></td></tr>';
                 }).join('') || '<tr><td colspan="5">No expenses</td></tr>';
-                
-                document.getElementById('expTable').innerHTML = html;
-                
-                // Add totals row
-                var totalsEl = document.getElementById('expTotals');
-                if (totalsEl) {
-                    totalsEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;">' +
-                        '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
-                        '<td class="amount-negative">' + fmt(totalExp) + '</td>' +
-                        '<td></td></tr>';
-                }
             });
         }
 
@@ -2475,46 +1691,6 @@
                 showAlert('Fill all fields', 'error');
                 return;
             }
-            
-            // Check net balance before saving (only for new expenses)
-            if (!id) {
-                var settings = getCampostSettings();
-                var reservedPercent = settings.reservedPercent;
-                
-                // Get current totals
-                Promise.all([api('/bills'), api('/expenses')]).then(function(results) {
-                    var bills = results[0];
-                    var expenses = results[1];
-                    
-                    var totalIncome = 0;
-                    bills.forEach(function(b) { if (b.paidAmount > 0) totalIncome += b.paidAmount; });
-                    
-                    var totalExpenses = 0;
-                    expenses.forEach(function(e) { totalExpenses += e.amount; });
-                    
-                    var reservedFunds = Math.round(totalIncome * reservedPercent / 100);
-                    var currentNetBalance = totalIncome - totalExpenses - reservedFunds;
-                    
-                    if (currentNetBalance <= 0) {
-                        showAlert('Cannot add expense: Net Balance is zero. Add more income first.', 'error');
-                        return;
-                    }
-                    
-                    if (data.amount > currentNetBalance) {
-                        showAlert('Cannot add expense: Amount (' + fmt(data.amount) + ') exceeds available Net Balance (' + fmt(currentNetBalance) + ')', 'error');
-                        return;
-                    }
-                    
-                    // Proceed with save
-                    doSaveExpense(null, data);
-                });
-            } else {
-                // Editing existing expense - just save
-                doSaveExpense(id, data);
-            }
-        }
-        
-        function doSaveExpense(id, data) {
             var url = id ? '/expenses/' + id : '/expenses';
             var method = id ? 'PUT' : 'POST';
             api(url, { method: method, body: JSON.stringify(data) }).then(function() {
@@ -2787,130 +1963,24 @@
 
         // Inheritance
         function loadInheritance() {
-            // First load all heirs for the beneficiary selection
-            api('/heirs').then(function(allHeirs) {
-                loadCampostBeneficiaryList(allHeirs);
-                
-                // Get selected beneficiaries
-                var selectedIds = getCampostBeneficiaries();
-                
-                // Calculate inheritance only for selected beneficiaries
-                api('/inheritance/calculate').then(function(d) {
-                    // Filter heirs to only include selected beneficiaries
-                    var beneficiaries = d.heirs.filter(function(h) {
-                        return selectedIds.length === 0 || selectedIds.includes(h.id);
-                    });
-                    
-                    // Recalculate totals for beneficiaries only
-                    var totalPortions = beneficiaries.reduce(function(sum, h) { return sum + parseFloat(h.portions); }, 0);
-                    var sharePerPortion = totalPortions > 0 ? d.inheritanceAmount / totalPortions : 0;
-                    
-                    // Calculate group summary for beneficiaries
-                    var groupSummary = {};
-                    beneficiaries.forEach(function(h) {
-                        if (!groupSummary[h.heir_group]) {
-                            groupSummary[h.heir_group] = { count: 0, totalPortions: 0, totalShare: 0 };
-                        }
-                        groupSummary[h.heir_group].count++;
-                        groupSummary[h.heir_group].totalPortions += parseFloat(h.portions);
-                        groupSummary[h.heir_group].totalShare += parseFloat(h.portions) * sharePerPortion;
-                    });
-                    
-                    document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
-                    document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
-                    document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
-                    document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
-                    document.getElementById('inhPortions').textContent = totalPortions;
-                    document.getElementById('inhPer').textContent = fmt(Math.round(sharePerPortion));
+            api('/inheritance/calculate').then(function(d) {
+                document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
+                document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
+                document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
+                document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
+                document.getElementById('inhPortions').textContent = d.totalPortions;
+                document.getElementById('inhPer').textContent = fmt(d.sharePerPortion);
 
-                    var html = '';
-                    for (var g in groupSummary) {
-                        var i = groupSummary[g];
-                        html += '<div class="heir-group"><h4>' + g + ' <span>' + i.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(i.totalShare / i.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(i.totalShare)) + ' XAF</span></div></div>';
-                    }
-                    document.getElementById('heirGroups').innerHTML = html || '<p>No beneficiaries selected</p>';
+                var html = '';
+                for (var g in d.groupSummary) {
+                    var i = d.groupSummary[g];
+                    html += '<div class="heir-group"><h4>' + g + ' <span>' + i.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(i.totalShare / i.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(i.totalShare)) + ' XAF</span></div></div>';
+                }
+                document.getElementById('heirGroups').innerHTML = html || '<p>No heirs</p>';
 
-                    var isAdmin = currentUser && currentUser.role === 'admin';
-                    document.getElementById('heirTable').innerHTML = beneficiaries.map(function(h) {
-                        var share = parseFloat(h.portions) * sharePerPortion;
-                        var actionsHtml = isAdmin ? '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td>' : '';
-                        return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(share)) + '</td>' + actionsHtml + '</tr>';
-                    }).join('') || '<tr><td colspan="6">No beneficiaries selected</td></tr>';
-                });
-            });
-        }
-        
-        // Load CAMPOST beneficiary selection list
-        function loadCampostBeneficiaryList(heirs) {
-            var selectedIds = getCampostBeneficiaries();
-            var html = heirs.map(function(h) {
-                var isSelected = selectedIds.length === 0 || selectedIds.includes(h.id);
-                return '<div class="beneficiary-item ' + (isSelected ? 'selected' : '') + '">' +
-                    '<input type="checkbox" id="campost-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleCampostBeneficiary(' + h.id + ', this.checked)">' +
-                    '<label for="campost-ben-' + h.id + '">' + h.name + '</label>' +
-                    '<span class="heir-info">' + h.relationship + '</span>' +
-                    '<span class="heir-portions">' + h.portions + ' portions</span>' +
-                '</div>';
-            }).join('');
-            document.getElementById('campostBeneficiaryList').innerHTML = html || '<p>No heirs available</p>';
-        }
-        
-        // Get selected CAMPOST beneficiaries from localStorage
-        function getCampostBeneficiaries() {
-            var stored = localStorage.getItem('campostBeneficiaries');
-            return stored ? JSON.parse(stored) : [];
-        }
-        
-        // Toggle CAMPOST beneficiary selection
-        function toggleCampostBeneficiary(id, checked) {
-            var el = document.querySelector('#campost-ben-' + id).closest('.beneficiary-item');
-            if (checked) {
-                el.classList.add('selected');
-            } else {
-                el.classList.remove('selected');
-            }
-        }
-        
-        // Select/Deselect all CAMPOST beneficiaries
-        function selectAllCampostBeneficiaries(selectAll) {
-            var checkboxes = document.querySelectorAll('#campostBeneficiaryList input[type="checkbox"]');
-            checkboxes.forEach(function(cb) {
-                cb.checked = selectAll;
-                var el = cb.closest('.beneficiary-item');
-                if (selectAll) {
-                    el.classList.add('selected');
-                } else {
-                    el.classList.remove('selected');
-                }
-            });
-        }
-        
-        // Save CAMPOST beneficiary selection
-        function saveCampostBeneficiaries() {
-            var checkboxes = document.querySelectorAll('#campostBeneficiaryList input[type="checkbox"]:checked');
-            var selectedIds = Array.from(checkboxes).map(function(cb) {
-                return parseInt(cb.id.replace('campost-ben-', ''));
-            });
-            localStorage.setItem('campostBeneficiaries', JSON.stringify(selectedIds));
-            showAlert('Beneficiary selection saved!');
-            loadInheritance();
-        }
-        
-        // Reset CAMPOST heirs to default family members
-        function resetCampostHeirsToDefaults() {
-            if (!confirm('This will delete all current heirs and reset to the default 16 family members. Continue?')) return;
-            
-            api('/heirs/reset-defaults', { method: 'POST' }).then(function(result) {
-                if (result.success) {
-                    // Clear beneficiary selection to include all
-                    localStorage.removeItem('campostBeneficiaries');
-                    showAlert('Heirs reset to default family members (' + result.count + ' heirs)');
-                    loadInheritance();
-                } else {
-                    showAlert('Error resetting heirs', 'error');
-                }
-            }).catch(function(err) {
-                showAlert('Error: ' + err.message, 'error');
+                document.getElementById('heirTable').innerHTML = d.heirs.map(function(h) {
+                    return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td><td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td></tr>';
+                }).join('') || '<tr><td colspan="6">No heirs</td></tr>';
             });
         }
 
@@ -3370,25 +2440,42 @@
 
         // Load Real Estate Data
         function loadRealEstate() {
-            api('/re/dashboard').then(function(data) {
-                document.getElementById('reTotalProps').textContent = data.totalProperties;
-                document.getElementById('reRented').textContent = data.rentedProperties;
-                document.getElementById('reTotalIncome').textContent = fmt(Math.round(data.totalIncome));
-                document.getElementById('reTotalExpenses').textContent = fmt(Math.round(data.totalExpenses));
-                document.getElementById('reReservedFunds').textContent = fmt(Math.round(data.reservedFunds));
-                document.getElementById('reNetBalance').textContent = fmt(Math.round(data.netBalance));
-                
-                // Check if expenses should be disabled
-                updateExpenseFormState(data.netBalance);
-            });
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+            var currency = settings.currency || 'XAF';
+            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
+
+            var totalIncome = 0;
+            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
+
+            var totalExpenses = 0;
+            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+
+            // Calculate Reserved Funds (percentage of total income)
+            var reservedFunds = totalIncome * reservedPercent / 100;
             
-            // Load properties for table
-            api('/properties').then(function(properties) {
-                renderPropertiesTable(properties);
-                renderRentalIncomeTable(properties);
-            });
+            // Net Balance = Income - Expenses - Reserved Funds (minimum 0)
+            var netBalance = Math.max(0, totalIncome - totalExpenses - reservedFunds);
+
+            var rentedProps = properties.filter(function(p) { return p.status === 'Rented'; });
+
+            document.getElementById('reTotalProps').textContent = properties.length;
+            document.getElementById('reRented').textContent = rentedProps.length;
+            document.getElementById('reTotalIncome').textContent = fmt(Math.round(totalIncome));
+            document.getElementById('reTotalExpenses').textContent = fmt(Math.round(totalExpenses));
+            document.getElementById('reReservedFunds').textContent = fmt(Math.round(reservedFunds));
+            document.getElementById('reNetBalance').textContent = fmt(Math.round(netBalance));
             
-            // Also load tab-specific data
+            // Check if expenses should be disabled (net balance is zero or would go negative)
+            updateExpenseFormState(netBalance);
+
+            renderPropertiesTable(properties);
+            renderRentalIncomeTable(properties);
+            
+            // Also load tab-specific data to populate dropdowns
             loadREBills();
             loadREPayments();
             loadREExpenses();
@@ -3457,7 +2544,6 @@
         function renderPropertiesTable(properties) {
             var filterStatus = document.getElementById('reStatusFilter').value;
             var filtered = filterStatus ? properties.filter(function(p) { return p.status === filterStatus; }) : properties;
-            var isAdmin = currentUser && currentUser.role === 'admin';
 
             var html = filtered.map(function(p) {
                 var isRented = p.status === 'Rented';
@@ -3470,12 +2556,6 @@
                 var taxAmount = rentAmount * taxRate / 100;
                 var netIncome = rentAmount - taxAmount;
 
-                var actionsHtml = isAdmin ? 
-                    '<td class="no-print">' +
-                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️</button> ' +
-                        '<button class="btn btn-danger btn-sm" onclick="deleteProperty(' + p.id + ')">🗑️</button>' +
-                    '</td>' : '';
-
                 return '<tr>' +
                     '<td><strong>' + p.name + '</strong></td>' +
                     '<td>' + p.location + '</td>' +
@@ -3486,11 +2566,14 @@
                     '<td>' + taxRate + '%</td>' +
                     '<td class="' + (netIncome > 0 ? 'amount-positive' : '') + '">' + fmt(Math.round(netIncome)) + '</td>' +
                     '<td>' + (p.islamic_inheritance || 'NA') + '</td>' +
-                    actionsHtml +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editProperty(' + p.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteProperty(' + p.id + ')">🗑️</button>' +
+                    '</td>' +
                 '</tr>';
             }).join('');
 
-            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="' + (isAdmin ? '10' : '9') + '">No properties found</td></tr>';
+            document.getElementById('propertiesTable').innerHTML = html || '<tr><td colspan="10">No properties found</td></tr>';
         }
 
         // Render Rental Income Table - show ALL properties with zeros for non-rented
@@ -3814,49 +2897,76 @@
         function saveREBill() {
             var id = document.getElementById('reBillId').value;
             var propertyId = parseInt(document.getElementById('reBillProperty').value);
-            var tenantName = document.getElementById('reBillTenant') ? document.getElementById('reBillTenant').value : 'Tenant';
             var billDate = document.getElementById('reBillDate').value;
-            var dueDate = document.getElementById('reBillDueDate') ? document.getElementById('reBillDueDate').value : billDate;
-            var amount = parseFloat(document.getElementById('reBillAmount').value) || parseFloat(document.getElementById('reBillGrossAmount').value) || 0;
-            var notes = document.getElementById('reBillDesc').value;
+            var period = document.getElementById('reBillPeriod').value;
+            var year = document.getElementById('reBillYear').value;
+            var grossAmount = parseFloat(document.getElementById('reBillGrossAmount').value) || 0;
+            var taxRateStr = document.getElementById('reBillTaxRate').value;
+            var taxRate = parseFloat(taxRateStr.replace('%', '')) || 0;
+            var taxAmount = grossAmount * taxRate / 100;
+            var netAmount = grossAmount - taxAmount;
+            var desc = document.getElementById('reBillDesc').value;
 
-            if (!propertyId || !amount) { showAlert('Please select property and enter amount', 'error'); return; }
+            if (!propertyId || !grossAmount) { showAlert('Please select property and enter amount', 'error'); return; }
 
-            var data = {
-                propertyId: propertyId,
-                tenantName: tenantName || 'Tenant',
-                billDate: billDate,
-                dueDate: dueDate || billDate,
-                amount: amount,
-                status: 'Unpaid',
-                notes: notes
-            };
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var billNumber = 'RE-' + period.substring(0,2).toUpperCase() + '-' + year + '-' + String(reBills.length + 1).padStart(3, '0');
 
-            var url = id ? '/re/bills/' + id : '/re/bills';
-            var method = id ? 'PUT' : 'POST';
-            
-            api(url, { method: method, body: JSON.stringify(data) }).then(function() {
-                clearREBillForm();
-                showAlert(id ? 'Bill updated!' : 'Bill created!');
-                loadREBills();
-                loadRealEstate();
-            });
+            if (id) {
+                var idx = reBills.findIndex(function(b) { return b.id === parseInt(id); });
+                if (idx !== -1) {
+                    reBills[idx].property_id = propertyId;
+                    reBills[idx].bill_date = billDate;
+                    reBills[idx].period = period;
+                    reBills[idx].year = year;
+                    reBills[idx].gross_amount = grossAmount;
+                    reBills[idx].tax_rate = taxRate;
+                    reBills[idx].tax_amount = taxAmount;
+                    reBills[idx].amount_due = netAmount;
+                    reBills[idx].outstanding = netAmount - (reBills[idx].paid_amount || 0);
+                    reBills[idx].description = desc;
+                }
+            } else {
+                var newId = reBills.length > 0 ? Math.max.apply(null, reBills.map(function(b) { return b.id; })) + 1 : 1;
+                reBills.push({ 
+                    id: newId, 
+                    bill_number: billNumber, 
+                    property_id: propertyId, 
+                    bill_date: billDate, 
+                    period: period, 
+                    year: year, 
+                    gross_amount: grossAmount,
+                    tax_rate: taxRate,
+                    tax_amount: taxAmount,
+                    amount_due: netAmount, 
+                    paid_amount: 0, 
+                    outstanding: netAmount, 
+                    description: desc, 
+                    created_at: new Date().toISOString() 
+                });
+            }
+
+            localStorage.setItem('reBills', JSON.stringify(reBills));
+            clearREBillForm();
+            showAlert(id ? 'Bill updated!' : 'Bill created with net amount after ' + taxRate + '% tax!');
+            loadREBills();
         }
 
         function clearREBillForm() { 
             document.getElementById('reBillId').value = ''; 
             document.getElementById('reBillProperty').value = ''; 
-            if (document.getElementById('reBillPeriod')) document.getElementById('reBillPeriod').value = ''; 
-            if (document.getElementById('reBillGrossAmount')) document.getElementById('reBillGrossAmount').value = '';
-            if (document.getElementById('reBillTaxRate')) document.getElementById('reBillTaxRate').value = '0%';
-            if (document.getElementById('reBillTaxAmount')) document.getElementById('reBillTaxAmount').value = '0';
-            if (document.getElementById('reBillAmount')) document.getElementById('reBillAmount').value = '0'; 
+            document.getElementById('reBillPeriod').value = ''; 
+            document.getElementById('reBillGrossAmount').value = '';
+            document.getElementById('reBillTaxRate').value = '0%';
+            document.getElementById('reBillTaxAmount').value = '0';
+            document.getElementById('reBillAmount').value = '0'; 
             document.getElementById('reBillDesc').value = ''; 
         }
 
         function editREBill(id) {
-            api('/re/bills').then(function(reBills) {
-                var b = reBills.find(function(x) { return x.id === id; });
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var b = reBills.find(function(x) { return x.id === id; });
             if (b) { 
                 var prop = properties.find(function(p) { return p.id === b.property_id; });
                 var taxRate = b.tax_rate || (prop ? parseFloat(prop.tax_rate) : 0) || 0;
@@ -3878,71 +2988,73 @@
 
         function deleteREBill(id) { 
             if (!confirm('Delete this bill?')) return; 
-            api('/re/bills/' + id, { method: 'DELETE' }).then(function() {
-                showAlert('Bill deleted'); 
-                loadREBills();
-                loadRealEstate();
-            });
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]'); 
+            reBills = reBills.filter(function(b) { return b.id !== id; }); 
+            localStorage.setItem('reBills', JSON.stringify(reBills)); 
+            showAlert('Bill deleted'); 
+            loadREBills(); 
         }
 
         // ========== RE PAYMENTS ==========
         function loadREPayments() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
             var currency = getCurrency();
 
-            // Populate Select Bill dropdown from Bills section (only unpaid/partial bills)
-            api('/re/bills').then(function(reBills) {
-                var unpaidBills = reBills.filter(function(b) { return b.status !== 'Paid'; });
-                document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
-                    unpaidBills.map(function(b) { 
-                        return '<option value="' + b.id + '" data-amount="' + b.amount + '">' + 
-                            'BILL-' + b.id + ' | ' + (b.property_name || 'N/A') + ' | Amount: ' + fmt(b.amount) + ' ' + currency + ' (' + b.status + ')' + 
-                        '</option>'; 
-                    }).join('');
-            });
+            // Populate Select Bill dropdown from Bills section (only bills with outstanding > 0)
+            var unpaidBills = reBills.filter(function(b) { return b.outstanding > 0; });
+            document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
+                unpaidBills.map(function(b) { 
+                    var prop = properties.find(function(p) { return p.id === b.property_id; });
+                    var status = b.paid_amount > 0 ? 'Partial' : 'Unpaid';
+                    return '<option value="' + b.id + '" data-outstanding="' + b.outstanding + '">' + 
+                        b.bill_number + ' | ' + (prop ? prop.name : 'N/A') + ' | Outstanding: ' + fmt(b.outstanding) + ' ' + currency + ' (' + status + ')' + 
+                    '</option>'; 
+                }).join('');
 
             if (!document.getElementById('rePayDate').value) { 
                 document.getElementById('rePayDate').valueAsDate = new Date(); 
             }
 
-            api('/re/payments').then(function(rePayments) {
-                var totalAmount = 0;
+            var totalAmount = 0;
+            
+            var html = rePayments.map(function(p) { 
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                var amount = parseFloat(p.amount) || 0;
                 
-                var html = rePayments.map(function(p) { 
-                    var amount = parseFloat(p.amount) || 0;
-                    totalAmount += amount;
-                    
-                    return '<tr>' +
-                        '<td>' + fmtDate(p.payment_date) + '</td>' +
-                        '<td>' + (p.property_name || 'N/A') + '</td>' +
-                        '<td>BILL-' + (p.bill_id || 'N/A') + '</td>' +
-                        '<td class="amount-positive"><strong>' + fmt(Math.round(amount)) + '</strong></td>' +
-                        '<td>' + (p.reference || '-') + '</td>' +
-                        '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
-                    '</tr>'; 
-                }).join('');
+                totalAmount += amount;
+                
+                return '<tr>' +
+                    '<td>' + fmtDate(p.payment_date) + '</td>' +
+                    '<td>' + (prop ? prop.name : 'N/A') + '</td>' +
+                    '<td>' + (bill ? bill.bill_number : 'N/A') + '</td>' +
+                    '<td class="amount-positive"><strong>' + fmt(Math.round(amount)) + '</strong></td>' +
+                    '<td>' + (p.reference || '-') + '</td>' +
+                    '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
+                '</tr>'; 
+            }).join('');
 
-                document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
-                
-                // Add totals row
-                if (document.getElementById('rePaymentsTotals')) {
-                    document.getElementById('rePaymentsTotals').innerHTML = 
-                        '<tr style="background: #f7fafc; font-weight: bold;">' +
-                        '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
-                        '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
-                        '<td colspan="2"></td>' +
-                        '</tr>';
-                }
-            });
+            document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
+            
+            // Add totals row
+            document.getElementById('rePaymentsTotals').innerHTML = 
+                '<tr style="background: #f7fafc; font-weight: bold;">' +
+                '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
+                '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
+                '<td colspan="2"></td>' +
+                '</tr>';
         }
 
-        // Auto-populate amount when bill is selected
+        // Auto-populate amount when bill is selected (outstanding = net amount from bill)
         function onREBillSelect() {
             var select = document.getElementById('rePayBill');
             var selectedOption = select.options[select.selectedIndex];
             
             if (selectedOption && selectedOption.value) {
-                var amount = parseFloat(selectedOption.getAttribute('data-amount')) || 0;
-                document.getElementById('rePayAmount').value = amount;
+                var outstanding = parseFloat(selectedOption.getAttribute('data-outstanding')) || 0;
+                document.getElementById('rePayAmount').value = outstanding;
             } else {
                 document.getElementById('rePayAmount').value = '';
             }
@@ -3956,26 +3068,35 @@
 
             if (!billId || !amount) { showAlert('Please fill required fields', 'error'); return; }
 
-            api('/re/payments', {
-                method: 'POST',
-                body: JSON.stringify({
-                    billId: billId,
-                    amount: amount,
-                    paymentDate: payDate,
-                    paymentMethod: 'Cash',
-                    reference: reference
-                })
-            }).then(function() {
-                clearREPaymentForm();
-                showAlert('Payment recorded!');
-                loadREPayments();
-                loadREBills();
-                loadRealEstate();
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+
+            var billIdx = reBills.findIndex(function(b) { return b.id === billId; });
+            if (billIdx !== -1) { 
+                reBills[billIdx].paid_amount = (reBills[billIdx].paid_amount || 0) + amount; 
+                reBills[billIdx].outstanding = reBills[billIdx].amount_due - reBills[billIdx].paid_amount; 
+                localStorage.setItem('reBills', JSON.stringify(reBills)); 
+            }
+
+            var newId = rePayments.length > 0 ? Math.max.apply(null, rePayments.map(function(p) { return p.id; })) + 1 : 1;
+            rePayments.push({ 
+                id: newId, 
+                bill_id: billId, 
+                payment_date: payDate, 
+                amount: amount,
+                reference: reference, 
+                created_at: new Date().toISOString() 
             });
+
+            localStorage.setItem('rePayments', JSON.stringify(rePayments));
+            clearREPaymentForm();
+            showAlert('Payment recorded!');
+            loadREPayments();
+            loadRealEstate();
         }
 
         function clearREPaymentForm() { 
-            if (document.getElementById('rePayId')) document.getElementById('rePayId').value = ''; 
+            document.getElementById('rePayId').value = ''; 
             document.getElementById('rePayBill').value = ''; 
             document.getElementById('rePayAmount').value = ''; 
             document.getElementById('rePayRef').value = ''; 
@@ -3983,56 +3104,65 @@
 
         function deleteREPayment(id) {
             if (!confirm('Delete this payment?')) return;
-            api('/re/payments/' + id, { method: 'DELETE' }).then(function() {
-                showAlert('Payment deleted');
-                loadREPayments();
-                loadREBills();
-                loadRealEstate();
-            });
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var payment = rePayments.find(function(p) { return p.id === id; });
+            if (payment) { 
+                var reBills = JSON.parse(localStorage.getItem('reBills') || '[]'); 
+                var billIdx = reBills.findIndex(function(b) { return b.id === payment.bill_id; }); 
+                if (billIdx !== -1) { 
+                    reBills[billIdx].paid_amount -= payment.amount; 
+                    reBills[billIdx].outstanding += payment.amount; 
+                    localStorage.setItem('reBills', JSON.stringify(reBills)); 
+                } 
+            }
+            rePayments = rePayments.filter(function(p) { return p.id !== id; });
+            localStorage.setItem('rePayments', JSON.stringify(rePayments));
+            showAlert('Payment deleted');
+            loadREPayments();
+            loadRealEstate();
         }
 
         // ========== RE EXPENSES ==========
         function loadREExpenses() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
             var currency = getCurrency();
 
             // Populate property dropdown with all properties
-            api('/properties').then(function(properties) {
-                var propOptions = properties.map(function(p) { 
-                    return '<option value="' + p.id + '">' + p.name + ' (' + p.status + ' - ' + p.location + ')</option>'; 
-                }).join('');
-                document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property (Optional)</option>' + propOptions;
-            });
+            var propOptions = properties.map(function(p) { 
+                return '<option value="' + p.id + '">' + p.name + ' (' + p.status + ' - ' + p.location + ')</option>'; 
+            }).join('');
+            document.getElementById('reExpProperty').innerHTML = '<option value="">Select Property (Optional)</option>' + propOptions;
 
             if (!document.getElementById('reExpDate').value) { 
                 document.getElementById('reExpDate').valueAsDate = new Date(); 
             }
 
-            api('/re/expenses').then(function(reExpenses) {
-                var totalExpenses = 0;
-                var html = reExpenses.map(function(e) { 
-                    var isInh = e.category === 'Inheritance Share';
-                    totalExpenses += parseFloat(e.amount) || 0;
-                    return '<tr>' +
-                        '<td>' + fmtDate(e.expense_date) + '</td>' +
-                        '<td>' + (e.property_name || 'General') + '</td>' +
-                        '<td>' + e.category + '</td>' +
-                        '<td>' + e.description + '</td>' +
-                        '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td>' +
-                        '<td class="no-print">' +
-                            '<button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> ' +
-                            '<button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button>' +
-                        '</td>' +
-                    '</tr>'; 
-                }).join('');
+            var totalExpenses = 0;
+            var html = reExpenses.map(function(e) { 
+                var prop = properties.find(function(p) { return p.id === e.property_id; }); 
+                var isInh = e.category === 'Inheritance Share';
+                totalExpenses += parseFloat(e.amount) || 0;
+                return '<tr>' +
+                    '<td>' + fmtDate(e.expense_date) + '</td>' +
+                    '<td>' + (prop ? prop.name : 'General') + '</td>' +
+                    '<td>' + e.category + '</td>' +
+                    '<td>' + e.description + '</td>' +
+                    '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td>' +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button>' +
+                    '</td>' +
+                '</tr>'; 
+            }).join('');
 
-                document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
-                
-                // Update expenses total if element exists
-                var expTotalEl = document.getElementById('reExpensesTotal');
-                if (expTotalEl) {
-                    expTotalEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTAL (' + currency + '):</td><td class="amount-negative">-' + fmt(Math.round(totalExpenses)) + '</td><td></td></tr>';
-                }
-            });
+            document.getElementById('reExpensesTable').innerHTML = html || '<tr><td colspan="6">No expenses</td></tr>';
+            
+            // Update expenses total if element exists
+            var expTotalEl = document.getElementById('reExpensesTotal');
+            if (expTotalEl) {
+                expTotalEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;"><td colspan="4" style="text-align: right;">TOTAL (' + currency + '):</td><td class="amount-negative">-' + fmt(Math.round(totalExpenses)) + '</td><td></td></tr>';
+            }
         }
 
         function saveREExpense() {
@@ -4057,55 +3187,71 @@
                 showAlert('Please enter a description', 'error'); 
                 return; 
             }
-
-            var data = {
-                propertyId: propertyId,
-                expenseDate: expDate,
-                category: category,
-                amount: amount,
-                description: desc
-            };
-
-            var url = id ? '/re/expenses/' + id : '/re/expenses';
-            var method = id ? 'PUT' : 'POST';
             
-            api(url, { method: method, body: JSON.stringify(data) }).then(function() {
-                clearREExpenseForm();
-                showAlert(id ? 'Expense updated!' : 'Expense added!');
-                loadREExpenses();
-                loadRealEstate();
-            });
-        }
+            // Check if net balance allows this expense (only for new expenses)
+            if (!id) {
+                var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+                var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+                var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
+                var reservedPercent = parseFloat(settings.reservedPercent) || 10;
+                
+                var totalIncome = 0;
+                rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
+                
+                var totalExpenses = 0;
+                reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+                
+                var reservedFunds = totalIncome * reservedPercent / 100;
+                var currentNetBalance = totalIncome - totalExpenses - reservedFunds;
+                
+                if (currentNetBalance <= 0) {
+                    showAlert('Cannot add expense: Net Balance is zero. Add more income first.', 'error');
+                    return;
+                }
+                
+                // Check if this expense would make net balance negative
+                if (amount > currentNetBalance) {
+                    showAlert('Cannot add expense: Amount (' + fmt(amount) + ') exceeds available Net Balance (' + fmt(Math.round(currentNetBalance)) + ')', 'error');
+                    return;
+                }
+            }
 
-        function clearREExpenseForm() { 
-            document.getElementById('reExpId').value = ''; 
-            document.getElementById('reExpProperty').value = ''; 
-            document.getElementById('reExpAmount').value = ''; 
-            document.getElementById('reExpDesc').value = ''; 
-        }
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
 
-        function editREExpense(id) { 
-            api('/re/expenses').then(function(reExpenses) {
-                var e = reExpenses.find(function(x) { return x.id === id; }); 
-                if (e) { 
-                    document.getElementById('reExpId').value = e.id; 
-                    document.getElementById('reExpProperty').value = e.property_id || ''; 
-                    document.getElementById('reExpDate').value = e.expense_date; 
-                    document.getElementById('reExpCategory').value = e.category; 
-                    document.getElementById('reExpAmount').value = e.amount; 
-                    document.getElementById('reExpDesc').value = e.description; 
+            if (id) { 
+                var idx = reExpenses.findIndex(function(e) { return e.id === parseInt(id); }); 
+                if (idx !== -1) { 
+                    reExpenses[idx].property_id = propertyId; 
+                    reExpenses[idx].expense_date = expDate; 
+                    reExpenses[idx].category = category; 
+                    reExpenses[idx].amount = amount; 
+                    reExpenses[idx].description = desc; 
                 } 
-            });
+            } else { 
+                var newId = reExpenses.length > 0 ? Math.max.apply(null, reExpenses.map(function(e) { return e.id; })) + 1 : 1;
+                reExpenses.push({ 
+                    id: newId, 
+                    property_id: propertyId, 
+                    expense_date: expDate, 
+                    category: category, 
+                    amount: amount, 
+                    description: desc, 
+                    created_at: new Date().toISOString() 
+                }); 
+            }
+
+            localStorage.setItem('reExpenses', JSON.stringify(reExpenses));
+            clearREExpenseForm();
+            showAlert(id ? 'Expense updated!' : 'Expense added!');
+            loadREExpenses();
+            loadRealEstate();
         }
 
-        function deleteREExpense(id) { 
-            if (!confirm('Delete this expense?')) return; 
-            api('/re/expenses/' + id, { method: 'DELETE' }).then(function() {
-                showAlert('Expense deleted'); 
-                loadREExpenses(); 
-                loadRealEstate(); 
-            });
-        }
+        function clearREExpenseForm() { document.getElementById('reExpId').value = ''; document.getElementById('reExpProperty').value = ''; document.getElementById('reExpAmount').value = ''; document.getElementById('reExpDesc').value = ''; }
+
+        function editREExpense(id) { var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); var e = reExpenses.find(function(x) { return x.id === id; }); if (e) { document.getElementById('reExpId').value = e.id; document.getElementById('reExpProperty').value = e.property_id || ''; document.getElementById('reExpDate').value = e.expense_date; document.getElementById('reExpCategory').value = e.category; document.getElementById('reExpAmount').value = e.amount; document.getElementById('reExpDesc').value = e.description; } }
+
+        function deleteREExpense(id) { if (!confirm('Delete this expense?')) return; var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]'); reExpenses = reExpenses.filter(function(e) { return e.id !== id; }); localStorage.setItem('reExpenses', JSON.stringify(reExpenses)); showAlert('Expense deleted'); loadREExpenses(); loadRealEstate(); }
 
         // ========== RE INHERITANCE - ISLAMIC LAW ==========
         
@@ -4182,249 +3328,56 @@
         }
         
         function loadREInheritance() {
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
             var currency = getCurrency();
+
+            var totalIncome = 0; 
+            rePayments.forEach(function(p) { totalIncome += parseFloat(p.amount) || 0; });
             
-            // Use API to calculate inheritance
-            api('/re/inheritance/calculate').then(function(data) {
-                var beneficiaries = data.heirs || [];
+            var totalExpenses = 0; 
+            reExpenses.forEach(function(e) { totalExpenses += parseFloat(e.amount) || 0; });
+
+            var inheritancePool = Math.max(0, totalIncome - totalExpenses);
+            
+            // Calculate total portions for Islamic distribution
+            var totalPortions = reHeirs.reduce(function(sum, h) { 
+                return sum + (parseFloat(h.portions) || 0); 
+            }, 0);
+            
+            // Per portion value
+            var perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
+
+            document.getElementById('reInhPool').textContent = fmt(Math.round(inheritancePool)) + ' ' + currency;
+            document.getElementById('reInhHeirs').textContent = reHeirs.length;
+            document.getElementById('reInhPortions').textContent = Math.round(totalPortions * 1000) / 1000;
+            document.getElementById('reInhPerPortion').textContent = fmt(Math.round(perPortion)) + ' ' + currency;
+
+            var html = reHeirs.map(function(h) { 
+                var shareAmount = perPortion * (parseFloat(h.portions) || 0);
+                var portionDisplay = h.portions;
+                // Show as fraction if possible
+                if (h.portions === 0.125) portionDisplay = '1/8';
+                else if (h.portions === 0.25) portionDisplay = '1/4';
+                else if (h.portions === 0.5) portionDisplay = '1/2';
+                else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
+                else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
                 
-                // Load beneficiary selection list with all heirs
-                api('/re/heirs').then(function(allHeirs) {
-                    loadREBeneficiaryList(allHeirs);
-                });
+                return '<tr>' +
+                    '<td>' + h.name + '</td>' +
+                    '<td>' + h.relationship + '</td>' +
+                    '<td>' + (h.gender || '-') + '</td>' +
+                    '<td>' + portionDisplay + '</td>' +
+                    '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
+                    '<td class="no-print">' +
+                        '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')">✏️</button> ' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')">🗑️</button>' +
+                    '</td>' +
+                '</tr>'; 
+            }).join('');
 
-                document.getElementById('reInhPool').textContent = fmt(Math.round(data.inheritancePool)) + ' ' + currency;
-                document.getElementById('reInhHeirs').textContent = beneficiaries.length;
-                document.getElementById('reInhPortions').textContent = Math.round(data.totalPortions * 1000) / 1000;
-                document.getElementById('reInhPerPortion').textContent = fmt(Math.round(data.perPortion)) + ' ' + currency;
-
-                // Store inheritance data for certificate printing
-                window.reInheritanceData = {
-                    inheritancePool: data.inheritancePool,
-                    totalPortions: data.totalPortions,
-                    perPortion: data.perPortion,
-                    beneficiaries: beneficiaries,
-                    currency: currency
-                };
-
-                var isAdmin = currentUser && currentUser.role === 'admin';
-                var html = beneficiaries.map(function(h) { 
-                    var shareAmount = h.shareAmount || (data.perPortion * (parseFloat(h.portions) || 0));
-                    var portionDisplay = h.portions;
-                    // Show as fraction if possible
-                    if (h.portions === 0.125) portionDisplay = '1/8';
-                    else if (h.portions === 0.25) portionDisplay = '1/4';
-                    else if (h.portions === 0.5) portionDisplay = '1/2';
-                    else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
-                    else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
-                    
-                    // Print certificate button for all users, edit/delete only for admin
-                    var actionsHtml = '<td class="no-print">' +
-                        '<button class="btn btn-gold btn-sm" onclick="printREHeirCertificate(' + h.id + ')" title="Print Certificate">📜</button> ';
-                    
-                    if (isAdmin) {
-                        actionsHtml += '<button class="btn btn-warning btn-sm" onclick="editREHeir(' + h.id + ')" title="Edit">✏️</button> ' +
-                            '<button class="btn btn-danger btn-sm" onclick="deleteREHeir(' + h.id + ')" title="Delete">🗑️</button>';
-                    }
-                    actionsHtml += '</td>';
-                    
-                    return '<tr>' +
-                        '<td>' + h.name + '</td>' +
-                        '<td>' + h.relationship + '</td>' +
-                        '<td>' + (h.gender || '-') + '</td>' +
-                        '<td>' + portionDisplay + '</td>' +
-                        '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
-                        actionsHtml +
-                    '</tr>'; 
-                }).join('');
-
-                document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No beneficiaries selected. Select heirs above to calculate Islamic inheritance distribution.</td></tr>';
-            });
-        }
-        
-        // Load Family RE beneficiary selection list
-        function loadREBeneficiaryList(heirs) {
-            api('/re/beneficiaries').then(function(selectedIds) {
-                var html = heirs.map(function(h) {
-                    var isSelected = selectedIds.length === 0 || selectedIds.includes(h.id);
-                    return '<div class="beneficiary-item ' + (isSelected ? 'selected' : '') + '">' +
-                        '<input type="checkbox" id="re-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleREBeneficiary(' + h.id + ', this.checked)">' +
-                        '<label for="re-ben-' + h.id + '">' + h.name + '</label>' +
-                        '<span class="heir-info">' + h.relationship + '</span>' +
-                        '<span class="heir-portions">' + h.portions + ' portions</span>' +
-                    '</div>';
-                }).join('');
-                document.getElementById('reBeneficiaryList').innerHTML = html || '<p>No heirs available. Add heirs first.</p>';
-            });
-        }
-        
-        // Get selected Family RE beneficiaries from API
-        function getREBeneficiaries() {
-            // This is now handled by the API
-            return [];
-        }
-        
-        // Toggle Family RE beneficiary selection
-        function toggleREBeneficiary(id, checked) {
-            var el = document.querySelector('#re-ben-' + id).closest('.beneficiary-item');
-            if (checked) {
-                el.classList.add('selected');
-            } else {
-                el.classList.remove('selected');
-            }
-        }
-        
-        // Select/Deselect all Family RE beneficiaries
-        function selectAllREBeneficiaries(selectAll) {
-            var checkboxes = document.querySelectorAll('#reBeneficiaryList input[type="checkbox"]');
-            checkboxes.forEach(function(cb) {
-                cb.checked = selectAll;
-                var el = cb.closest('.beneficiary-item');
-                if (selectAll) {
-                    el.classList.add('selected');
-                } else {
-                    el.classList.remove('selected');
-                }
-            });
-        }
-        
-        // Save Family RE beneficiary selection
-        function saveREBeneficiaries() {
-            var checkboxes = document.querySelectorAll('#reBeneficiaryList input[type="checkbox"]:checked');
-            var selectedIds = Array.from(checkboxes).map(function(cb) {
-                return parseInt(cb.id.replace('re-ben-', ''));
-            });
-            
-            api('/re/beneficiaries', {
-                method: 'POST',
-                body: JSON.stringify({ selectedIds: selectedIds })
-            }).then(function() {
-                showAlert('Beneficiary selection saved!');
-                loadREInheritance();
-            });
-        }
-        
-        // Reset Family RE heirs to default family members
-        function resetREHeirsToDefaults() {
-            if (!confirm('This will delete all current heirs and reset to the default 16 family members. Continue?')) return;
-            
-            api('/re/heirs/reset-defaults', { method: 'POST' }).then(function(result) {
-                if (result.success) {
-                    showAlert('Heirs reset to default family members (' + result.count + ' heirs)');
-                    loadREInheritance();
-                } else {
-                    showAlert('Error resetting heirs', 'error');
-                }
-            });
-        }
-        
-        // Print single RE heir certificate
-        function printREHeirCertificate(heirId) {
-            var data = window.reInheritanceData;
-            if (!data) {
-                showAlert('Please wait for inheritance data to load', 'error');
-                return;
-            }
-            
-            var h = data.beneficiaries.find(function(x) { return x.id === heirId; });
-            if (!h) {
-                showAlert('Heir not found', 'error');
-                return;
-            }
-            
-            var shareAmount = data.perPortion * (parseFloat(h.portions) || 0);
-            var certHtml = generateRECertificateHTML(h, data, shareAmount);
-            var w = window.open('', '_blank');
-            w.document.write(certHtml);
-            w.document.close();
-            w.print();
-        }
-        
-        // Print all RE heir certificates
-        function printAllREHeirCertificates() {
-            var data = window.reInheritanceData;
-            if (!data || !data.beneficiaries || data.beneficiaries.length === 0) {
-                showAlert('No beneficiaries to print', 'error');
-                return;
-            }
-            
-            var allCerts = data.beneficiaries.map(function(h) {
-                var shareAmount = data.perPortion * (parseFloat(h.portions) || 0);
-                return generateRECertificateHTML(h, data, shareAmount, true);
-            }).join('<div style="page-break-after: always;"></div>');
-            
-            var w = window.open('', '_blank');
-            w.document.write('<html><head><title>Family Real Estate - All Heir Certificates</title></head><body>' + allCerts + '</body></html>');
-            w.document.close();
-            w.print();
-        }
-        
-        // Generate RE certificate HTML
-        function generateRECertificateHTML(heir, data, shareAmount, isPartOfBatch) {
-            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            var currency = data.currency || 'XAF';
-            
-            return (isPartOfBatch ? '' : '<html><head><title>Heir Certificate - ' + heir.name + '</title></head><body>') +
-                '<div style="max-width: 800px; margin: 0 auto; padding: 40px; font-family: Georgia, serif; border: 3px double #d69e2e; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">' +
-                    '<div style="text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 20px; margin-bottom: 30px;">' +
-                        '<h1 style="color: #92400e; margin: 0; font-size: 28px;">🏠 FAMILY REAL ESTATES</h1>' +
-                        '<h2 style="color: #78350f; margin: 10px 0; font-size: 20px;">NJIKAM SALIFU REAL ESTATE PROPERTIES</h2>' +
-                        '<p style="color: #a16207; font-style: italic; margin: 5px 0;">Islamic Inheritance Distribution Certificate</p>' +
-                    '</div>' +
-                    
-                    '<div style="text-align: center; margin-bottom: 30px;">' +
-                        '<h2 style="color: #1e40af; font-size: 24px; margin: 0;">CERTIFICATE OF INHERITANCE</h2>' +
-                        '<p style="color: #6b7280; font-size: 14px;">Certificate No: RE-' + new Date().getFullYear() + '-' + String(heir.id).padStart(4, '0') + '</p>' +
-                    '</div>' +
-                    
-                    '<div style="background: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e5e7eb;">' +
-                        '<p style="font-size: 16px; line-height: 1.8; text-align: justify;">' +
-                            'This is to certify that <strong style="color: #1e40af; font-size: 18px;">' + heir.name + '</strong>, ' +
-                            'being a <strong>' + heir.relationship + '</strong> (' + (heir.gender || 'N/A') + ') of the deceased, ' +
-                            'is entitled to receive their rightful share of the Family Real Estate inheritance ' +
-                            'in accordance with Islamic law (Sharia).' +
-                        '</p>' +
-                    '</div>' +
-                    
-                    '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">' +
-                        '<div style="background: #dbeafe; padding: 15px; border-radius: 8px; text-align: center;">' +
-                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL INHERITANCE POOL</p>' +
-                            '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #1e40af;">' + fmt(Math.round(data.inheritancePool)) + ' ' + currency + '</p>' +
-                        '</div>' +
-                        '<div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">' +
-                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL PORTIONS</p>' +
-                            '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #92400e;">' + data.totalPortions + '</p>' +
-                        '</div>' +
-                    '</div>' +
-                    
-                    '<div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 8px; text-align: center; margin-bottom: 25px; border: 2px solid #22c55e;">' +
-                        '<p style="margin: 0; color: #166534; font-size: 14px;">HEIR\'S PORTIONS</p>' +
-                        '<p style="margin: 5px 0; font-size: 24px; font-weight: bold; color: #15803d;">' + heir.portions + ' portion(s)</p>' +
-                        '<hr style="border: none; border-top: 1px dashed #86efac; margin: 15px 0;">' +
-                        '<p style="margin: 0; color: #166534; font-size: 14px;">INHERITANCE SHARE AMOUNT</p>' +
-                        '<p style="margin: 5px 0; font-size: 32px; font-weight: bold; color: #15803d;">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</p>' +
-                    '</div>' +
-                    
-                    '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; padding-top: 30px; border-top: 1px solid #e5e7eb;">' +
-                        '<div style="text-align: center;">' +
-                            '<div style="border-top: 2px solid #1e40af; width: 200px; margin: 0 auto;"></div>' +
-                            '<p style="margin: 10px 0 5px; font-weight: bold;">Estate Administrator</p>' +
-                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">Date: ' + today + '</p>' +
-                        '</div>' +
-                        '<div style="text-align: center;">' +
-                            '<div style="border-top: 2px solid #1e40af; width: 200px; margin: 0 auto;"></div>' +
-                            '<p style="margin: 10px 0 5px; font-weight: bold;">Witness</p>' +
-                            '<p style="margin: 0; color: #6b7280; font-size: 12px;">Date: ' + today + '</p>' +
-                        '</div>' +
-                    '</div>' +
-                    
-                    '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #d69e2e;">' +
-                        '<p style="color: #92400e; font-size: 11px; margin: 0;">This certificate is issued as part of the Islamic inheritance distribution</p>' +
-                        '<p style="color: #92400e; font-size: 11px; margin: 5px 0;">for the Family Real Estate properties of the late NJIKAM SALIFU</p>' +
-                        '<p style="color: #6b7280; font-size: 10px; margin-top: 10px;">Generated on: ' + today + '</p>' +
-                    '</div>' +
-                '</div>' +
-                (isPartOfBatch ? '' : '</body></html>');
+            document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No heirs added. Add heirs to calculate Islamic inheritance distribution.</td></tr>';
         }
 
         function openREHeirModal() { 
@@ -4442,17 +3395,16 @@
         }
 
         function editREHeir(id) { 
-            api('/re/heirs').then(function(reHeirs) {
-                var h = reHeirs.find(function(x) { return x.id === id; }); 
-                if (h) { 
-                    document.getElementById('reHeirId').value = h.id; 
-                    document.getElementById('reHeirName').value = h.name; 
-                    document.getElementById('reHeirRel').value = h.relationship; 
-                    document.getElementById('reHeirGender').value = h.gender || 'Male'; 
-                    document.getElementById('reHeirPor').value = h.portions; 
-                    document.getElementById('reHeirModal').classList.add('active'); 
-                } 
-            });
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); 
+            var h = reHeirs.find(function(x) { return x.id === id; }); 
+            if (h) { 
+                document.getElementById('reHeirId').value = h.id; 
+                document.getElementById('reHeirName').value = h.name; 
+                document.getElementById('reHeirRel').value = h.relationship; 
+                document.getElementById('reHeirGender').value = h.gender || 'Male'; 
+                document.getElementById('reHeirPor').value = h.portions; 
+                document.getElementById('reHeirModal').classList.add('active'); 
+            } 
         }
 
         function saveREHeir() {
@@ -4467,70 +3419,162 @@
                 return; 
             }
 
-            var data = {
-                name: name,
-                relationship: rel,
-                gender: gender,
-                heirGroup: gender === 'Male' ? 'Sons' : (rel === 'Wife' || rel === 'Spouse' ? 'Wives' : 'Daughters'),
-                portions: por
-            };
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
 
-            var url = id ? '/re/heirs/' + id : '/re/heirs';
-            var method = id ? 'PUT' : 'POST';
+            if (id) { 
+                var idx = reHeirs.findIndex(function(h) { return h.id === parseInt(id); }); 
+                if (idx !== -1) { 
+                    reHeirs[idx].name = name; 
+                    reHeirs[idx].relationship = rel; 
+                    reHeirs[idx].gender = gender; 
+                    reHeirs[idx].portions = por; 
+                } 
+            } else { 
+                var newId = reHeirs.length > 0 ? Math.max.apply(null, reHeirs.map(function(h) { return h.id; })) + 1 : 1;
+                reHeirs.push({ 
+                    id: newId, 
+                    name: name, 
+                    relationship: rel, 
+                    gender: gender, 
+                    portions: por 
+                }); 
+            }
 
-            api(url, { method: method, body: JSON.stringify(data) }).then(function() {
-                closeREHeirModal();
-                showAlert(id ? 'Heir updated!' : 'Heir added!');
-                loadREInheritance();
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
+            closeREHeirModal();
+            showAlert(id ? 'Heir updated!' : 'Heir added!');
+            
+            // Recalculate all heirs' portions based on new family composition
+            recalculateAllHeirPortions();
+            loadREInheritance();
+        }
+        
+        // Recalculate all heirs' portions when family composition changes
+        function recalculateAllHeirPortions() {
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]');
+            
+            var hasChildren = reHeirs.some(function(h) { 
+                return h.relationship === 'Son' || h.relationship === 'Daughter'; 
             });
+            var hasSons = reHeirs.some(function(h) { return h.relationship === 'Son'; });
+            
+            reHeirs.forEach(function(h) {
+                switch(h.relationship) {
+                    case 'Wife':
+                        h.portions = hasChildren ? 0.125 : 0.25;
+                        break;
+                    case 'Husband':
+                        h.portions = hasChildren ? 0.25 : 0.5;
+                        break;
+                    case 'Mother':
+                        h.portions = hasChildren ? (1/6) : (1/3);
+                        break;
+                    case 'Father':
+                    case 'Grandfather':
+                        h.portions = hasChildren ? (1/6) : 1;
+                        break;
+                    case 'Grandmother':
+                        h.portions = 1/6;
+                        break;
+                    case 'Brother':
+                        h.portions = hasSons ? 0 : 2;
+                        break;
+                    case 'Sister':
+                        h.portions = hasSons ? 0 : 1;
+                        break;
+                    // Sons and Daughters keep their fixed ratios
+                }
+            });
+            
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs));
         }
 
         function deleteREHeir(id) { 
             if (!confirm('Delete this heir?')) return; 
-            api('/re/heirs/' + id, { method: 'DELETE' }).then(function() {
-                showAlert('Heir deleted'); 
-                loadREInheritance(); 
-            });
+            var reHeirs = JSON.parse(localStorage.getItem('reHeirs') || '[]'); 
+            reHeirs = reHeirs.filter(function(h) { return h.id !== id; }); 
+            localStorage.setItem('reHeirs', JSON.stringify(reHeirs)); 
+            showAlert('Heir deleted'); 
+            recalculateAllHeirPortions();
+            loadREInheritance(); 
         }
 
         // ========== RE LEDGER ==========
         function loadRELedgerFull() {
+            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var settings = JSON.parse(localStorage.getItem('reSettings') || '{}');
             var currency = getCurrency();
+            var reservedPercent = parseFloat(settings.reservedPercent) || 10;
 
-            api('/re/ledger').then(function(ledgerEntries) {
-                var runningBalance = 0, totalIncome = 0, totalExpense = 0;
+            var ledgerEntries = [];
 
-                var html = ledgerEntries.map(function(entry) { 
-                    var income = parseFloat(entry.income) || 0;
-                    var expense = parseFloat(entry.expense) || 0;
-                    runningBalance = parseFloat(entry.balance) || (runningBalance + income - expense);
-                    totalIncome += income; 
-                    totalExpense += expense;
-                    
-                    var isIncome = income > 0; 
-                    var isInh = entry.type === 'Inheritance Share'; 
-                    
-                    return '<tr>' +
-                        '<td>' + fmtDate(entry.date) + '</td>' +
-                        '<td>' + (entry.property || 'N/A') + '</td>' +
-                        '<td>' + (entry.description || '') + '</td>' +
-                        '<td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
-                        '<td class="amount-positive">' + (income > 0 ? fmt(Math.round(income)) : '-') + '</td>' +
-                        '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (expense > 0 ? fmt(Math.round(expense)) : '-') + '</td>' +
-                        '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
-                    '</tr>'; 
-                }).join('');
-
-                document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
-                document.getElementById('reLedgerTotals').innerHTML = 
-                    '<tr style="background: #f7fafc; font-weight: bold;">' +
-                    '<td colspan="4" style="text-align: right;">TOTALS (' + currency + '):</td>' +
-                    '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
-                    '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
-                    '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
-                    '</tr>';
+            // Add payments as income - amount is already NET (tax deducted in Bills)
+            rePayments.forEach(function(p) { 
+                var bill = reBills.find(function(b) { return b.id === p.bill_id; }); 
+                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                var amount = parseFloat(p.amount) || 0;
+                
+                ledgerEntries.push({ 
+                    date: p.payment_date, 
+                    property: prop ? prop.name : 'N/A', 
+                    description: 'Rental Payment - ' + (bill ? bill.bill_number : 'Bill'),
+                    type: 'Income', 
+                    income: amount,
+                    expense: 0,
+                    reserved: 0
+                }); 
             });
-        }
+
+            // Add expenses
+            reExpenses.forEach(function(e) { 
+                var prop = properties.find(function(p) { return p.id === e.property_id; }); 
+                ledgerEntries.push({ 
+                    date: e.expense_date, 
+                    property: prop ? prop.name : 'General', 
+                    description: e.description, 
+                    type: e.category, 
+                    income: 0,
+                    expense: parseFloat(e.amount) || 0,
+                    reserved: 0
+                }); 
+            });
+
+            // Sort by date
+            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+
+            var runningBalance = 0, totalIncome = 0, totalExpense = 0;
+
+            var html = ledgerEntries.map(function(entry) { 
+                runningBalance += entry.income - entry.expense; 
+                totalIncome += entry.income; 
+                totalExpense += entry.expense;
+                
+                var isIncome = entry.income > 0; 
+                var isInh = entry.type === 'Inheritance Share'; 
+                
+                return '<tr>' +
+                    '<td>' + fmtDate(entry.date) + '</td>' +
+                    '<td>' + entry.property + '</td>' +
+                    '<td>' + entry.description + '</td>' +
+                    '<td><span class="badge ' + (isIncome ? 'badge-income' : isInh ? 'badge-inheritance' : 'badge-expense') + '">' + entry.type + '</span></td>' +
+                    '<td class="amount-positive">' + (entry.income > 0 ? fmt(Math.round(entry.income)) : '-') + '</td>' +
+                    '<td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">' + (entry.expense > 0 ? fmt(Math.round(entry.expense)) : '-') + '</td>' +
+                    '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
+                '</tr>'; 
+            }).join('');
+
+            // Calculate Reserved Funds and Net Balance
+            var reservedFunds = totalIncome * reservedPercent / 100;
+            // Ensure net balance is never negative
+            var netBalance = Math.max(0, runningBalance - reservedFunds);
+
+            document.getElementById('reLedgerTable').innerHTML = html || '<tr><td colspan="7">No transactions</td></tr>';
+            document.getElementById('reLedgerTotals').innerHTML = 
+                '<tr style="background: #f7fafc; font-weight: bold;">' +
+                '<td colspan="4" style="text-align: right;">SUBTOTAL (' + currency + '):</td>' +
                 '<td class="amount-positive">' + fmt(Math.round(totalIncome)) + '</td>' +
                 '<td class="amount-negative">' + fmt(Math.round(totalExpense)) + '</td>' +
                 '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(Math.round(runningBalance)) + '</td>' +
@@ -5099,14 +4143,10 @@
             if (taxInput) taxInput.addEventListener('change', updatePropertyCalc);
         });
 
-        // Initialize - no login required
+        // Initialize
         function init() {
-            // Set default admin user for full access
-            currentUser = { id: 1, username: 'admin', full_name: 'Administrator', role: 'admin' };
-            document.body.classList.add('is-admin');
-            
-            // Initialize app
             checkDb();
+            // Start on landing page
             goToLanding();
         }
 

@@ -773,31 +773,27 @@
                             </div>
                             <div class="form-group">
                                 <label>Period (from Property)</label>
-                                <input type="text" id="reBillPeriod" readonly placeholder="Select property first" style="background: #f0f0f0;">
+                                <input type="text" id="reBillPeriod" readonly placeholder="Auto from property" style="background: #e2e8f0;">
                             </div>
                             <div class="form-group">
-                                <label>Year *</label>
-                                <input type="number" id="reBillYear" value="2025">
-                            </div>
-                            <div class="form-group">
-                                <label>Gross Rent (XAF)</label>
-                                <input type="number" id="reBillGrossAmount" placeholder="Gross rent" onchange="calculateBillNet()" oninput="calculateBillNet()">
+                                <label>Gross Rent (XAF) - From Property</label>
+                                <input type="number" id="reBillGrossAmount" readonly placeholder="Auto from property" style="background: #e2e8f0; font-weight: bold;">
                             </div>
                             <div class="form-group">
                                 <label>Tax Rate (%)</label>
-                                <input type="text" id="reBillTaxRate" readonly style="background: #f0f0f0;" value="0%">
+                                <input type="text" id="reBillTaxRate" readonly style="background: #e2e8f0;" value="0%">
                             </div>
                             <div class="form-group">
                                 <label>Tax Amount (XAF)</label>
-                                <input type="text" id="reBillTaxAmount" readonly style="background: #f0f0f0; color: #e53e3e;" value="0">
+                                <input type="text" id="reBillTaxAmount" readonly style="background: #fed7d7; color: #e53e3e;" value="0">
                             </div>
                             <div class="form-group">
-                                <label>Net Amount Due (After Tax) *</label>
+                                <label>Net Amount Due (After Tax)</label>
                                 <input type="text" id="reBillAmount" readonly style="background: #c6f6d5; font-weight: bold; color: #276749;" value="0">
                             </div>
-                            <div class="form-group" style="grid-column: span 2;">
+                            <div class="form-group">
                                 <label>Description</label>
-                                <input type="text" id="reBillDesc" placeholder="Bill description">
+                                <input type="text" id="reBillDesc" placeholder="Bill description (optional)">
                             </div>
                         </div>
                         <div class="btn-group">
@@ -814,7 +810,7 @@
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Bill #</th><th>Property</th><th>Period</th><th>Year</th><th>Gross</th><th>Tax</th><th>Net Due</th><th>Paid</th><th>Outstanding</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
+                                <thead><tr><th>Bill #</th><th>Property</th><th>Period</th><th>Date</th><th>Gross</th><th>Tax</th><th>Net Due</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="reBillsTable"></tbody>
                                 <tfoot id="reBillsTotals"></tfoot>
                             </table>
@@ -3809,15 +3805,18 @@
                     document.getElementById('reBillDate').valueAsDate = new Date();
                 }
 
-                var totalGross = 0, totalTax = 0, totalNet = 0, totalPaid = 0, totalOutstanding = 0;
+                var totalGross = 0, totalTax = 0, totalNet = 0;
 
+                var isAdmin = currentUser && currentUser.role === 'admin';
+                
                 var html = reBills.map(function(b) {
                     var prop = properties.find(function(p) { return p.id === b.property_id; });
-                    var status = b.status || 'Unpaid';
-                    var statusClass = status === 'Paid' ? 'badge-paid' : status === 'Partial' ? 'badge-new' : 'badge-unpaid';
                     
-                    // Get tax info
-                    var grossAmount = parseFloat(b.amount) || 0;
+                    // Get Period from property (Monthly, Quarterly, Yearly)
+                    var period = prop ? (prop.rent_period || 'Monthly') : 'N/A';
+                    
+                    // Get Gross from property rent_amount
+                    var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : (parseFloat(b.amount) || 0);
                     var taxRate = prop ? parseFloat(prop.tax_rate) : 0;
                     var taxAmount = grossAmount * taxRate / 100;
                     var netAmount = grossAmount - taxAmount;
@@ -3826,20 +3825,29 @@
                     totalTax += taxAmount;
                     totalNet += netAmount;
                     
+                    // Actions: Edit, Delete for admin only
+                    var actionsHtml = '<td class="no-print">';
+                    if (isAdmin) {
+                        actionsHtml += '<button class="btn btn-warning btn-sm" onclick="editREBill(' + b.id + ')" title="Edit">✏️</button> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="deleteREBill(' + b.id + ')" title="Delete">🗑️</button>';
+                    } else {
+                        actionsHtml += '<span style="color: #999;">-</span>';
+                    }
+                    actionsHtml += '</td>';
+                    
                     return '<tr>' +
                         '<td><strong>BILL-' + b.id + '</strong></td>' +
                         '<td>' + (prop ? prop.name : (b.property_name || 'N/A')) + '</td>' +
-                        '<td>' + b.tenant_name + '</td>' +
+                        '<td>' + period + '</td>' +
                         '<td>' + (b.bill_date ? b.bill_date.split('T')[0] : '') + '</td>' +
                         '<td>' + fmt(Math.round(grossAmount)) + '</td>' +
                         '<td class="amount-negative">' + fmt(Math.round(taxAmount)) + ' (' + taxRate + '%)</td>' +
                         '<td><strong>' + fmt(Math.round(netAmount)) + '</strong></td>' +
-                        '<td><span class="badge ' + statusClass + '">' + status + '</span></td>' +
-                        '<td class="no-print admin-only"><button class="btn btn-warning btn-sm" onclick="editREBill(' + b.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteREBill(' + b.id + ')">🗑️</button></td>' +
+                        actionsHtml +
                     '</tr>';
                 }).join('');
 
-                document.getElementById('reBillsTable').innerHTML = html || '<tr><td colspan="9">No bills</td></tr>';
+                document.getElementById('reBillsTable').innerHTML = html || '<tr><td colspan="8">No bills</td></tr>';
                 
                 // Add totals row
                 document.getElementById('reBillsTotals').innerHTML = 
@@ -3848,7 +3856,7 @@
                     '<td>' + fmt(Math.round(totalGross)) + '</td>' +
                     '<td class="amount-negative">' + fmt(Math.round(totalTax)) + '</td>' +
                     '<td>' + fmt(Math.round(totalNet)) + '</td>' +
-                    '<td colspan="2"></td>' +
+                    '<td></td>' +
                     '</tr>';
             });
         }
@@ -3943,18 +3951,22 @@
                 var b = reBills.find(function(x) { return x.id === id; });
                 if (b) { 
                     var prop = properties.find(function(p) { return p.id === b.property_id; });
+                    
+                    // Get values from property
+                    var period = prop ? (prop.rent_period || 'Monthly') : 'N/A';
+                    var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : 0;
                     var taxRate = prop ? parseFloat(prop.tax_rate) : 0;
-                    var grossAmount = parseFloat(b.amount) || 0;
                     var taxAmount = grossAmount * taxRate / 100;
+                    var netAmount = grossAmount - taxAmount;
                     
                     document.getElementById('reBillId').value = b.id; 
                     document.getElementById('reBillProperty').value = b.property_id; 
-                    document.getElementById('reBillDate').value = b.bill_date ? b.bill_date.split('T')[0] : ''; 
-                    if (document.getElementById('reBillTenant')) document.getElementById('reBillTenant').value = b.tenant_name || '';
+                    document.getElementById('reBillDate').value = b.bill_date ? b.bill_date.split('T')[0] : '';
+                    if (document.getElementById('reBillPeriod')) document.getElementById('reBillPeriod').value = period;
                     if (document.getElementById('reBillGrossAmount')) document.getElementById('reBillGrossAmount').value = Math.round(grossAmount);
                     if (document.getElementById('reBillTaxRate')) document.getElementById('reBillTaxRate').value = taxRate + '%';
                     if (document.getElementById('reBillTaxAmount')) document.getElementById('reBillTaxAmount').value = fmt(Math.round(taxAmount));
-                    if (document.getElementById('reBillAmount')) document.getElementById('reBillAmount').value = fmt(Math.round(grossAmount - taxAmount)); 
+                    if (document.getElementById('reBillAmount')) document.getElementById('reBillAmount').value = fmt(Math.round(netAmount)); 
                     document.getElementById('reBillDesc').value = b.notes || ''; 
                 }
             });

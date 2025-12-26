@@ -113,7 +113,9 @@
         .landing-page { text-align: center; padding: 2rem 1rem; }
         .landing-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); margin-bottom: 0.5rem; }
         .landing-subtitle { color: var(--text-gray); font-size: 1rem; margin-bottom: 2rem; }
-        .landing-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto 2rem; }
+        .landing-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 1400px; margin: 0 auto 2rem; }
+        @media (max-width: 1200px) { .landing-cards { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
+        @media (max-width: 900px) { .landing-cards { grid-template-columns: 1fr; max-width: 500px; } }
         .landing-card { background: var(--bg-white); border-radius: 12px; box-shadow: var(--shadow-md); padding: 1.5rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 3px solid transparent; }
         .landing-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
         .landing-card.campost { border-color: var(--primary-blue); }
@@ -122,6 +124,13 @@
         .landing-card.family:hover { border-color: var(--accent-gold); }
         .landing-card.assets { border-color: #805ad5; }
         .landing-card.assets:hover { border-color: var(--accent-gold); }
+        .landing-card-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        .landing-card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .landing-card-desc { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 1rem; min-height: 40px; }
+        .landing-card-stats { display: flex; justify-content: space-around; gap: 0.5rem; padding: 0.75rem 0; background: #f7fafc; border-radius: 8px; margin-bottom: 0.5rem; }
+        .landing-stat { text-align: center; }
+        .landing-stat-value { font-size: 0.95rem; font-weight: 700; }
+        .landing-stat-label { font-size: 0.7rem; color: var(--text-gray); }
         
         /* Asset Tab Styles */
         .asset-tab { padding: 0.5rem 1rem; border: none; background: #e2e8f0; color: #4a5568; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
@@ -387,7 +396,7 @@
                     </div>
                 </div>
                 
-                <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <div class="card" style="max-width: 1400px; margin: 0 auto;">
                     <div class="card-header gold"><span>📊 Combined Portfolio Overview</span></div>
                     <div class="card-body">
                         <div class="stats-grid">

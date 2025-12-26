@@ -218,7 +218,8 @@
         .highlight-box p { font-size: 0.75rem; color: var(--text-gray); }
         
         /* Beneficiary Selection Styles */
-        .beneficiary-item { display: flex; align-items: center; padding: 10px; background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .beneficiary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+        .beneficiary-item { display: flex; align-items: center; padding: 10px; background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0; transition: all 0.2s; cursor: pointer; }
         .beneficiary-item:hover { background: #edf2f7; }
         .beneficiary-item.selected { background: #c6f6d5; border-color: #48bb78; }
         .beneficiary-item input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; }
@@ -1659,19 +1660,58 @@
                         📌 <strong>Islamic Inheritance:</strong> Distribution follows the same heir portions as defined in the Family Estates module. Wives receive 1/8 collectively, Sons receive 2 portions each, Daughters receive 1 portion each.
                     </p>
                     
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Heir Name</th>
-                                    <th>Relationship</th>
-                                    <th>Group</th>
-                                    <th>Portions</th>
-                                    <th style="text-align: right;">Share (XAF)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="assetsHeirsTable"></tbody>
-                        </table>
+                    <!-- Beneficiary Selection -->
+                    <div class="card" style="margin-bottom: 1rem; border: 2px solid var(--accent-gold);">
+                        <div class="card-header" style="background: linear-gradient(135deg, #744210 0%, #975a16 100%);">
+                            <span>✅ Select Beneficiaries</span>
+                            <span class="badge" style="background: white; color: #744210;" id="assetsBeneficiaryCount">0 selected</span>
+                        </div>
+                        <div class="card-body">
+                            <p style="font-size: 0.85rem; color: #718096; margin-bottom: 1rem;">Select which heirs will receive a share of the residence assets. Only selected heirs will be included in the distribution calculation.</p>
+                            
+                            <div class="btn-group" style="margin-bottom: 1rem;">
+                                <button class="btn btn-success btn-sm" onclick="selectAllAssetsBeneficiaries()">✅ Select All</button>
+                                <button class="btn btn-outline btn-sm" onclick="deselectAllAssetsBeneficiaries()">☐ Deselect All</button>
+                            </div>
+                            
+                            <div id="assetsBeneficiaryList" class="beneficiary-grid">
+                                <!-- Beneficiaries loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Distribution Table -->
+                    <div class="card">
+                        <div class="card-header green">
+                            <span>📊 Distribution to Selected Beneficiaries</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Heir Name</th>
+                                            <th>Relationship</th>
+                                            <th>Group</th>
+                                            <th style="text-align: center;">Portions</th>
+                                            <th style="text-align: right;">Share (XAF)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assetsHeirsTable"></tbody>
+                                    <tfoot>
+                                        <tr style="background: #f0fff4; font-weight: bold;">
+                                            <td colspan="3">TOTAL DISTRIBUTED</td>
+                                            <td style="text-align: center;" id="assetsTotalPortions">0</td>
+                                            <td style="text-align: right;" id="assetsTotalDistributed">0 XAF</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            
+                            <div id="assetsUndistributedWarning" style="display: none; margin-top: 1rem; padding: 10px; background: #fed7d7; border-radius: 6px; border-left: 4px solid #c53030;">
+                                <p style="color: #c53030; margin: 0;"><strong>⚠️ Warning:</strong> <span id="assetsUndistributedAmount">0 XAF</span> remains undistributed. Please select more beneficiaries or the full amount will not be allocated.</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="btn-group" style="margin-top: 1rem;">
@@ -7744,28 +7784,127 @@
         }
         
         // Load Assets Inheritance
+        // Assets beneficiaries storage
+        var assetsBeneficiaries = [];
+        var allAssetsHeirs = [];
+        
         function loadAssetsInheritance() {
             var totals = calcAssetTotals();
             document.getElementById('assetsInheritancePool').textContent = fmt(totals.grandTotal) + ' XAF';
             
-            // Use the same heirs from RE module
+            // Load heirs from RE module
             api('/re/heirs').then(function(heirs) {
-                var totalPortions = heirs.reduce(function(s, h) { return s + parseFloat(h.portions); }, 0);
-                var perPortion = totals.grandTotal / totalPortions;
+                allAssetsHeirs = heirs;
                 
-                var html = heirs.map(function(h) {
-                    var share = parseFloat(h.portions) * perPortion;
-                    return '<tr>' +
-                        '<td><strong>' + h.name + '</strong></td>' +
-                        '<td>' + h.relationship + '</td>' +
-                        '<td>' + h.heir_group + '</td>' +
-                        '<td style="text-align: center;">' + h.portions + '</td>' +
-                        '<td style="text-align: right; color: var(--success-green); font-weight: bold;">' + fmt(Math.round(share)) + '</td>' +
-                    '</tr>';
-                }).join('');
+                // Initialize all heirs as selected if first load
+                if (assetsBeneficiaries.length === 0) {
+                    assetsBeneficiaries = heirs.map(function(h) { return h.id; });
+                }
                 
-                document.getElementById('assetsHeirsTable').innerHTML = html;
+                // Render beneficiary selection grid
+                renderAssetsBeneficiaryList(heirs);
+                
+                // Calculate and display distribution
+                calculateAssetsDistribution();
             });
+        }
+        
+        // Render beneficiary selection list
+        function renderAssetsBeneficiaryList(heirs) {
+            var html = heirs.map(function(h) {
+                var isSelected = assetsBeneficiaries.indexOf(h.id) !== -1;
+                return '<div class="beneficiary-item' + (isSelected ? ' selected' : '') + '" onclick="toggleAssetsBeneficiary(' + h.id + ')">' +
+                    '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' onchange="toggleAssetsBeneficiary(' + h.id + ')">' +
+                    '<label>' +
+                        '<strong>' + h.name + '</strong><br>' +
+                        '<span style="font-size: 0.75rem; color: #718096;">' + h.relationship + ' • ' + h.portions + ' portion(s)</span>' +
+                    '</label>' +
+                '</div>';
+            }).join('');
+            
+            document.getElementById('assetsBeneficiaryList').innerHTML = html || '<p style="color: #718096;">No heirs defined. Please add heirs in the Family Estates module.</p>';
+            
+            // Update count
+            document.getElementById('assetsBeneficiaryCount').textContent = assetsBeneficiaries.length + ' selected';
+        }
+        
+        // Toggle beneficiary selection
+        function toggleAssetsBeneficiary(heirId) {
+            var index = assetsBeneficiaries.indexOf(heirId);
+            if (index === -1) {
+                assetsBeneficiaries.push(heirId);
+            } else {
+                assetsBeneficiaries.splice(index, 1);
+            }
+            
+            // Re-render
+            renderAssetsBeneficiaryList(allAssetsHeirs);
+            calculateAssetsDistribution();
+        }
+        
+        // Select all beneficiaries
+        function selectAllAssetsBeneficiaries() {
+            assetsBeneficiaries = allAssetsHeirs.map(function(h) { return h.id; });
+            renderAssetsBeneficiaryList(allAssetsHeirs);
+            calculateAssetsDistribution();
+        }
+        
+        // Deselect all beneficiaries
+        function deselectAllAssetsBeneficiaries() {
+            assetsBeneficiaries = [];
+            renderAssetsBeneficiaryList(allAssetsHeirs);
+            calculateAssetsDistribution();
+        }
+        
+        // Calculate and display distribution
+        function calculateAssetsDistribution() {
+            var totals = calcAssetTotals();
+            var pool = totals.grandTotal;
+            
+            // Filter selected heirs
+            var selectedHeirs = allAssetsHeirs.filter(function(h) {
+                return assetsBeneficiaries.indexOf(h.id) !== -1;
+            });
+            
+            if (selectedHeirs.length === 0) {
+                document.getElementById('assetsHeirsTable').innerHTML = '<tr><td colspan="5" style="text-align: center; color: #718096;">No beneficiaries selected. Please select at least one heir above.</td></tr>';
+                document.getElementById('assetsTotalPortions').textContent = '0';
+                document.getElementById('assetsTotalDistributed').textContent = '0 XAF';
+                document.getElementById('assetsUndistributedWarning').style.display = 'block';
+                document.getElementById('assetsUndistributedAmount').textContent = fmt(pool) + ' XAF';
+                return;
+            }
+            
+            // Calculate total portions for selected heirs
+            var totalPortions = selectedHeirs.reduce(function(s, h) { return s + parseFloat(h.portions); }, 0);
+            var perPortion = pool / totalPortions;
+            var totalDistributed = 0;
+            
+            // Render distribution table
+            var html = selectedHeirs.map(function(h) {
+                var share = parseFloat(h.portions) * perPortion;
+                totalDistributed += share;
+                return '<tr>' +
+                    '<td><strong>' + h.name + '</strong></td>' +
+                    '<td>' + h.relationship + '</td>' +
+                    '<td>' + h.heir_group + '</td>' +
+                    '<td style="text-align: center;">' + h.portions + '</td>' +
+                    '<td style="text-align: right; color: var(--success-green); font-weight: bold;">' + fmt(Math.round(share)) + '</td>' +
+                '</tr>';
+            }).join('');
+            
+            document.getElementById('assetsHeirsTable').innerHTML = html;
+            document.getElementById('assetsTotalPortions').textContent = totalPortions;
+            document.getElementById('assetsTotalDistributed').textContent = fmt(Math.round(totalDistributed)) + ' XAF';
+            
+            // Check for undistributed amount (should be 0 if all selected)
+            var undistributed = pool - totalDistributed;
+            if (Math.abs(undistributed) > 1) {
+                document.getElementById('assetsUndistributedWarning').style.display = 'block';
+                document.getElementById('assetsUndistributedAmount').textContent = fmt(Math.round(undistributed)) + ' XAF';
+            } else {
+                document.getElementById('assetsUndistributedWarning').style.display = 'none';
+            }
         }
         
         // Export Assets PDF
@@ -7861,55 +8000,80 @@
             var totals = calcAssetTotals();
             var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            api('/re/heirs').then(function(heirs) {
-                var totalPortions = heirs.reduce(function(s, h) { return s + parseFloat(h.portions); }, 0);
-                var perPortion = totals.grandTotal / totalPortions;
-                
-                // Background
-                doc.setFillColor(255, 250, 240);
-                doc.rect(0, 0, 210, 297, 'F');
-                
-                // Header
-                doc.setFillColor(214, 158, 46);
-                doc.rect(10, 10, 190, 30, 'F');
-                
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(18);
-                doc.setFont('helvetica', 'bold');
-                doc.text('ASSETS INHERITANCE DISTRIBUTION', 105, 22, { align: 'center' });
-                doc.setFontSize(10);
-                doc.text('NJIKAM SALIFU ESTATE - Islamic Inheritance', 105, 30, { align: 'center' });
-                
-                // Pool info
-                doc.setTextColor(116, 66, 16);
-                doc.setFontSize(12);
-                doc.text('Total Assets Pool: ' + fmt(totals.grandTotal) + ' XAF', 105, 50, { align: 'center' });
-                doc.setFontSize(9);
-                doc.text('(Old Town: ' + fmt(totals.oldTown.total) + ' + Manka: ' + fmt(totals.manka.total) + ')', 105, 57, { align: 'center' });
-                
-                // Heirs table
-                var tableData = heirs.map(function(h) {
-                    var share = parseFloat(h.portions) * perPortion;
-                    return [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(share))];
-                });
-                
-                doc.autoTable({
-                    startY: 65,
-                    head: [['Heir Name', 'Relationship', 'Group', 'Portions', 'Share (XAF)']],
-                    body: tableData,
-                    styles: { fontSize: 9, cellPadding: 4 },
-                    headStyles: { fillColor: [214, 158, 46], textColor: [255, 255, 255] },
-                    alternateRowStyles: { fillColor: [255, 250, 240] }
-                });
-                
-                // Footer
-                doc.setFontSize(8);
-                doc.setTextColor(113, 128, 150);
-                doc.text('Generated on: ' + today, 105, doc.lastAutoTable.finalY + 10, { align: 'center' });
-                
-                doc.save('assets_inheritance_' + new Date().toISOString().split('T')[0] + '.pdf');
-                showAlert('Assets Inheritance PDF exported!');
+            // Filter to selected beneficiaries only
+            var selectedHeirs = allAssetsHeirs.filter(function(h) {
+                return assetsBeneficiaries.indexOf(h.id) !== -1;
             });
+            
+            if (selectedHeirs.length === 0) {
+                showAlert('Please select at least one beneficiary before exporting', 'error');
+                return;
+            }
+            
+            var totalPortions = selectedHeirs.reduce(function(s, h) { return s + parseFloat(h.portions); }, 0);
+            var perPortion = totals.grandTotal / totalPortions;
+            
+            // Background
+            doc.setFillColor(255, 250, 240);
+            doc.rect(0, 0, 210, 297, 'F');
+            
+            // Header
+            doc.setFillColor(214, 158, 46);
+            doc.rect(10, 10, 190, 30, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ASSETS INHERITANCE DISTRIBUTION', 105, 22, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text('NJIKAM SALIFU ESTATE - Islamic Inheritance', 105, 30, { align: 'center' });
+            
+            // Pool info
+            doc.setTextColor(116, 66, 16);
+            doc.setFontSize(12);
+            doc.text('Total Assets Pool: ' + fmt(totals.grandTotal) + ' XAF', 105, 50, { align: 'center' });
+            doc.setFontSize(9);
+            doc.text('(Old Town: ' + fmt(totals.oldTown.total) + ' + Manka: ' + fmt(totals.manka.total) + ')', 105, 57, { align: 'center' });
+            
+            // Beneficiary count
+            doc.setFontSize(10);
+            doc.text('Selected Beneficiaries: ' + selectedHeirs.length + ' of ' + allAssetsHeirs.length + ' heirs', 105, 64, { align: 'center' });
+            
+            // Heirs table
+            var tableData = selectedHeirs.map(function(h) {
+                var share = parseFloat(h.portions) * perPortion;
+                return [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(share))];
+            });
+            
+            // Add total row
+            var totalDistributed = selectedHeirs.reduce(function(s, h) {
+                return s + (parseFloat(h.portions) * perPortion);
+            }, 0);
+            tableData.push(['TOTAL', '', '', totalPortions, fmt(Math.round(totalDistributed))]);
+            
+            doc.autoTable({
+                startY: 72,
+                head: [['Heir Name', 'Relationship', 'Group', 'Portions', 'Share (XAF)']],
+                body: tableData,
+                styles: { fontSize: 9, cellPadding: 4 },
+                headStyles: { fillColor: [214, 158, 46], textColor: [255, 255, 255] },
+                alternateRowStyles: { fillColor: [255, 250, 240] },
+                didParseCell: function(data) {
+                    // Bold the total row
+                    if (data.row.index === tableData.length - 1) {
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [254, 243, 199];
+                    }
+                }
+            });
+            
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(113, 128, 150);
+            doc.text('Generated on: ' + today, 105, doc.lastAutoTable.finalY + 10, { align: 'center' });
+            
+            doc.save('assets_inheritance_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showAlert('Assets Inheritance PDF exported!');
         }
         
         // Print Assets Inheritance

@@ -882,24 +882,31 @@
                 </div>
                 <div class="admin-only-section">
                 
-                <!-- Inheritance Amount Card -->
+                <!-- Available Funds Card -->
                 <div class="card">
-                    <div class="card-header gold"><span>💰 Set Inheritance Amount</span></div>
+                    <div class="card-header blue"><span>💰 Available Funds</span></div>
                     <div class="card-body">
                         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                            📌 Enter the amount to be distributed as inheritance. This is the total amount available for Islamic inheritance distribution among the heirs.
+                            📌 Available funds are automatically calculated as: <strong>Total Income - Total Expenses - Reserved Funds</strong>.
+                            Reserved Funds percentage can be set in the Settings section.
                         </p>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Inheritance Amount (XAF) *</label>
-                                <input type="number" id="reInheritanceAmount" placeholder="Enter inheritance amount" min="0" style="font-size: 18px; font-weight: bold;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div style="padding: 15px; background: #e6fffa; border-radius: 8px; border: 2px solid #38b2ac;">
+                                <div style="font-size: 12px; color: #234e52; font-weight: bold;">TOTAL INCOME</div>
+                                <div id="reTotalIncome" style="font-size: 20px; font-weight: bold; color: #38a169;">0 XAF</div>
                             </div>
-                            <div class="form-group" style="display: flex; align-items: flex-end;">
-                                <button class="btn btn-gold" onclick="saveREInheritanceAmount()">💾 Save Inheritance Amount</button>
+                            <div style="padding: 15px; background: #fed7d7; border-radius: 8px; border: 2px solid #fc8181;">
+                                <div style="font-size: 12px; color: #742a2a; font-weight: bold;">TOTAL EXPENSES</div>
+                                <div id="reTotalExpenses" style="font-size: 20px; font-weight: bold; color: #c53030;">0 XAF</div>
                             </div>
-                        </div>
-                        <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-radius: 6px;">
-                            <strong>Current Inheritance Amount:</strong> <span id="currentInheritanceAmount" style="font-size: 18px; font-weight: bold; color: #92400e;">0 XAF</span>
+                            <div style="padding: 15px; background: #fef3c7; border-radius: 8px; border: 2px solid #d69e2e;">
+                                <div style="font-size: 12px; color: #744210; font-weight: bold;">RESERVED FUNDS (<span id="reReservedPercent">10</span>%)</div>
+                                <div id="reReservedFunds" style="font-size: 20px; font-weight: bold; color: #d69e2e;">0 XAF</div>
+                            </div>
+                            <div style="padding: 15px; background: #ebf8ff; border-radius: 8px; border: 2px solid #3182ce;">
+                                <div style="font-size: 12px; color: #2c5282; font-weight: bold;">AVAILABLE FUNDS</div>
+                                <div id="reAvailableFunds" style="font-size: 20px; font-weight: bold; color: #2b6cb0;">0 XAF</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -931,6 +938,7 @@
                                     <option value="Insurance">Insurance</option>
                                     <option value="Legal">Legal Fees</option>
                                     <option value="Agent Fees">Agent Fees</option>
+                                    <option value="Inheritance Allocation">Inheritance Allocation</option>
                                     <option value="Others">Others</option>
                                 </select>
                             </div>
@@ -1004,7 +1012,7 @@
                     </div>
                     <div class="card-body">
                         <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                            📌 Inheritance amount is set by the administrator in the <strong>Expenses</strong> section based on available funds.
+                            📌 Inheritance amount is the total of all <strong>Inheritance Allocation</strong> expenses recorded in the Expenses section.
                             <br>Only <strong>selected beneficiaries</strong> are included in the distribution below.
                         </p>
                         <div class="table-container">
@@ -4494,32 +4502,39 @@
             });
         }
 
-        // ========== RE INHERITANCE AMOUNT ==========
-        function loadREInheritanceAmount() {
+        // ========== RE AVAILABLE FUNDS ==========
+        function loadREAvailableFunds() {
             var currency = getCurrency();
-            api('/re/inheritance-amount').then(function(data) {
-                var amount = data.amount || 0;
-                document.getElementById('reInheritanceAmount').value = amount || '';
-                document.getElementById('currentInheritanceAmount').textContent = fmt(Math.round(amount)) + ' ' + currency;
-            });
-        }
-        
-        function saveREInheritanceAmount() {
-            var amount = parseFloat(document.getElementById('reInheritanceAmount').value) || 0;
             
-            if (amount < 0) {
-                showAlert('Inheritance amount cannot be negative', 'error');
-                return;
-            }
-            
-            api('/re/inheritance-amount', {
-                method: 'POST',
-                body: JSON.stringify({ amount: amount })
-            }).then(function() {
-                showAlert('Inheritance amount saved!');
-                loadREInheritanceAmount();
-                loadREInheritance();
-                loadRealEstate();
+            Promise.all([
+                api('/re/payments'),
+                api('/re/expenses'),
+                api('/re/settings')
+            ]).then(function(results) {
+                var payments = results[0];
+                var expenses = results[1];
+                var settings = results[2];
+                
+                // Get reserved funds percentage from settings
+                var reservedPercent = 10; // default
+                settings.forEach(function(s) {
+                    if (s.setting_key === 'reservedFundsPercent') {
+                        reservedPercent = parseFloat(s.setting_value) || 10;
+                    }
+                });
+                
+                // Calculate totals
+                var totalIncome = payments.reduce(function(sum, p) { return sum + (parseFloat(p.amount) || 0); }, 0);
+                var totalExpenses = expenses.reduce(function(sum, e) { return sum + (parseFloat(e.amount) || 0); }, 0);
+                var reservedFunds = totalIncome * (reservedPercent / 100);
+                var availableFunds = Math.max(0, totalIncome - totalExpenses - reservedFunds);
+                
+                // Update display
+                document.getElementById('reTotalIncome').textContent = fmt(Math.round(totalIncome)) + ' ' + currency;
+                document.getElementById('reTotalExpenses').textContent = fmt(Math.round(totalExpenses)) + ' ' + currency;
+                document.getElementById('reReservedPercent').textContent = reservedPercent;
+                document.getElementById('reReservedFunds').textContent = fmt(Math.round(reservedFunds)) + ' ' + currency;
+                document.getElementById('reAvailableFunds').textContent = fmt(Math.round(availableFunds)) + ' ' + currency;
             });
         }
 
@@ -4527,8 +4542,8 @@
         function loadREExpenses() {
             var currency = getCurrency();
             
-            // Load inheritance amount
-            loadREInheritanceAmount();
+            // Load available funds
+            loadREAvailableFunds();
 
             // Populate property dropdown with all properties
             api('/properties').then(function(properties) {
@@ -4545,13 +4560,14 @@
             api('/re/expenses').then(function(reExpenses) {
                 var totalExpenses = 0;
                 var html = reExpenses.map(function(e) { 
+                    var isInheritance = e.category === 'Inheritance Allocation';
                     totalExpenses += parseFloat(e.amount) || 0;
                     return '<tr>' +
                         '<td>' + fmtDate(e.expense_date) + '</td>' +
                         '<td>' + (e.property_name || 'General') + '</td>' +
-                        '<td>' + e.category + '</td>' +
+                        '<td>' + (isInheritance ? '<span class="badge badge-gold">' + e.category + '</span>' : e.category) + '</td>' +
                         '<td>' + e.description + '</td>' +
-                        '<td class="amount-negative">-' + fmt(e.amount) + '</td>' +
+                        '<td class="' + (isInheritance ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td>' +
                         '<td class="no-print">' +
                             '<button class="btn btn-warning btn-sm" onclick="editREExpense(' + e.id + ')">✏️</button> ' +
                             '<button class="btn btn-danger btn-sm" onclick="deleteREExpense(' + e.id + ')">🗑️</button>' +

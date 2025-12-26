@@ -1445,9 +1445,9 @@ app.post('/api/users/change-password', async (req, res) => {
 // ============== RE INHERITANCE CALCULATION ==============
 app.get('/api/re/inheritance/calculate', async (req, res) => {
     try {
-        // Get user-entered inheritance amount from settings
-        const inheritanceAmountResult = await pool.query("SELECT setting_value FROM re_settings WHERE setting_key = 'inheritanceAmount'");
-        const inheritancePool = inheritanceAmountResult.rows.length > 0 ? parseFloat(inheritanceAmountResult.rows[0].setting_value) : 0;
+        // Get total "Inheritance Allocation" expenses - this is the inheritance pool
+        const inheritanceResult = await pool.query("SELECT COALESCE(SUM(amount), 0) as total FROM re_expenses WHERE category = 'Inheritance Allocation'");
+        const inheritancePool = parseFloat(inheritanceResult.rows[0].total) || 0;
         
         // Get selected beneficiaries
         const beneficiariesResult = await pool.query('SELECT heir_id FROM re_beneficiaries WHERE is_selected = TRUE');
@@ -1490,30 +1490,6 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
             heirs: heirShares,
             groupSummary
         });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Get/Set RE Inheritance Amount
-app.get('/api/re/inheritance-amount', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT setting_value FROM re_settings WHERE setting_key = 'inheritanceAmount'");
-        const amount = result.rows.length > 0 ? parseFloat(result.rows[0].setting_value) : 0;
-        res.json({ amount });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/re/inheritance-amount', async (req, res) => {
-    try {
-        const { amount } = req.body;
-        await pool.query(
-            "INSERT INTO re_settings (setting_key, setting_value) VALUES ('inheritanceAmount', $1) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $1, updated_at = CURRENT_TIMESTAMP",
-            [amount.toString()]
-        );
-        res.json({ success: true, amount });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

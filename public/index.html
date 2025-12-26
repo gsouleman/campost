@@ -842,6 +842,10 @@
                                 <input type="number" id="rePayAmount" readonly style="background: #e2e8f0; font-weight: bold;">
                             </div>
                             <div class="form-group">
+                                <label>Amount Paid *</label>
+                                <input type="number" id="rePayAmountPaid" placeholder="Enter amount to pay">
+                            </div>
+                            <div class="form-group">
                                 <label>Reference</label>
                                 <input type="text" id="rePayRef" readonly style="background: #e2e8f0;">
                             </div>
@@ -4018,26 +4022,49 @@
                 var properties = results[1];
                 var rePayments = results[2];
                 
-                // Calculate Net Amount Due for each bill (from property)
+                // Calculate Net Amount Due for each bill (from property) and track payment status
                 var billsWithNetAmount = reBills.map(function(b) {
                     var prop = properties.find(function(p) { return p.id === b.property_id; });
                     var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : (parseFloat(b.amount) || 0);
                     var taxRate = prop ? parseFloat(prop.tax_rate) : 0;
                     var netAmount = grossAmount - (grossAmount * taxRate / 100);
+                    
+                    // Calculate total paid for this bill
+                    var totalPaidForBill = rePayments
+                        .filter(function(p) { return p.bill_id === b.id; })
+                        .reduce(function(sum, p) { return sum + (parseFloat(p.amount) || 0); }, 0);
+                    
+                    // Determine payment status
+                    var paymentStatus = 'Unpaid';
+                    if (totalPaidForBill >= netAmount) {
+                        paymentStatus = totalPaidForBill > netAmount ? 'Overpaid' : 'Paid';
+                    } else if (totalPaidForBill > 0) {
+                        paymentStatus = 'Partial';
+                    }
+                    
                     return {
                         id: b.id,
                         property_id: b.property_id,
                         property_name: prop ? prop.name : (b.property_name || 'N/A'),
                         netAmount: netAmount,
+                        totalPaid: totalPaidForBill,
+                        paymentStatus: paymentStatus,
                         status: b.status
                     };
                 });
                 
-                // Populate Select Bill dropdown - show all bills
+                // Filter bills that are NOT fully paid or overpaid for the dropdown
+                var unpaidBills = billsWithNetAmount.filter(function(b) {
+                    return b.paymentStatus !== 'Paid' && b.paymentStatus !== 'Overpaid';
+                });
+                
+                // Populate Select Bill dropdown - only show unpaid/partial bills
                 document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill</option>' + 
-                    billsWithNetAmount.map(function(b) { 
-                        return '<option value="' + b.id + '" data-amount="' + Math.round(b.netAmount) + '" data-property="' + b.property_name + '">' + 
-                            'BILL-' + b.id + ' | ' + b.property_name + ' | Amount: ' + fmt(Math.round(b.netAmount)) + ' ' + currency + 
+                    unpaidBills.map(function(b) {
+                        var remaining = b.netAmount - b.totalPaid;
+                        var statusText = b.paymentStatus === 'Partial' ? ' (Partial - Remaining: ' + fmt(Math.round(remaining)) + ')' : '';
+                        return '<option value="' + b.id + '" data-amount="' + Math.round(b.netAmount) + '" data-remaining="' + Math.round(remaining) + '" data-property="' + b.property_name + '">' + 
+                            'BILL-' + b.id + ' | ' + b.property_name + ' | Amount: ' + fmt(Math.round(b.netAmount)) + ' ' + currency + statusText +
                         '</option>'; 
                     }).join('');
 
@@ -4062,20 +4089,22 @@
                     
                     // Determine status
                     var status, statusClass;
-                    if (amountPaid === amount) {
-                        status = 'Paid in Full';
-                        statusClass = 'badge-paid';
-                    } else if (amountPaid < amount) {
+                    if (amountPaid >= amount) {
+                        if (amountPaid > amount) {
+                            status = 'Overpayment';
+                            statusClass = 'badge-inheritance';
+                        } else {
+                            status = 'Paid in Full';
+                            statusClass = 'badge-paid';
+                        }
+                    } else {
                         status = 'Partial Payment';
                         statusClass = 'badge-new';
-                    } else {
-                        status = 'Overpayment, Credit on Account';
-                        statusClass = 'badge-inheritance';
                     }
                     
                     totalAmount += amount;
                     totalPaid += amountPaid;
-                    totalDue += amountDue;
+                    totalDue += Math.max(0, amountDue);
                     
                     // Actions: View, Print, Delete
                     var actionsHtml = '<td class="no-print">';
@@ -4122,29 +4151,34 @@
             
             if (selectedOption && selectedOption.value) {
                 var amount = parseFloat(selectedOption.getAttribute('data-amount')) || 0;
+                var remaining = parseFloat(selectedOption.getAttribute('data-remaining')) || amount;
                 document.getElementById('rePayAmount').value = amount;
+                // Pre-fill amount paid with remaining balance
+                document.getElementById('rePayAmountPaid').value = remaining;
                 // Generate new reference if empty
                 if (!document.getElementById('rePayRef').value) {
                     document.getElementById('rePayRef').value = generatePaymentReference();
                 }
             } else {
                 document.getElementById('rePayAmount').value = '';
+                document.getElementById('rePayAmountPaid').value = '';
             }
         }
 
         function saveREPayment() {
             var billId = parseInt(document.getElementById('rePayBill').value);
             var payDate = document.getElementById('rePayDate').value;
-            var amount = parseFloat(document.getElementById('rePayAmount').value) || 0;
+            var amountPaid = parseFloat(document.getElementById('rePayAmountPaid').value) || 0;
             var reference = document.getElementById('rePayRef').value || generatePaymentReference();
 
-            if (!billId || !amount) { showAlert('Please select a bill', 'error'); return; }
+            if (!billId) { showAlert('Please select a bill', 'error'); return; }
+            if (!amountPaid || amountPaid <= 0) { showAlert('Please enter amount paid', 'error'); return; }
 
             api('/re/payments', {
                 method: 'POST',
                 body: JSON.stringify({
                     billId: billId,
-                    amount: amount,
+                    amount: amountPaid,
                     paymentDate: payDate,
                     paymentMethod: 'Cash',
                     reference: reference
@@ -4162,6 +4196,7 @@
             if (document.getElementById('rePayId')) document.getElementById('rePayId').value = ''; 
             document.getElementById('rePayBill').value = ''; 
             document.getElementById('rePayAmount').value = ''; 
+            document.getElementById('rePayAmountPaid').value = '';
             document.getElementById('rePayRef').value = generatePaymentReference();
         }
 
@@ -4175,7 +4210,7 @@
             });
         }
         
-        // View payment details
+        // View payment details - Certificate style modal
         function viewREPayment(id) {
             Promise.all([api('/re/payments'), api('/re/bills'), api('/properties')]).then(function(results) {
                 var payments = results[0];
@@ -4192,25 +4227,84 @@
                     var netAmount = grossAmount - (grossAmount * taxRate / 100);
                     var amountPaid = parseFloat(payment.amount) || 0;
                     var amountDue = netAmount - amountPaid;
-                    var status = amountPaid === netAmount ? 'Paid in Full' : amountPaid < netAmount ? 'Partial Payment' : 'Overpayment, Credit on Account';
+                    var status, statusColor;
+                    if (amountPaid >= netAmount) {
+                        status = amountPaid > netAmount ? 'Overpayment, Credit on Account' : 'Paid in Full';
+                        statusColor = amountPaid > netAmount ? '#d69e2e' : '#38a169';
+                    } else {
+                        status = 'Partial Payment';
+                        statusColor = '#dd6b20';
+                    }
                     
                     var currency = getCurrency();
-                    alert(
-                        '=== PAYMENT DETAILS ===\n\n' +
-                        'Reference: ' + (payment.reference || '-') + '\n' +
-                        'Date: ' + fmtDate(payment.payment_date) + '\n' +
-                        'Property: ' + propName + '\n' +
-                        'Bill: BILL-' + payment.bill_id + '\n\n' +
-                        'Amount Due: ' + fmt(Math.round(netAmount)) + ' ' + currency + '\n' +
-                        'Amount Paid: ' + fmt(Math.round(amountPaid)) + ' ' + currency + '\n' +
-                        'Balance: ' + fmt(Math.round(amountDue)) + ' ' + currency + '\n' +
-                        'Status: ' + status
-                    );
+                    var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    
+                    // Create certificate-style modal
+                    var modalHtml = '<div id="paymentViewModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">' +
+                        '<div style="background: linear-gradient(135deg, #fef9e7 0%, #fdebd0 100%); max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 3px solid #c9a227;">' +
+                            '<div style="background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">' +
+                                '<div style="font-size: 24px; font-weight: bold;">🏠 FAMILY REAL ESTATES</div>' +
+                                '<div style="font-size: 14px; margin-top: 5px;">NJIKAM SALIFU REAL ESTATE PROPERTIES</div>' +
+                                '<div style="font-size: 12px; font-style: italic; color: #90cdf4; margin-top: 5px;">Payment Receipt</div>' +
+                            '</div>' +
+                            '<div style="padding: 30px;">' +
+                                '<div style="text-align: center; margin-bottom: 20px;">' +
+                                    '<h2 style="color: #2c5282; margin: 0; font-size: 22px;">PAYMENT RECEIPT</h2>' +
+                                    '<div style="color: #718096; font-size: 12px;">Receipt No: ' + (payment.reference || 'N/A') + '</div>' +
+                                '</div>' +
+                                '<div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">' +
+                                    '<p style="font-size: 14px; line-height: 1.8; margin: 0;">This is to acknowledge receipt of payment for <strong>' + propName + '</strong> property rental, Bill <strong>BILL-' + payment.bill_id + '</strong>, dated <strong>' + fmtDate(payment.payment_date) + '</strong>.</p>' +
+                                '</div>' +
+                                '<div style="display: flex; gap: 15px; margin-bottom: 20px;">' +
+                                    '<div style="flex: 1; background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); border: 2px solid #3182ce; border-radius: 8px; padding: 15px; text-align: center;">' +
+                                        '<div style="font-size: 11px; color: #2c5282; font-weight: bold; text-transform: uppercase;">Total Amount Due</div>' +
+                                        '<div style="font-size: 20px; color: #2c5282; font-weight: bold;">' + fmt(Math.round(netAmount)) + ' ' + currency + '</div>' +
+                                    '</div>' +
+                                    '<div style="flex: 1; background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border: 2px solid #38a169; border-radius: 8px; padding: 15px; text-align: center;">' +
+                                        '<div style="font-size: 11px; color: #276749; font-weight: bold; text-transform: uppercase;">Amount Paid</div>' +
+                                        '<div style="font-size: 20px; color: #38a169; font-weight: bold;">' + fmt(Math.round(amountPaid)) + ' ' + currency + '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div style="background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%); border: 3px dashed #c9a227; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px;">' +
+                                    '<div style="font-size: 11px; color: #744210; font-weight: bold; text-transform: uppercase;">Balance Due</div>' +
+                                    '<div style="font-size: 28px; color: ' + (amountDue > 0 ? '#c53030' : '#38a169') + '; font-weight: bold;">' + fmt(Math.round(Math.abs(amountDue))) + ' ' + currency + '</div>' +
+                                    '<div style="margin-top: 10px;">' +
+                                        '<span style="background: ' + statusColor + '; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;">' + status + '</span>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">' +
+                                    '<div style="text-align: center;">' +
+                                        '<div style="width: 150px; border-top: 1px solid #2c5282; margin-bottom: 5px;"></div>' +
+                                        '<div style="font-weight: bold; font-size: 12px;">Estate Administrator</div>' +
+                                        '<div style="font-size: 10px; color: #718096;">Date: ' + today + '</div>' +
+                                    '</div>' +
+                                    '<div style="text-align: center;">' +
+                                        '<div style="width: 150px; border-top: 1px solid #2c5282; margin-bottom: 5px;"></div>' +
+                                        '<div style="font-weight: bold; font-size: 12px;">Received By</div>' +
+                                        '<div style="font-size: 10px; color: #718096;">Date: ' + today + '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div style="background: #f7fafc; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">' +
+                                '<div style="font-size: 10px; color: #718096;">This receipt is issued as acknowledgment of payment received</div>' +
+                                '<div style="font-size: 10px; color: #718096;">for the Family Real Estate properties of the late NJIKAM SALIFU</div>' +
+                                '<div style="font-size: 10px; color: #a0aec0; margin-top: 5px;">Generated on: ' + today + '</div>' +
+                                '<button onclick="document.getElementById(\'paymentViewModal\').remove()" style="margin-top: 15px; background: #2c5282; color: white; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer; font-weight: bold;">Close</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                    
+                    // Remove existing modal if any
+                    var existingModal = document.getElementById('paymentViewModal');
+                    if (existingModal) existingModal.remove();
+                    
+                    // Add modal to page
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
                 }
             });
         }
         
-        // Print payment receipt
+        // Print payment receipt - Certificate style PDF
         function printREPayment(id) {
             Promise.all([api('/re/payments'), api('/re/bills'), api('/properties')]).then(function(results) {
                 var payments = results[0];
@@ -4227,69 +4321,150 @@
                     var netAmount = grossAmount - (grossAmount * taxRate / 100);
                     var amountPaid = parseFloat(payment.amount) || 0;
                     var amountDue = netAmount - amountPaid;
-                    var status = amountPaid === netAmount ? 'Paid in Full' : amountPaid < netAmount ? 'Partial Payment' : 'Overpayment, Credit on Account';
+                    var status;
+                    if (amountPaid >= netAmount) {
+                        status = amountPaid > netAmount ? 'Overpayment, Credit on Account' : 'Paid in Full';
+                    } else {
+                        status = 'Partial Payment';
+                    }
                     
                     var currency = getCurrency();
                     var jsPDF = window.jspdf.jsPDF;
                     var doc = new jsPDF();
+                    var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     
+                    // Background color (cream/beige)
+                    doc.setFillColor(254, 249, 231);
+                    doc.rect(0, 0, 210, 297, 'F');
+                    
+                    // Header bar (dark blue)
+                    doc.setFillColor(44, 82, 130);
+                    doc.rect(10, 10, 190, 35, 'F');
+                    
+                    // Header text
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(20);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 30, { align: 'center' });
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(144, 205, 244);
+                    doc.text('Payment Receipt', 105, 38, { align: 'center' });
+                    
+                    // Dotted line
+                    doc.setDrawColor(201, 162, 39);
+                    doc.setLineDash([2, 2]);
+                    doc.line(20, 52, 190, 52);
+                    doc.setLineDash([]);
+                    
+                    // Title
+                    doc.setTextColor(44, 82, 130);
                     doc.setFontSize(18);
                     doc.setFont('helvetica', 'bold');
-                    doc.text('PAYMENT RECEIPT', 105, 20, { align: 'center' });
+                    doc.text('PAYMENT RECEIPT', 105, 65, { align: 'center' });
+                    doc.setFontSize(10);
+                    doc.setTextColor(113, 128, 150);
+                    doc.text('Receipt No: ' + (payment.reference || 'N/A'), 105, 72, { align: 'center' });
                     
-                    doc.setFontSize(12);
+                    // Description box
+                    doc.setFillColor(255, 255, 255);
+                    doc.setDrawColor(226, 232, 240);
+                    doc.roundedRect(20, 80, 170, 25, 3, 3, 'FD');
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(10);
                     doc.setFont('helvetica', 'normal');
-                    doc.text('FAMILY REAL ESTATES', 105, 30, { align: 'center' });
-                    doc.text('GHOUENZEN Soulemanou', 105, 37, { align: 'center' });
+                    var descText = 'This is to acknowledge receipt of payment for ' + propName + ' property rental,';
+                    var descText2 = 'Bill BILL-' + payment.bill_id + ', dated ' + fmtDate(payment.payment_date) + '.';
+                    doc.text(descText, 105, 90, { align: 'center' });
+                    doc.text(descText2, 105, 97, { align: 'center' });
                     
-                    doc.line(20, 45, 190, 45);
+                    // Amount boxes
+                    // Total Amount Due (blue)
+                    doc.setFillColor(235, 248, 255);
+                    doc.setDrawColor(49, 130, 206);
+                    doc.roundedRect(20, 115, 82, 35, 3, 3, 'FD');
+                    doc.setTextColor(44, 82, 130);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('TOTAL AMOUNT DUE', 61, 125, { align: 'center' });
+                    doc.setFontSize(16);
+                    doc.text(fmt(Math.round(netAmount)) + ' ' + currency, 61, 140, { align: 'center' });
+                    
+                    // Amount Paid (green)
+                    doc.setFillColor(240, 255, 244);
+                    doc.setDrawColor(56, 161, 105);
+                    doc.roundedRect(108, 115, 82, 35, 3, 3, 'FD');
+                    doc.setTextColor(39, 103, 73);
+                    doc.setFontSize(9);
+                    doc.text('AMOUNT PAID', 149, 125, { align: 'center' });
+                    doc.setFontSize(16);
+                    doc.setTextColor(56, 161, 105);
+                    doc.text(fmt(Math.round(amountPaid)) + ' ' + currency, 149, 140, { align: 'center' });
+                    
+                    // Balance box (gold border)
+                    doc.setFillColor(255, 250, 240);
+                    doc.setDrawColor(201, 162, 39);
+                    doc.setLineDash([3, 3]);
+                    doc.roundedRect(20, 160, 170, 45, 3, 3, 'FD');
+                    doc.setLineDash([]);
+                    
+                    doc.setTextColor(116, 66, 16);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('BALANCE DUE', 105, 172, { align: 'center' });
+                    
+                    doc.setFontSize(22);
+                    if (amountDue > 0) {
+                        doc.setTextColor(197, 48, 48);
+                    } else {
+                        doc.setTextColor(56, 161, 105);
+                    }
+                    doc.text(fmt(Math.round(Math.abs(amountDue))) + ' ' + currency, 105, 186, { align: 'center' });
+                    
+                    // Status badge
+                    var statusColor;
+                    if (status === 'Paid in Full') {
+                        statusColor = [56, 161, 105];
+                    } else if (status === 'Partial Payment') {
+                        statusColor = [221, 107, 32];
+                    } else {
+                        statusColor = [214, 158, 46];
+                    }
+                    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+                    doc.roundedRect(60, 192, 90, 8, 4, 4, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(8);
+                    doc.text(status, 105, 198, { align: 'center' });
+                    
+                    // Signatures
+                    doc.setTextColor(0, 0, 0);
+                    doc.setDrawColor(44, 82, 130);
+                    doc.line(30, 230, 90, 230);
+                    doc.line(120, 230, 180, 230);
                     
                     doc.setFontSize(10);
-                    var y = 55;
-                    doc.text('Reference:', 20, y);
                     doc.setFont('helvetica', 'bold');
-                    doc.text(payment.reference || '-', 70, y);
+                    doc.text('Estate Administrator', 60, 237, { align: 'center' });
+                    doc.text('Received By', 150, 237, { align: 'center' });
                     
-                    doc.setFont('helvetica', 'normal');
-                    y += 10;
-                    doc.text('Date:', 20, y);
-                    doc.text(fmtDate(payment.payment_date), 70, y);
-                    
-                    y += 10;
-                    doc.text('Property:', 20, y);
-                    doc.text(propName, 70, y);
-                    
-                    y += 10;
-                    doc.text('Bill #:', 20, y);
-                    doc.text('BILL-' + payment.bill_id, 70, y);
-                    
-                    doc.line(20, y + 5, 190, y + 5);
-                    
-                    y += 15;
-                    doc.text('Amount Due:', 20, y);
-                    doc.text(fmt(Math.round(netAmount)) + ' ' + currency, 70, y);
-                    
-                    y += 10;
-                    doc.text('Amount Paid:', 20, y);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(fmt(Math.round(amountPaid)) + ' ' + currency, 70, y);
-                    
-                    doc.setFont('helvetica', 'normal');
-                    y += 10;
-                    doc.text('Balance:', 20, y);
-                    doc.text(fmt(Math.round(amountDue)) + ' ' + currency, 70, y);
-                    
-                    y += 10;
-                    doc.text('Status:', 20, y);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(status, 70, y);
-                    
-                    doc.line(20, y + 10, 190, y + 10);
-                    
-                    y += 25;
-                    doc.setFont('helvetica', 'normal');
                     doc.setFontSize(8);
-                    doc.text('Generated on: ' + new Date().toLocaleString(), 105, y, { align: 'center' });
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(113, 128, 150);
+                    doc.text('Date: ' + today, 60, 243, { align: 'center' });
+                    doc.text('Date: ' + today, 150, 243, { align: 'center' });
+                    
+                    // Footer
+                    doc.setFillColor(247, 250, 252);
+                    doc.rect(10, 255, 190, 30, 'F');
+                    doc.setFontSize(8);
+                    doc.setTextColor(113, 128, 150);
+                    doc.text('This receipt is issued as acknowledgment of payment received', 105, 263, { align: 'center' });
+                    doc.text('for the Family Real Estate properties of the late NJIKAM SALIFU', 105, 269, { align: 'center' });
+                    doc.setTextColor(160, 174, 192);
+                    doc.text('Generated on: ' + today, 105, 278, { align: 'center' });
                     
                     doc.save('payment_receipt_' + (payment.reference || id) + '.pdf');
                     showAlert('Payment receipt downloaded!');

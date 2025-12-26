@@ -155,9 +155,10 @@
         .login-footer a { color: var(--primary-blue); cursor: pointer; text-decoration: underline; }
         .login-error { background: rgba(229,62,62,0.15); color: var(--danger-red); padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.8rem; display: none; }
         .login-error.show { display: block; }
-        .user-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.65rem; margin-left: 0.5rem; }
+        .user-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.65rem; margin-left: 0.5rem; font-weight: bold; }
         .user-badge.admin { background: rgba(214,158,46,0.2); color: var(--accent-gold); }
         .user-badge.user { background: rgba(66,153,225,0.2); color: var(--primary-blue); }
+        .user-badge.guest { background: rgba(160,174,192,0.2); color: #718096; }
         
         /* Role-based access control */
         .admin-only { display: none !important; }
@@ -166,6 +167,15 @@
         body.is-admin .admin-only-section { display: block !important; }
         .user-restricted-notice { display: none; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
         body:not(.is-admin) .user-restricted-notice { display: block; }
+        .guest-restricted-notice { display: none; background: #fed7d7; border: 1px solid #fc8181; color: #c53030; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        body.is-guest .guest-restricted-notice { display: block; }
+        
+        /* Read-only mode for users */
+        body.is-user .btn-success:not(.allow-user), 
+        body.is-user .btn-danger:not(.allow-user), 
+        body.is-user .btn-warning:not(.allow-user) { opacity: 0.5; pointer-events: none; }
+        body.is-guest .btn { opacity: 0.5; pointer-events: none; }
+        body.is-guest .btn.allow-guest { opacity: 1; pointer-events: auto; }
         
         .heir-group { background: #f7fafc; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
         .heir-group h4 { color: var(--primary-blue); margin-bottom: 0.3rem; display: flex; justify-content: space-between; font-size: 0.9rem; }
@@ -380,8 +390,9 @@
                             <div class="form-group">
                                 <label>Role *</label>
                                 <select id="newUserRole">
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="user">User (View Only)</option>
+                                    <option value="guest">Guest (Limited Access)</option>
+                                    <option value="admin">Admin (Full Access)</option>
                                 </select>
                             </div>
                         </div>
@@ -1490,6 +1501,94 @@
     </div>
     </div> <!-- End mainApp -->
 
+    <!-- ==================== LOGIN CONTAINER ==================== -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏢</div>
+                <h1>NJIKAM SALIFU REAL ESTATE</h1>
+                <p>Property & Billing Management System</p>
+            </div>
+            <div class="login-body">
+                <div id="loginError" class="login-error"></div>
+                <div class="form-group">
+                    <label>👤 Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>🔑 Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password" onkeypress="if(event.key==='Enter')doLogin()">
+                </div>
+                <button class="btn btn-success login-btn" onclick="doLogin()">🔓 Login</button>
+            </div>
+            <div class="login-footer">
+                <a onclick="showForgotPassword()">Forgot Password?</a>
+                <br><br>
+                <span>© 2024-2025 NJIKAM SALIFU REAL ESTATE PROPERTIES</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== FORGOT PASSWORD MODAL ==================== -->
+    <div id="forgotPasswordModal" class="modal-overlay" style="display:none;">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3>🔐 Reset Password</h3>
+                <button class="modal-close" onclick="closeForgotPassword()" style="color: white;">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: #718096; margin-bottom: 15px;">
+                    Enter your username and email address. A temporary password will be sent to your registered email.
+                </p>
+                <div id="forgotError" class="login-error"></div>
+                <div class="form-group">
+                    <label>👤 Username</label>
+                    <input type="text" id="forgotUsername" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label>📧 Email Address</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter your email address">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="requestPasswordReset()">📨 Send Temporary Password</button>
+                    <button class="btn btn-outline" onclick="closeForgotPassword()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== FORCE PASSWORD CHANGE MODAL ==================== -->
+    <div id="forcePasswordModal" class="modal-overlay" style="display:none;">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white;">
+                <h3>⚠️ Password Change Required</h3>
+            </div>
+            <div class="modal-body">
+                <div style="background: #fffaf0; border: 1px solid #ed8936; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <p style="font-size: 0.9rem; color: #744210; margin: 0;">
+                        <strong>🔒 Security Notice:</strong> You must change your password before continuing. This is required for:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #744210; margin: 10px 0 0 20px; padding: 0;">
+                        <li>First-time login with default credentials</li>
+                        <li>Login after password reset</li>
+                    </ul>
+                </div>
+                <div id="forcePasswordError" class="login-error"></div>
+                <div class="form-group">
+                    <label>🔑 New Password</label>
+                    <input type="password" id="forceNewPassword" placeholder="Enter new password (min 6 characters)">
+                </div>
+                <div class="form-group">
+                    <label>🔑 Confirm New Password</label>
+                    <input type="password" id="forceConfirmPassword" placeholder="Confirm new password" onkeypress="if(event.key==='Enter')forceChangePassword()">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-warning" onclick="forceChangePassword()">🔐 Change Password & Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="alertBox" style="position:fixed;top:60px;right:10px;z-index:3000;max-width:280px;"></div>
 
     <script>
@@ -1532,13 +1631,120 @@
                 if (result.success && result.user) {
                     currentUser = result.user;
                     localStorage.setItem('currentSession', JSON.stringify({ userId: result.user.id, loginTime: new Date().toISOString() }));
-                    enterMainApp();
+                    
+                    // Check if password change is required
+                    if (result.user.must_change_password) {
+                        showForcePasswordChange();
+                    } else {
+                        enterMainApp();
+                    }
                 } else {
                     errorEl.textContent = result.error || 'Invalid username or password';
                     errorEl.classList.add('show');
                 }
             }).catch(function(err) {
                 errorEl.textContent = 'Login failed: ' + (err.error || err.message || 'Connection error');
+                errorEl.classList.add('show');
+            });
+        }
+        
+        // Show force password change modal
+        function showForcePasswordChange() {
+            document.getElementById('forcePasswordModal').style.display = 'flex';
+            document.getElementById('forceNewPassword').value = '';
+            document.getElementById('forceConfirmPassword').value = '';
+            document.getElementById('forcePasswordError').classList.remove('show');
+        }
+        
+        // Force password change (for first login or after reset)
+        function forceChangePassword() {
+            var newPwd = document.getElementById('forceNewPassword').value;
+            var confirmPwd = document.getElementById('forceConfirmPassword').value;
+            var errorEl = document.getElementById('forcePasswordError');
+            
+            if (newPwd.length < 6) {
+                errorEl.textContent = 'New password must be at least 6 characters';
+                errorEl.classList.add('show');
+                return;
+            }
+            
+            if (newPwd !== confirmPwd) {
+                errorEl.textContent = 'Passwords do not match';
+                errorEl.classList.add('show');
+                return;
+            }
+            
+            // Check if new password is same as default
+            if (newPwd === 'admin' || newPwd === '1234') {
+                errorEl.textContent = 'Please choose a different password than the default';
+                errorEl.classList.add('show');
+                return;
+            }
+            
+            // Update password via API
+            api('/users/force-change-password', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    userId: currentUser.id, 
+                    newPassword: newPwd 
+                })
+            }).then(function(result) {
+                if (result.success) {
+                    document.getElementById('forcePasswordModal').style.display = 'none';
+                    currentUser.must_change_password = false;
+                    showAlert('Password changed successfully!');
+                    enterMainApp();
+                } else {
+                    errorEl.textContent = result.error || 'Failed to change password';
+                    errorEl.classList.add('show');
+                }
+            }).catch(function(err) {
+                errorEl.textContent = 'Error: ' + (err.message || 'Connection error');
+                errorEl.classList.add('show');
+            });
+        }
+        
+        // Forgot password functions
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'flex';
+            document.getElementById('forgotUsername').value = '';
+            document.getElementById('forgotEmail').value = '';
+            document.getElementById('forgotError').classList.remove('show');
+        }
+        
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        }
+        
+        function requestPasswordReset() {
+            var username = document.getElementById('forgotUsername').value.trim();
+            var email = document.getElementById('forgotEmail').value.trim();
+            var errorEl = document.getElementById('forgotError');
+            
+            if (!username || !email) {
+                errorEl.textContent = 'Please enter both username and email';
+                errorEl.classList.add('show');
+                return;
+            }
+            
+            api('/users/reset-password', {
+                method: 'POST',
+                body: JSON.stringify({ username: username, email: email })
+            }).then(function(result) {
+                if (result.success) {
+                    closeForgotPassword();
+                    // For demo, show the temp password. In production, this would be sent via email
+                    if (result.tempPassword) {
+                        showAlert('Temporary password: ' + result.tempPassword + '\nPlease use this to login and change your password.', 'success');
+                    } else {
+                        showAlert('Password reset email sent! Check your inbox.');
+                    }
+                } else {
+                    errorEl.textContent = result.error || 'Reset failed';
+                    errorEl.classList.add('show');
+                }
+            }).catch(function(err) {
+                errorEl.textContent = err.error || 'Account not found or connection error';
                 errorEl.classList.add('show');
             });
         }
@@ -1554,18 +1760,80 @@
             badge.textContent = currentUser.role.toUpperCase();
             badge.className = 'user-badge ' + currentUser.role;
             
-            // Set admin class on body for role-based access control
+            // Set role classes on body for role-based access control
+            document.body.classList.remove('is-admin', 'is-user', 'is-guest');
+            document.body.classList.add('is-' + currentUser.role);
+            
+            // Show/hide admin user management
             if (currentUser.role === 'admin') {
-                document.body.classList.add('is-admin');
                 document.getElementById('adminUserManagement').style.display = 'block';
             } else {
-                document.body.classList.remove('is-admin');
                 document.getElementById('adminUserManagement').style.display = 'none';
             }
+            
+            // Apply role-based restrictions
+            applyRoleBasedAccess();
             
             // Initialize app
             checkDb();
             goToLanding();
+        }
+        
+        // Apply role-based access control
+        function applyRoleBasedAccess() {
+            var role = currentUser ? currentUser.role : 'guest';
+            
+            // Admin-only sections (full access)
+            var adminOnlySections = document.querySelectorAll('.admin-only-section');
+            adminOnlySections.forEach(function(el) {
+                el.style.display = (role === 'admin') ? 'block' : 'none';
+            });
+            
+            // Admin-only elements (buttons, links)
+            var adminOnlyElements = document.querySelectorAll('.admin-only');
+            adminOnlyElements.forEach(function(el) {
+                el.style.display = (role === 'admin') ? '' : 'none';
+            });
+            
+            // User restricted notice (shown to non-admins)
+            var userNotices = document.querySelectorAll('.user-restricted-notice');
+            userNotices.forEach(function(el) {
+                el.style.display = (role === 'admin') ? 'none' : 'block';
+            });
+            
+            // Guest restricted notice (shown to guests only)
+            var guestNotices = document.querySelectorAll('.guest-restricted-notice');
+            guestNotices.forEach(function(el) {
+                el.style.display = (role === 'guest') ? 'block' : 'none';
+            });
+            
+            // Hide navigation buttons based on role
+            applyNavRestrictions();
+        }
+        
+        // Apply navigation restrictions based on role
+        function applyNavRestrictions() {
+            var role = currentUser ? currentUser.role : 'guest';
+            
+            // Admin-only pages (full write access)
+            var adminPages = ['campost-expenses', 'campost-bills', 'campost-payments', 'campost-inheritance', 'campost-export', 'campost-settings', 'family-expenses', 'family-bills', 'family-payments', 'family-inheritance', 'family-export', 'family-settings', 'family-ledger'];
+            
+            // Guest restricted pages (guests cannot access these)
+            var guestRestrictedPages = ['campost-ledger', 'campost-expenses', 'campost-bills', 'campost-payments', 'campost-inheritance', 'campost-export', 'campost-settings', 'family-ledger', 'family-expenses', 'family-bills', 'family-payments', 'family-inheritance', 'family-export', 'family-settings'];
+            
+            // Apply restrictions
+            document.querySelectorAll('.nav-btn[data-page]').forEach(function(btn) {
+                var page = btn.getAttribute('data-page');
+                
+                if (role === 'guest' && guestRestrictedPages.indexOf(page) !== -1) {
+                    btn.style.display = 'none';
+                } else if (role === 'user' && adminPages.indexOf(page) !== -1) {
+                    // Users can see but have read-only access (handled elsewhere)
+                    btn.style.display = '';
+                } else {
+                    btn.style.display = '';
+                }
+            });
         }
         
         // Logout function
@@ -1576,7 +1844,7 @@
             localStorage.removeItem('currentSession');
             
             // Reset UI
-            document.body.classList.remove('is-admin');
+            document.body.classList.remove('is-admin', 'is-user', 'is-guest');
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('loginContainer').classList.add('active');
             document.getElementById('loginUsername').value = '';
@@ -1585,8 +1853,8 @@
             document.getElementById('adminUserManagement').style.display = 'none';
         }
         
-        // Force password change
-        function forceChangePassword() {
+        // Old force password change (now replaced)
+        function oldForceChangePassword() {
             var currentPwd = document.getElementById('forceCurrentPassword').value;
             var newPwd = document.getElementById('forceNewPassword').value;
             var confirmPwd = document.getElementById('forceConfirmPassword').value;
@@ -1667,11 +1935,17 @@
             }
             
             var username = document.getElementById('newUserUsername').value.trim().toLowerCase();
+            var email = document.getElementById('newUserEmail').value.trim().toLowerCase();
             var fullName = document.getElementById('newUserFullName').value.trim();
             var role = document.getElementById('newUserRole').value;
             
             if (!username) {
                 showAlert('Username is required', 'error');
+                return;
+            }
+            
+            if (!email) {
+                showAlert('Email is required', 'error');
                 return;
             }
             
@@ -1681,6 +1955,7 @@
                     username: username,
                     password: '1234',
                     fullName: fullName || username,
+                    email: email,
                     role: role,
                     active: true
                 })
@@ -1689,9 +1964,10 @@
                     showAlert(result.error, 'error');
                 } else {
                     document.getElementById('newUserUsername').value = '';
+                    document.getElementById('newUserEmail').value = '';
                     document.getElementById('newUserFullName').value = '';
                     document.getElementById('newUserRole').value = 'user';
-                    showAlert('User created successfully! Default password is 1234');
+                    showAlert('User created successfully! Default password is 1234. User must change it on first login.');
                     loadUsersTable();
                 }
             }).catch(function(err) {
@@ -1705,37 +1981,39 @@
                 var html = users.map(function(u) {
                     var statusClass = u.active ? 'badge-paid' : 'badge-unpaid';
                     var statusText = u.active ? 'Active' : 'Inactive';
-                    var roleClass = u.role === 'admin' ? 'badge-inheritance' : 'badge-new';
+                    var roleClass = u.role === 'admin' ? 'badge-inheritance' : (u.role === 'guest' ? 'badge-expense' : 'badge-new');
+                    var pwdStatus = u.must_change_password ? '<span style="color:#ed8936;font-size:0.7rem;">⚠️ Must change</span>' : '';
                     
                     return '<tr>' +
                         '<td><strong>' + u.username + '</strong></td>' +
                         '<td>' + (u.full_name || '-') + '</td>' +
+                        '<td>' + (u.email || '-') + '</td>' +
                         '<td><span class="badge ' + roleClass + '">' + u.role.toUpperCase() + '</span></td>' +
-                        '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                        '<td><span class="badge ' + statusClass + '">' + statusText + '</span> ' + pwdStatus + '</td>' +
                         '<td>' +
                             (u.id !== currentUser.id ? 
-                                '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')">🔑 Reset Pwd</button> ' +
-                                '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ', ' + u.active + ')">' + (u.active ? '🚫 Disable' : '✅ Enable') + '</button> ' +
+                                '<button class="btn btn-warning btn-sm" onclick="resetUserPassword(' + u.id + ')">🔑 Reset</button> ' +
+                                '<button class="btn btn-' + (u.active ? 'danger' : 'success') + ' btn-sm" onclick="toggleUserStatus(' + u.id + ', ' + u.active + ')">' + (u.active ? '🚫' : '✅') + '</button> ' +
                                 '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.id + ')">🗑️</button>'
                                 : '<span style="color:#718096;font-size:0.75rem;">Current User</span>') +
                         '</td>' +
                     '</tr>';
                 }).join('');
                 
-                document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="5">No users</td></tr>';
+                document.getElementById('usersTable').innerHTML = html || '<tr><td colspan="6">No users</td></tr>';
             });
         }
         
         // Reset user password (admin only)
         function resetUserPassword(userId) {
             if (currentUser.role !== 'admin') return;
-            if (!confirm('Reset this user\'s password to 1234?')) return;
+            if (!confirm('Reset this user\'s password to 1234? They will need to change it on next login.')) return;
             
             api('/users/' + userId, { 
                 method: 'PUT', 
-                body: JSON.stringify({ password: '1234' }) 
+                body: JSON.stringify({ password: '1234', mustChangePassword: true }) 
             }).then(function() {
-                showAlert('Password reset to 1234');
+                showAlert('Password reset to 1234. User must change it on next login.');
                 loadUsersTable();
             });
         }

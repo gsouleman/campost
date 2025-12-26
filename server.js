@@ -181,10 +181,25 @@ async function initDatabase() {
                 username VARCHAR(50) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 full_name VARCHAR(100) NOT NULL,
+                email VARCHAR(255),
                 role VARCHAR(20) DEFAULT 'user',
                 active BOOLEAN DEFAULT TRUE,
+                must_change_password BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+        `);
+        
+        // Add email and must_change_password columns if they don't exist (for existing databases)
+        await pool.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='app_users' AND column_name='email') THEN
+                    ALTER TABLE app_users ADD COLUMN email VARCHAR(255);
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='app_users' AND column_name='must_change_password') THEN
+                    ALTER TABLE app_users ADD COLUMN must_change_password BOOLEAN DEFAULT TRUE;
+                END IF;
+            END $$;
         `);
         
         // CAMPOST Beneficiaries selection
@@ -316,22 +331,30 @@ async function initializeDefaultData() {
     // Initialize default users - only if table is empty, otherwise ensure admin exists
     const userResult = await pool.query('SELECT COUNT(*) FROM app_users');
     if (parseInt(userResult.rows[0].count) === 0) {
+        // Admin user - must change password on first login
         await pool.query(
-            'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',
-            ['admin', '12345', 'Administrator', 'admin', true]
+            'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            ['admin', 'admin', 'Administrator', 'admin@example.com', 'admin', true, true]
         );
+        // Standard user - must change password on first login
         await pool.query(
-            'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5)',
-            ['user', 'user123', 'Standard User', 'user', true]
+            'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            ['user', '1234', 'Standard User', 'user@example.com', 'user', true, true]
+        );
+        // Guest user - must change password on first login
+        await pool.query(
+            'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            ['guest', '1234', 'Guest User', 'guest@example.com', 'guest', true, true]
         );
     } else {
-        // Ensure admin user exists with correct password (in case it was deleted or password changed)
-        await pool.query(
-            `INSERT INTO app_users (username, password, full_name, role, active) 
-             VALUES ($1, $2, $3, $4, $5) 
-             ON CONFLICT (username) DO UPDATE SET password = $2`,
-            ['admin', '12345', 'Administrator', 'admin', true]
-        );
+        // Ensure admin user exists (in case it was deleted)
+        const adminExists = await pool.query("SELECT id FROM app_users WHERE username = 'admin'");
+        if (adminExists.rows.length === 0) {
+            await pool.query(
+                'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                ['admin', 'admin', 'Administrator', 'admin@example.com', 'admin', true, true]
+            );
+        }
     }
     
     // Initialize default settings
@@ -1357,7 +1380,7 @@ app.post('/api/campost/beneficiaries', async (req, res) => {
 // ============== USERS API ==============
 app.get('/api/users', async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, username, full_name, role, active, created_at FROM app_users ORDER BY created_at');
+        const result = await pool.query('SELECT id, username, full_name, email, role, active, must_change_password, created_at FROM app_users ORDER BY created_at');
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1366,10 +1389,10 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
     try {
-        const { username, password, fullName, role, active } = req.body;
+        const { username, password, fullName, email, role, active } = req.body;
         const result = await pool.query(
-            'INSERT INTO app_users (username, password, full_name, role, active) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, full_name, role, active',
-            [username.toLowerCase(), password, fullName, role || 'user', active !== false]
+            'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, TRUE) RETURNING id, username, full_name, email, role, active, must_change_password',
+            [username.toLowerCase(), password || '1234', fullName, email || '', role || 'user', active !== false]
         );
         res.json(result.rows[0]);
     } catch (err) {
@@ -1383,16 +1406,16 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
     try {
-        const { username, password, fullName, role, active } = req.body;
+        const { username, password, fullName, email, role, active, mustChangePassword } = req.body;
         if (password) {
             await pool.query(
-                'UPDATE app_users SET username = $1, password = $2, full_name = $3, role = $4, active = $5 WHERE id = $6',
-                [username.toLowerCase(), password, fullName, role, active, req.params.id]
+                'UPDATE app_users SET username = $1, password = $2, full_name = $3, email = $4, role = $5, active = $6, must_change_password = $7 WHERE id = $8',
+                [username.toLowerCase(), password, fullName, email || '', role, active, mustChangePassword !== false, req.params.id]
             );
         } else {
             await pool.query(
-                'UPDATE app_users SET username = $1, full_name = $2, role = $3, active = $4 WHERE id = $5',
-                [username.toLowerCase(), fullName, role, active, req.params.id]
+                'UPDATE app_users SET username = $1, full_name = $2, email = $3, role = $4, active = $5 WHERE id = $6',
+                [username.toLowerCase(), fullName, email || '', role, active, req.params.id]
             );
         }
         res.json({ success: true });
@@ -1414,7 +1437,7 @@ app.post('/api/users/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const result = await pool.query(
-            'SELECT id, username, full_name, role, active FROM app_users WHERE LOWER(username) = LOWER($1) AND password = $2 AND active = TRUE',
+            'SELECT id, username, full_name, email, role, active, must_change_password FROM app_users WHERE LOWER(username) = LOWER($1) AND password = $2 AND active = TRUE',
             [username, password]
         );
         if (result.rows.length > 0) {
@@ -1435,8 +1458,54 @@ app.post('/api/users/change-password', async (req, res) => {
             res.status(400).json({ error: 'Current password is incorrect' });
             return;
         }
-        await pool.query('UPDATE app_users SET password = $1 WHERE id = $2', [newPassword, userId]);
+        await pool.query('UPDATE app_users SET password = $1, must_change_password = FALSE WHERE id = $2', [newPassword, userId]);
         res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Force password change (for first login or password reset)
+app.post('/api/users/force-change-password', async (req, res) => {
+    try {
+        const { userId, newPassword } = req.body;
+        await pool.query('UPDATE app_users SET password = $1, must_change_password = FALSE WHERE id = $2', [newPassword, userId]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Password reset request
+app.post('/api/users/reset-password', async (req, res) => {
+    try {
+        const { username, email } = req.body;
+        const result = await pool.query(
+            'SELECT id, email FROM app_users WHERE LOWER(username) = LOWER($1) AND LOWER(email) = LOWER($2) AND active = TRUE',
+            [username, email]
+        );
+        if (result.rows.length === 0) {
+            res.status(400).json({ error: 'No active account found with that username and email' });
+            return;
+        }
+        
+        // Generate temporary password
+        const tempPassword = 'temp' + Math.random().toString(36).substring(2, 8);
+        
+        // Update password and set must_change_password flag
+        await pool.query(
+            'UPDATE app_users SET password = $1, must_change_password = TRUE WHERE id = $2',
+            [tempPassword, result.rows[0].id]
+        );
+        
+        // In production, you would send an email here
+        // For now, we'll return the temp password (in real app, this would be sent via email)
+        res.json({ 
+            success: true, 
+            message: 'Temporary password has been set. Please check your email.',
+            // In production, remove this line - only for demo purposes
+            tempPassword: tempPassword
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

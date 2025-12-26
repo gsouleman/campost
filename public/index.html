@@ -7788,12 +7788,37 @@
         var assetsBeneficiaries = [];
         var allAssetsHeirs = [];
         
+        // Default heirs data (used as fallback if API returns empty)
+        var DEFAULT_HEIRS = [
+            { id: 1, name: 'MODER PASMA IDRISU EPSE SALIFOU', relationship: 'Spouse', gender: 'Female', heir_group: 'Wives', portions: 3 },
+            { id: 2, name: 'MENJIKOUE ABIBA SPOUSE NJIKAM', relationship: 'Spouse', gender: 'Female', heir_group: 'Wives', portions: 3 },
+            { id: 3, name: 'SAHNATU SALIFU', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 4, name: 'MOHAMAN SALIFU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 },
+            { id: 5, name: 'ABIBATU SALIFU', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 6, name: 'ZAKARE SALIFU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 },
+            { id: 7, name: 'FERER ALIMATU SALIFU', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 8, name: 'NTENTIE REKIATU NJIKAM', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 9, name: 'KAHPUI MARIAMA SALIFU', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 10, name: 'GHOUENZEN SOULEMANOU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 },
+            { id: 11, name: 'NGAMENPOUYE MAIMUNATE', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 12, name: 'LOUMNGAM NCHINTOUO AMINATOUO', relationship: 'Child', gender: 'Female', heir_group: 'Daughters', portions: 1 },
+            { id: 13, name: 'MENTCHA ABOUBAKAR SALIFOU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 },
+            { id: 14, name: 'HAROUNA SALIFU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 },
+            { id: 15, name: 'MBALLEY ABDOU RAHAMA SALIFOU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 },
+            { id: 16, name: 'NGAMDAMOUN IBRAHIM SALIFOU', relationship: 'Child', gender: 'Male', heir_group: 'Sons', portions: 2 }
+        ];
+        
         function loadAssetsInheritance() {
             var totals = calcAssetTotals();
             document.getElementById('assetsInheritancePool').textContent = fmt(totals.grandTotal) + ' XAF';
             
             // Load heirs from RE module
             api('/re/heirs').then(function(heirs) {
+                // Use default heirs if API returns empty
+                if (!heirs || heirs.length === 0) {
+                    heirs = DEFAULT_HEIRS;
+                }
+                
                 allAssetsHeirs = heirs;
                 
                 // Initialize all heirs as selected if first load
@@ -7806,6 +7831,17 @@
                 
                 // Calculate and display distribution
                 calculateAssetsDistribution();
+            }).catch(function(err) {
+                // Use default heirs on error
+                console.log('Using default heirs due to API error:', err);
+                allAssetsHeirs = DEFAULT_HEIRS;
+                
+                if (assetsBeneficiaries.length === 0) {
+                    assetsBeneficiaries = DEFAULT_HEIRS.map(function(h) { return h.id; });
+                }
+                
+                renderAssetsBeneficiaryList(DEFAULT_HEIRS);
+                calculateAssetsDistribution();
             });
         }
         
@@ -7813,11 +7849,14 @@
         function renderAssetsBeneficiaryList(heirs) {
             var html = heirs.map(function(h) {
                 var isSelected = assetsBeneficiaries.indexOf(h.id) !== -1;
+                var groupColor = h.heir_group === 'Wives' ? '#805ad5' : (h.heir_group === 'Sons' ? '#3182ce' : '#38a169');
                 return '<div class="beneficiary-item' + (isSelected ? ' selected' : '') + '" onclick="toggleAssetsBeneficiary(' + h.id + ')">' +
-                    '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' onchange="toggleAssetsBeneficiary(' + h.id + ')">' +
+                    '<input type="checkbox" ' + (isSelected ? 'checked' : '') + '>' +
                     '<label>' +
                         '<strong>' + h.name + '</strong><br>' +
-                        '<span style="font-size: 0.75rem; color: #718096;">' + h.relationship + ' • ' + h.portions + ' portion(s)</span>' +
+                        '<span style="font-size: 0.75rem; color: #718096;">' + h.relationship + ' • </span>' +
+                        '<span style="font-size: 0.7rem; background: ' + groupColor + '; color: white; padding: 1px 6px; border-radius: 10px;">' + h.heir_group + '</span>' +
+                        '<span style="font-size: 0.75rem; color: #718096;"> • ' + h.portions + ' portion(s)</span>' +
                     '</label>' +
                 '</div>';
             }).join('');

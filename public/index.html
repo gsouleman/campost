@@ -501,7 +501,8 @@
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="dashIncome">0</div><div class="stat-label">Total Income</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="dashExp">0</div><div class="stat-label">Total Expenses</div></div>
-                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserve Funds</div></div>
+                <div class="stat-card red"><div class="stat-icon">🏦</div><div class="stat-value" id="dashReserve">0</div><div class="stat-label">Reserved Funds</div></div>
+                <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="dashNetBalance">0</div><div class="stat-label">Net Balance</div></div>
                 <div class="stat-card gold"><div class="stat-icon">👨‍👩‍👧‍👦</div><div class="stat-value" id="dashInh">0</div><div class="stat-label">Inheritance Pool</div></div>
             </div>
             <div class="card">
@@ -509,7 +510,8 @@
                 <div class="card-body">
                     <div class="summary-row"><span>Total Income (Bills Paid):</span><span class="amount-positive" id="dashIncomeSum">0 XAF</span></div>
                     <div class="summary-row"><span>Total Expenses:</span><span class="amount-negative" id="dashExpSum">0 XAF</span></div>
-                    <div class="summary-row" style="font-size: 1rem;"><span><strong>Reserve Funds (Income - Expenses):</strong></span><span id="dashReserveSum" style="font-weight: bold;">0 XAF</span></div>
+                    <div class="summary-row"><span>Reserved Funds (<span id="dashReservePercent">10</span>% of Income):</span><span class="amount-negative" id="dashReserveSum">0 XAF</span></div>
+                    <div class="summary-row" style="font-size: 1rem; background: #fed7d7; padding: 8px; border-radius: 6px;"><span><strong>📊 Net Balance (Income - Expenses - Reserved):</strong></span><span id="dashNetBalanceSum" style="font-weight: bold; color: #c53030;">0 XAF</span></div>
                     <div class="summary-row"><span>Inheritance Pool (from distributions):</span><span class="amount-gold" id="dashInhSum">0 XAF</span></div>
                 </div>
             </div>
@@ -520,7 +522,8 @@
             <div class="stats-grid">
                 <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-value" id="ledgerIncome">0</div><div class="stat-label">Total Income (from Bills)</div></div>
                 <div class="stat-card red"><div class="stat-icon">💸</div><div class="stat-value" id="ledgerExpense">0</div><div class="stat-label">Total Expenses</div></div>
-                <div class="stat-card blue"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerBalance">0</div><div class="stat-label">Balance (Reserve)</div></div>
+                <div class="stat-card red"><div class="stat-icon">🏦</div><div class="stat-value" id="ledgerReserved">0</div><div class="stat-label">Reserved Funds</div></div>
+                <div class="stat-card red"><div class="stat-icon">📊</div><div class="stat-value" id="ledgerNetBalance">0</div><div class="stat-label">Net Balance</div></div>
             </div>
             <div class="card">
                 <div class="card-header">
@@ -533,7 +536,7 @@
                 </div>
                 <div class="card-body">
                     <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
-                        📌 <strong>Income</strong> = Bills with status Paid or Partial | <strong>Expenses</strong> = All recorded expenses
+                        📌 <strong>Income</strong> = Bills with status Paid or Partial | <strong>Expenses</strong> = All recorded expenses | <strong>Net Balance</strong> = Income - Expenses - Reserved Funds
                     </p>
                     <div class="table-container">
                         <table>
@@ -560,18 +563,22 @@
             <div class="card no-print">
                 <div class="card-header green"><span>➕ Add/Edit Expense</span></div>
                 <div class="card-body">
+                    <div id="campostExpenseWarning" style="display: none; background: #fed7d7; border: 1px solid #fc8181; color: #c53030; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                        <strong>⚠️ Expenses Disabled:</strong> Net Balance is zero. You cannot add more expenses until more income is received. 
+                        <br><small>Net Balance = Total Income - Total Expenses - Reserved Funds</small>
+                    </div>
                     <input type="hidden" id="expId">
                     <div class="form-grid">
                         <div class="form-group"><label>Date</label><input type="date" id="expDate"></div>
                         <div class="form-group"><label>Description</label><input type="text" id="expDesc" placeholder="Description"></div>
                         <div class="form-group"><label>Category</label><select id="expCat"></select></div>
-                        <div class="form-group"><label>Amount (XAF)</label><input type="number" id="expAmt" placeholder="Amount"></div>
+                        <div class="form-group"><label>Amount</label><input type="number" id="expAmt" placeholder="Amount"></div>
                     </div>
-                    <div class="btn-group"><button class="btn btn-success" onclick="saveExpense()">💾 Save</button><button class="btn btn-outline" onclick="clearExpenseForm()">🔄 Clear</button></div>
+                    <div class="btn-group"><button class="btn btn-success" id="campostSaveExpenseBtn" onclick="saveExpense()">💾 Save</button><button class="btn btn-outline" onclick="clearExpenseForm()">🔄 Clear</button></div>
                 </div>
             </div>
             <div class="card"><div class="card-header"><span>💸 Expenses</span><button class="btn btn-print btn-sm no-print" onclick="printPage('expenses')">🖨️ Print</button></div>
-            <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="expTable"></tbody></table></div></div></div>
+            <div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="expTable"></tbody><tfoot id="expTotals"></tfoot></table></div></div></div>
         </div>
 
         <!-- BILLS -->
@@ -1336,11 +1343,42 @@
         <!-- SETTINGS -->
         <div id="campost-settings" class="page">
             <div class="card">
+                <div class="card-header gold"><span>🌍 Currency & Global Settings</span></div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <select id="campostCurrency" onchange="updateCampostCalcDisplays()">
+                                <option value="XAF" selected>XAF - Central African CFA Franc</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="USD">USD - US Dollar</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reserved Funds (% of Income)</label>
+                            <select id="campostReservedPercent" onchange="updateCampostCalcDisplays()">
+                                <option value="0">0% - No Reserve</option>
+                                <option value="5">5%</option>
+                                <option value="10" selected>10%</option>
+                                <option value="15">15%</option>
+                                <option value="20">20%</option>
+                                <option value="25">25%</option>
+                                <option value="30">30%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #718096; margin: 10px 0; background: #ebf8ff; padding: 10px; border-radius: 6px;">
+                        🏦 <strong>Reserved Funds:</strong> A percentage of total income set aside for maintenance, emergencies, or future investments.<br>
+                        📊 <strong>Net Balance</strong> = Total Income - Total Expenses - Reserved Funds
+                    </p>
+                </div>
+            </div>
+            <div class="card">
                 <div class="card-header gold"><span>💰 Rent Configuration</span></div>
                 <div class="card-body">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Monthly Rent (XAF)</label>
+                            <label>Monthly Rent</label>
                             <input type="number" id="settingMonthlyRent" value="200000">
                         </div>
                         <div class="form-group">
@@ -1359,7 +1397,7 @@
                         <div class="summary-row" style="font-weight: bold; color: #38a169;"><span>Net Amount Due:</span><span id="calcNet">510,000 XAF</span></div>
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-success" onclick="saveSettings()">💾 Save Settings</button>
+                        <button class="btn btn-success" onclick="saveSettings()">💾 Save All Settings</button>
                     </div>
                 </div>
             </div>
@@ -1869,6 +1907,9 @@
         function saveSettings() {
             var rate = parseInt(document.getElementById('settingMonthlyRent').value);
             var tax = parseFloat(document.getElementById('settingTaxRate').value) / 100;
+            var currency = document.getElementById('campostCurrency').value;
+            var reservedPercent = document.getElementById('campostReservedPercent').value;
+            
             if (rate < 1000) {
                 showAlert('Invalid monthly rate', 'error');
                 return;
@@ -1877,43 +1918,67 @@
             CONFIG.taxRate = tax;
             localStorage.setItem('monthlyRate', rate);
             localStorage.setItem('taxRate', tax);
+            localStorage.setItem('campostCurrency', currency);
+            localStorage.setItem('campostReservedPercent', reservedPercent);
             updateCalcDisplays();
-            showAlert('Settings saved!');
+            showAlert('All settings saved! Currency: ' + currency + ', Reserved: ' + reservedPercent + '%');
         }
 
         // Load settings into form
         function loadSettings() {
             document.getElementById('settingMonthlyRent').value = CONFIG.monthlyRate;
             document.getElementById('settingTaxRate').value = Math.round(CONFIG.taxRate * 100);
+            
+            // Load currency and reserved percent
+            var currency = localStorage.getItem('campostCurrency') || 'XAF';
+            var reservedPercent = localStorage.getItem('campostReservedPercent') || '10';
+            document.getElementById('campostCurrency').value = currency;
+            document.getElementById('campostReservedPercent').value = reservedPercent;
+            
             updateCalcDisplays();
+        }
+        
+        // Update CAMPOST calc displays with currency
+        function updateCampostCalcDisplays() {
+            var currency = document.getElementById('campostCurrency').value;
+            var gross = CONFIG.monthlyRate * CONFIG.months;
+            var tax = Math.round(gross * CONFIG.taxRate);
+            var net = gross - tax;
+            document.getElementById('calcGross').textContent = fmt(gross) + ' ' + currency;
+            document.getElementById('calcTax').textContent = fmt(tax) + ' ' + currency;
+            document.getElementById('calcNet').textContent = fmt(net) + ' ' + currency;
         }
 
         // Add event listeners for real-time calculation in settings
         function setupSettingsListeners() {
             var rateInput = document.getElementById('settingMonthlyRent');
             var taxInput = document.getElementById('settingTaxRate');
+            var currencySelect = document.getElementById('campostCurrency');
+            
             if (rateInput) {
                 rateInput.addEventListener('input', function() {
+                    var currency = currencySelect ? currencySelect.value : 'XAF';
                     var tempRate = parseInt(this.value) || 0;
                     var tempTax = parseFloat(taxInput.value) / 100 || 0.15;
                     var gross = tempRate * CONFIG.months;
                     var tax = Math.round(gross * tempTax);
                     var net = gross - tax;
-                    document.getElementById('calcGross').textContent = fmt(gross) + ' XAF';
-                    document.getElementById('calcTax').textContent = fmt(tax) + ' XAF';
-                    document.getElementById('calcNet').textContent = fmt(net) + ' XAF';
+                    document.getElementById('calcGross').textContent = fmt(gross) + ' ' + currency;
+                    document.getElementById('calcTax').textContent = fmt(tax) + ' ' + currency;
+                    document.getElementById('calcNet').textContent = fmt(net) + ' ' + currency;
                 });
             }
             if (taxInput) {
                 taxInput.addEventListener('input', function() {
+                    var currency = currencySelect ? currencySelect.value : 'XAF';
                     var tempRate = parseInt(rateInput.value) || CONFIG.monthlyRate;
                     var tempTax = parseFloat(this.value) / 100 || 0.15;
                     var gross = tempRate * CONFIG.months;
                     var tax = Math.round(gross * tempTax);
                     var net = gross - tax;
-                    document.getElementById('calcGross').textContent = fmt(gross) + ' XAF';
-                    document.getElementById('calcTax').textContent = fmt(tax) + ' XAF';
-                    document.getElementById('calcNet').textContent = fmt(net) + ' XAF';
+                    document.getElementById('calcGross').textContent = fmt(gross) + ' ' + currency;
+                    document.getElementById('calcTax').textContent = fmt(tax) + ' ' + currency;
+                    document.getElementById('calcNet').textContent = fmt(net) + ' ' + currency;
                 });
             }
         }
@@ -2164,7 +2229,19 @@
         }
 
         // Dashboard
+        // Get CAMPOST settings
+        function getCampostSettings() {
+            return {
+                currency: localStorage.getItem('campostCurrency') || 'XAF',
+                reservedPercent: parseFloat(localStorage.getItem('campostReservedPercent')) || 10
+            };
+        }
+        
         function loadDashboard() {
+            var settings = getCampostSettings();
+            var currency = settings.currency;
+            var reservedPercent = settings.reservedPercent;
+            
             // Get total income from bills (paid amounts from bills with paid or partial status)
             api('/bills').then(function(bills) {
                 var totalIncome = 0;
@@ -2175,7 +2252,7 @@
                     }
                 });
                 document.getElementById('dashIncome').textContent = fmt(totalIncome);
-                document.getElementById('dashIncomeSum').textContent = fmt(totalIncome) + ' XAF';
+                document.getElementById('dashIncomeSum').textContent = fmt(totalIncome) + ' ' + currency;
                 
                 // Get expenses
                 api('/expenses').then(function(expenses) {
@@ -2184,25 +2261,82 @@
                         totalExpenses += e.amount;
                     });
                     document.getElementById('dashExp').textContent = fmt(totalExpenses);
-                    document.getElementById('dashExpSum').textContent = fmt(totalExpenses) + ' XAF';
+                    document.getElementById('dashExpSum').textContent = fmt(totalExpenses) + ' ' + currency;
                     
-                    // Calculate reserve funds = Income - Expenses
-                    var reserveFunds = totalIncome - totalExpenses;
-                    document.getElementById('dashReserve').textContent = fmt(reserveFunds);
-                    document.getElementById('dashReserveSum').textContent = fmt(reserveFunds) + ' XAF';
-                    if (reserveFunds < 0) {
-                        document.getElementById('dashReserveSum').className = 'amount-negative';
-                    } else {
-                        document.getElementById('dashReserveSum').className = 'amount-positive';
-                    }
+                    // Calculate reserved funds = percentage of income
+                    var reservedFunds = Math.round(totalIncome * reservedPercent / 100);
+                    document.getElementById('dashReserve').textContent = fmt(reservedFunds);
+                    document.getElementById('dashReserveSum').textContent = fmt(reservedFunds) + ' ' + currency;
+                    document.getElementById('dashReservePercent').textContent = reservedPercent;
+                    
+                    // Calculate net balance = Income - Expenses - Reserved (minimum 0)
+                    var netBalance = Math.max(0, totalIncome - totalExpenses - reservedFunds);
+                    document.getElementById('dashNetBalance').textContent = fmt(netBalance);
+                    document.getElementById('dashNetBalanceSum').textContent = fmt(netBalance) + ' ' + currency;
+                    
+                    // Update expense form state
+                    updateCampostExpenseFormState(netBalance);
                 });
             });
             
             // Get inheritance amount
             api('/inheritance/calculate').then(function(d) {
                 document.getElementById('dashInh').textContent = fmt(d.inheritanceAmount);
-                document.getElementById('dashInhSum').textContent = fmt(d.inheritanceAmount) + ' XAF';
+                document.getElementById('dashInhSum').textContent = fmt(d.inheritanceAmount) + ' ' + currency;
             });
+        }
+        
+        // Enable/Disable CAMPOST expense form based on net balance
+        function updateCampostExpenseFormState(netBalance) {
+            var expenseFields = ['expDate', 'expDesc', 'expCat', 'expAmt'];
+            var saveBtn = document.getElementById('campostSaveExpenseBtn');
+            var warningEl = document.getElementById('campostExpenseWarning');
+            
+            if (netBalance <= 0) {
+                // Disable all expense input fields
+                expenseFields.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) {
+                        el.disabled = true;
+                        el.style.backgroundColor = '#f0f0f0';
+                        el.style.cursor = 'not-allowed';
+                    }
+                });
+                
+                // Disable save button
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.style.opacity = '0.5';
+                    saveBtn.style.cursor = 'not-allowed';
+                }
+                
+                // Show warning message
+                if (warningEl) {
+                    warningEl.style.display = 'block';
+                }
+            } else {
+                // Enable all expense input fields
+                expenseFields.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) {
+                        el.disabled = false;
+                        el.style.backgroundColor = '';
+                        el.style.cursor = '';
+                    }
+                });
+                
+                // Enable save button
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.style.opacity = '1';
+                    saveBtn.style.cursor = '';
+                }
+                
+                // Hide warning message
+                if (warningEl) {
+                    warningEl.style.display = 'none';
+                }
+            }
         }
 
         // Ledger - combines income (from bills paid/partial) and expenses
@@ -2276,24 +2410,47 @@
                 
                 document.getElementById('ledgerTable').innerHTML = tableHtml || '<tr><td colspan="6">No transactions</td></tr>';
                 
-                // Totals footer
+                // Calculate reserved funds and net balance
+                var settings = getCampostSettings();
+                var currency = settings.currency;
+                var reservedPercent = settings.reservedPercent;
+                var reservedFunds = Math.round(totalIncome * reservedPercent / 100);
+                var netBalance = Math.max(0, runningBalance - reservedFunds);
+                
+                // Totals footer with 3 rows
                 document.getElementById('ledgerTotals').innerHTML = 
                     '<tr style="background: #f7fafc; font-weight: bold;">' +
-                    '<td colspan="3" style="text-align: right;">TOTALS:</td>' +
+                    '<td colspan="3" style="text-align: right;">SUBTOTAL (' + currency + '):</td>' +
                     '<td class="amount-positive">' + fmt(totalIncome) + '</td>' +
                     '<td class="amount-negative">' + fmt(totalExpense) + '</td>' +
                     '<td class="' + (runningBalance >= 0 ? 'amount-positive' : 'amount-negative') + '">' + fmt(runningBalance) + '</td>' +
+                    '</tr>' +
+                    '<tr style="background: #fed7d7; font-weight: bold;">' +
+                    '<td colspan="3" style="text-align: right; color: #c53030;">🏦 Reserved Funds (' + reservedPercent + '% of Income):</td>' +
+                    '<td></td>' +
+                    '<td style="color: #c53030;">-' + fmt(reservedFunds) + '</td>' +
+                    '<td></td>' +
+                    '</tr>' +
+                    '<tr style="background: #fc8181; font-weight: bold;">' +
+                    '<td colspan="3" style="text-align: right; color: #742a2a;">📊 NET BALANCE:</td>' +
+                    '<td></td>' +
+                    '<td></td>' +
+                    '<td style="color: #742a2a;">' + fmt(netBalance) + '</td>' +
                     '</tr>';
                 
                 // Update stats
                 document.getElementById('ledgerIncome').textContent = fmt(totalIncome);
                 document.getElementById('ledgerExpense').textContent = fmt(totalExpense);
-                document.getElementById('ledgerBalance').textContent = fmt(runningBalance);
+                document.getElementById('ledgerReserved').textContent = fmt(reservedFunds);
+                document.getElementById('ledgerNetBalance').textContent = fmt(netBalance);
             });
         }
 
         // Expenses
         function loadExpenses() {
+            var settings = getCampostSettings();
+            var currency = settings.currency;
+            
             api('/categories').then(function(cats) {
                 document.getElementById('expCat').innerHTML = cats.map(function(c) {
                     return '<option value="' + c.id + '">' + c.name + '</option>';
@@ -2303,10 +2460,23 @@
                 document.getElementById('expDate').valueAsDate = new Date();
             }
             api('/expenses').then(function(expenses) {
-                document.getElementById('expTable').innerHTML = expenses.map(function(e) {
+                var totalExp = 0;
+                var html = expenses.map(function(e) {
                     var isInh = e.categoryName === 'Inheritance Share';
+                    totalExp += e.amount;
                     return '<tr><td>' + fmtDate(e.date) + '</td><td>' + e.description + '</td><td>' + e.categoryName + '</td><td class="' + (isInh ? 'amount-gold' : 'amount-negative') + '">-' + fmt(e.amount) + '</td><td class="no-print"><button class="btn btn-warning btn-sm" onclick="editExpense(' + e.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteExpense(' + e.id + ')">🗑️</button></td></tr>';
                 }).join('') || '<tr><td colspan="5">No expenses</td></tr>';
+                
+                document.getElementById('expTable').innerHTML = html;
+                
+                // Add totals row
+                var totalsEl = document.getElementById('expTotals');
+                if (totalsEl) {
+                    totalsEl.innerHTML = '<tr style="background: #f7fafc; font-weight: bold;">' +
+                        '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
+                        '<td class="amount-negative">' + fmt(totalExp) + '</td>' +
+                        '<td></td></tr>';
+                }
             });
         }
 
@@ -2335,6 +2505,46 @@
                 showAlert('Fill all fields', 'error');
                 return;
             }
+            
+            // Check net balance before saving (only for new expenses)
+            if (!id) {
+                var settings = getCampostSettings();
+                var reservedPercent = settings.reservedPercent;
+                
+                // Get current totals
+                Promise.all([api('/bills'), api('/expenses')]).then(function(results) {
+                    var bills = results[0];
+                    var expenses = results[1];
+                    
+                    var totalIncome = 0;
+                    bills.forEach(function(b) { if (b.paidAmount > 0) totalIncome += b.paidAmount; });
+                    
+                    var totalExpenses = 0;
+                    expenses.forEach(function(e) { totalExpenses += e.amount; });
+                    
+                    var reservedFunds = Math.round(totalIncome * reservedPercent / 100);
+                    var currentNetBalance = totalIncome - totalExpenses - reservedFunds;
+                    
+                    if (currentNetBalance <= 0) {
+                        showAlert('Cannot add expense: Net Balance is zero. Add more income first.', 'error');
+                        return;
+                    }
+                    
+                    if (data.amount > currentNetBalance) {
+                        showAlert('Cannot add expense: Amount (' + fmt(data.amount) + ') exceeds available Net Balance (' + fmt(currentNetBalance) + ')', 'error');
+                        return;
+                    }
+                    
+                    // Proceed with save
+                    doSaveExpense(null, data);
+                });
+            } else {
+                // Editing existing expense - just save
+                doSaveExpense(id, data);
+            }
+        }
+        
+        function doSaveExpense(id, data) {
             var url = id ? '/expenses/' + id : '/expenses';
             var method = id ? 'PUT' : 'POST';
             api(url, { method: method, body: JSON.stringify(data) }).then(function() {

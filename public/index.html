@@ -5263,31 +5263,61 @@
         function exportREPropertiesPDF() {
             var jsPDF = window.jspdf.jsPDF;
             var doc = new jsPDF();
+            var currency = getCurrency();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
             api('/properties').then(function(properties) {
-                doc.setFontSize(16);
+                // Background
+                doc.setFillColor(254, 249, 231);
+                doc.rect(0, 0, 210, 297, 'F');
+                
+                // Header bar
+                doc.setFillColor(44, 82, 130);
+                doc.rect(10, 10, 190, 30, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
-                doc.text('FAMILY REAL ESTATE - PROPERTIES', 105, 15, { align: 'center' });
+                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
-                doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-                doc.line(20, 25, 190, 25);
-            
+                doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(144, 205, 244);
+                doc.text('Properties Report', 105, 36, { align: 'center' });
+                
+                // Title
+                doc.setTextColor(44, 82, 130);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('PROPERTY INVENTORY', 105, 52, { align: 'center' });
+                
                 var tableData = properties.map(function(p) {
                     var isRented = p.status === 'Rented';
                     var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
                     var tax = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
                     var net = rent - (rent * tax / 100);
-                    return [p.name, p.location, p.type, p.status, fmt(rent), tax + '%', fmt(Math.round(net)), p.islamic_inheritance || 'NA'];
+                    return [p.name, p.location, p.type || '-', p.status, fmt(rent), tax + '%', fmt(Math.round(net))];
                 });
                 
                 doc.autoTable({
-                    startY: 30,
-                    head: [['Property', 'Location', 'Type', 'Status', 'Rent', 'Tax', 'Net Income', 'Islamic Inh.']],
+                    startY: 58,
+                    head: [['Property', 'Location', 'Type', 'Status', 'Rent', 'Tax', 'Net Income']],
                     body: tableData,
-                    styles: { fontSize: 7 },
-                    headStyles: { fillColor: [44, 82, 130] }
+                    styles: { fontSize: 8, cellPadding: 3 },
+                    headStyles: { fillColor: [44, 82, 130], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [254, 249, 231] }
                 });
+                
+                // Footer
+                var finalY = doc.lastAutoTable.finalY + 10;
+                doc.setFillColor(247, 250, 252);
+                doc.rect(10, finalY, 190, 20, 'F');
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('Total Properties: ' + properties.length, 105, finalY + 8, { align: 'center' });
+                doc.text('Generated on: ' + today, 105, finalY + 14, { align: 'center' });
                 
                 doc.save('re_properties_' + new Date().toISOString().split('T')[0] + '.pdf');
                 showAlert('Properties PDF exported!');
@@ -5297,188 +5327,382 @@
         function exportREBillsPDF() {
             var jsPDF = window.jspdf.jsPDF;
             var doc = new jsPDF('landscape');
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
+            var currency = getCurrency();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('FAMILY REAL ESTATE - BILLS', 148, 15, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 148, 22, { align: 'center' });
-            doc.text('* All amounts shown are NET after tax deductions', 148, 27, { align: 'center' });
-            doc.line(20, 30, 277, 30);
-            
-            var totalGross = 0, totalTax = 0, totalNet = 0, totalPaid = 0, totalOutstanding = 0;
-            
-            var tableData = reBills.map(function(b) {
-                var prop = properties.find(function(p) { return p.id === b.property_id; });
-                var status = b.outstanding === 0 ? 'Paid' : b.paid_amount > 0 ? 'Partial' : 'Unpaid';
+            Promise.all([api('/re/bills'), api('/properties')]).then(function(results) {
+                var reBills = results[0] || [];
+                var properties = results[1] || [];
                 
-                var grossAmount = b.gross_amount || b.amount_due || 0;
-                var taxRate = b.tax_rate || (prop ? parseFloat(prop.tax_rate) : 0) || 0;
-                var taxAmount = b.tax_amount || (grossAmount * taxRate / 100);
-                var netAmount = b.amount_due || (grossAmount - taxAmount);
+                // Background
+                doc.setFillColor(254, 249, 231);
+                doc.rect(0, 0, 297, 210, 'F');
                 
-                totalGross += grossAmount;
-                totalTax += taxAmount;
-                totalNet += netAmount;
-                totalPaid += b.paid_amount || 0;
-                totalOutstanding += b.outstanding || 0;
+                // Header bar
+                doc.setFillColor(56, 161, 105);
+                doc.rect(10, 10, 277, 25, 'F');
                 
-                return [b.bill_number, prop ? prop.name : 'N/A', b.period, b.year, fmt(Math.round(grossAmount)), taxRate + '%', fmt(Math.round(taxAmount)), fmt(Math.round(netAmount)), fmt(b.paid_amount || 0), fmt(b.outstanding || 0), status];
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FAMILY REAL ESTATES - BILLS REPORT', 148, 20, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 148, 28, { align: 'center' });
+                
+                var totalGross = 0, totalTax = 0, totalNet = 0;
+                
+                var tableData = reBills.map(function(b) {
+                    var prop = properties.find(function(p) { return p.id === b.property_id; });
+                    var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : (parseFloat(b.amount) || 0);
+                    var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
+                    var taxAmount = grossAmount * taxRate / 100;
+                    var netAmount = grossAmount - taxAmount;
+                    
+                    totalGross += grossAmount;
+                    totalTax += taxAmount;
+                    totalNet += netAmount;
+                    
+                    return ['BILL-' + b.id, prop ? prop.name : 'N/A', prop ? prop.rent_period : '-', fmtDate(b.bill_date), fmt(Math.round(grossAmount)), taxRate + '%', fmt(Math.round(taxAmount)), fmt(Math.round(netAmount)), b.notes || '-'];
+                });
+                
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Bill #', 'Property', 'Period', 'Date', 'Gross', 'Tax %', 'Tax Amt', 'Net Due', 'Description']],
+                    body: tableData,
+                    styles: { fontSize: 8, cellPadding: 2 },
+                    headStyles: { fillColor: [56, 161, 105], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [240, 255, 244] }
+                });
+                
+                // Totals
+                var finalY = doc.lastAutoTable.finalY + 5;
+                doc.setFillColor(56, 161, 105);
+                doc.rect(10, finalY, 277, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TOTALS - Gross: ' + fmt(Math.round(totalGross)) + ' | Tax: ' + fmt(Math.round(totalTax)) + ' | Net: ' + fmt(Math.round(totalNet)) + ' ' + currency, 148, finalY + 7, { align: 'center' });
+                
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('Generated on: ' + today, 148, finalY + 18, { align: 'center' });
+                
+                doc.save('re_bills_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Bills PDF exported!');
             });
-            
-            doc.autoTable({
-                startY: 35,
-                head: [['Bill #', 'Property', 'Period', 'Year', 'Gross', 'Tax %', 'Tax Amt', 'Net Due', 'Paid', 'Outstanding', 'Status']],
-                body: tableData,
-                styles: { fontSize: 7 },
-                headStyles: { fillColor: [56, 161, 105] }
-            });
-            
-            doc.setFontSize(9);
-            doc.text('Totals - Gross: ' + fmt(Math.round(totalGross)) + ' | Tax: ' + fmt(Math.round(totalTax)) + ' | Net: ' + fmt(Math.round(totalNet)) + ' | Paid: ' + fmt(Math.round(totalPaid)) + ' | Outstanding: ' + fmt(Math.round(totalOutstanding)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
-            
-            doc.save('re_bills_' + new Date().toISOString().split('T')[0] + '.pdf');
-            showAlert('Bills PDF exported!');
         }
 
         function exportREPaymentsPDF() {
             var jsPDF = window.jspdf.jsPDF;
             var doc = new jsPDF();
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
+            var currency = getCurrency();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('FAMILY REAL ESTATE - PAYMENTS', 105, 15, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-            doc.text('* Payment amounts are Net (tax already deducted in Bills)', 105, 27, { align: 'center' });
-            doc.line(20, 30, 190, 30);
-            
-            var totalAmount = 0;
-            
-            var tableData = rePayments.map(function(p) {
-                var bill = reBills.find(function(b) { return b.id === p.bill_id; });
-                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
-                var amount = parseFloat(p.amount) || 0;
-                totalAmount += amount;
-                return [fmtDate(p.payment_date), prop ? prop.name : 'N/A', bill ? bill.bill_number : 'N/A', fmt(Math.round(amount)), p.reference || '-'];
+            Promise.all([api('/re/payments'), api('/re/bills'), api('/properties')]).then(function(results) {
+                var rePayments = results[0] || [];
+                var reBills = results[1] || [];
+                var properties = results[2] || [];
+                
+                // Background
+                doc.setFillColor(254, 249, 231);
+                doc.rect(0, 0, 210, 297, 'F');
+                
+                // Header bar
+                doc.setFillColor(66, 153, 225);
+                doc.rect(10, 10, 190, 30, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(190, 227, 248);
+                doc.text('Payment History Report', 105, 36, { align: 'center' });
+                
+                // Title
+                doc.setTextColor(44, 82, 130);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('PAYMENT HISTORY', 105, 52, { align: 'center' });
+                
+                var totalAmount = 0;
+                
+                var tableData = rePayments.map(function(p) {
+                    var bill = reBills.find(function(b) { return b.id === p.bill_id; });
+                    var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                    var amount = parseFloat(p.amount) || 0;
+                    totalAmount += amount;
+                    return [fmtDate(p.payment_date), prop ? prop.name : 'N/A', 'BILL-' + (p.bill_id || 'N/A'), fmt(Math.round(amount)), p.reference || '-'];
+                });
+                
+                doc.autoTable({
+                    startY: 58,
+                    head: [['Date', 'Property', 'Bill #', 'Amount', 'Reference']],
+                    body: tableData,
+                    styles: { fontSize: 9, cellPadding: 4 },
+                    headStyles: { fillColor: [66, 153, 225], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [235, 248, 255] },
+                    columnStyles: { 3: { halign: 'right', fontStyle: 'bold' } }
+                });
+                
+                // Totals
+                var finalY = doc.lastAutoTable.finalY + 5;
+                doc.setFillColor(66, 153, 225);
+                doc.rect(10, finalY, 190, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TOTAL PAYMENTS: ' + fmt(Math.round(totalAmount)) + ' ' + currency, 105, finalY + 7, { align: 'center' });
+                
+                // Footer
+                doc.setFillColor(247, 250, 252);
+                doc.rect(10, finalY + 15, 190, 20, 'F');
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('This report shows all recorded payments for Family Real Estate properties', 105, finalY + 23, { align: 'center' });
+                doc.text('Generated on: ' + today, 105, finalY + 29, { align: 'center' });
+                
+                doc.save('re_payments_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Payments PDF exported!');
             });
-            
-            doc.autoTable({
-                startY: 35,
-                head: [['Date', 'Property', 'Bill #', 'Amount', 'Reference']],
-                body: tableData,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [66, 153, 225] }
-            });
-            
-            doc.setFontSize(10);
-            doc.text('Total Payments: ' + fmt(Math.round(totalAmount)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
-            
-            doc.save('re_payments_' + new Date().toISOString().split('T')[0] + '.pdf');
-            showAlert('Payments PDF exported!');
         }
 
         function exportREExpensesPDF() {
             var jsPDF = window.jspdf.jsPDF;
             var doc = new jsPDF();
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var currency = getCurrency();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('FAMILY REAL ESTATE - EXPENSES', 105, 15, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-            doc.line(20, 25, 190, 25);
-            
-            var total = 0;
-            var tableData = reExpenses.map(function(e) {
-                var prop = properties.find(function(p) { return p.id === e.property_id; });
-                total += parseFloat(e.amount) || 0;
-                return [fmtDate(e.expense_date), prop ? prop.name : 'General', e.category, e.description, fmt(e.amount)];
+            Promise.all([api('/re/expenses'), api('/properties')]).then(function(results) {
+                var reExpenses = results[0] || [];
+                var properties = results[1] || [];
+                
+                // Background
+                doc.setFillColor(254, 249, 231);
+                doc.rect(0, 0, 210, 297, 'F');
+                
+                // Header bar
+                doc.setFillColor(229, 62, 62);
+                doc.rect(10, 10, 190, 30, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(254, 215, 215);
+                doc.text('Expenses Report', 105, 36, { align: 'center' });
+                
+                // Title
+                doc.setTextColor(197, 48, 48);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('PROPERTY EXPENSES', 105, 52, { align: 'center' });
+                
+                var total = 0;
+                var tableData = reExpenses.map(function(e) {
+                    var prop = properties.find(function(p) { return p.id === e.property_id; });
+                    var amount = parseFloat(e.amount) || 0;
+                    total += amount;
+                    var isInheritance = e.category === 'Inheritance Allocation';
+                    return [fmtDate(e.expense_date), prop ? prop.name : 'General', e.category, e.description, fmt(Math.round(amount))];
+                });
+                
+                doc.autoTable({
+                    startY: 58,
+                    head: [['Date', 'Property', 'Category', 'Description', 'Amount']],
+                    body: tableData,
+                    styles: { fontSize: 9, cellPadding: 4 },
+                    headStyles: { fillColor: [229, 62, 62], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [254, 242, 242] },
+                    columnStyles: { 4: { halign: 'right', fontStyle: 'bold' } }
+                });
+                
+                // Totals
+                var finalY = doc.lastAutoTable.finalY + 5;
+                doc.setFillColor(229, 62, 62);
+                doc.rect(10, finalY, 190, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TOTAL EXPENSES: ' + fmt(Math.round(total)) + ' ' + currency, 105, finalY + 7, { align: 'center' });
+                
+                // Footer
+                doc.setFillColor(247, 250, 252);
+                doc.rect(10, finalY + 15, 190, 20, 'F');
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('This report shows all recorded expenses for Family Real Estate properties', 105, finalY + 23, { align: 'center' });
+                doc.text('Generated on: ' + today, 105, finalY + 29, { align: 'center' });
+                
+                doc.save('re_expenses_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Expenses PDF exported!');
             });
-            
-            doc.autoTable({
-                startY: 30,
-                head: [['Date', 'Property', 'Category', 'Description', 'Amount']],
-                body: tableData,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [229, 62, 62] }
-            });
-            
-            doc.setFontSize(10);
-            doc.text('Total Expenses: ' + fmt(Math.round(total)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
-            
-            doc.save('re_expenses_' + new Date().toISOString().split('T')[0] + '.pdf');
-            showAlert('Expenses PDF exported!');
         }
 
         function exportRELedgerPDF() {
             var jsPDF = window.jspdf.jsPDF;
-            var doc = new jsPDF();
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
-            var reBills = JSON.parse(localStorage.getItem('reBills') || '[]');
-            var rePayments = JSON.parse(localStorage.getItem('rePayments') || '[]');
-            var reExpenses = JSON.parse(localStorage.getItem('reExpenses') || '[]');
+            var doc = new jsPDF('landscape');
+            var currency = getCurrency();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('FAMILY REAL ESTATE - LEDGER', 105, 15, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-            doc.text('* Income shown is NET after tax deductions', 105, 27, { align: 'center' });
-            doc.line(20, 30, 190, 30);
-            
-            var ledgerEntries = [];
-            
-            // Payments as net income
-            rePayments.forEach(function(p) {
-                var bill = reBills.find(function(b) { return b.id === p.bill_id; });
-                var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
-                var taxRate = prop ? (parseFloat(prop.tax_rate) || 0) : 0;
-                var gross = parseFloat(p.amount) || 0;
-                var net = gross - (gross * taxRate / 100);
-                ledgerEntries.push({ date: p.payment_date, property: prop ? prop.name : 'N/A', desc: 'Payment ' + (bill ? bill.bill_number : ''), type: 'Income', income: net, expense: 0 });
+            Promise.all([api('/re/payments'), api('/re/expenses'), api('/re/bills'), api('/properties'), api('/re/settings')]).then(function(results) {
+                var rePayments = results[0] || [];
+                var reExpenses = results[1] || [];
+                var reBills = results[2] || [];
+                var properties = results[3] || [];
+                var settings = results[4] || {};
+                
+                // Background
+                doc.setFillColor(254, 249, 231);
+                doc.rect(0, 0, 297, 210, 'F');
+                
+                // Header bar
+                doc.setFillColor(44, 82, 130);
+                doc.rect(10, 10, 277, 28, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FAMILY REAL ESTATES', 148, 20, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 148, 27, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(144, 205, 244);
+                doc.text('Financial Ledger Report', 148, 34, { align: 'center' });
+                
+                // Title
+                doc.setTextColor(44, 82, 130);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TRANSACTION LEDGER', 148, 48, { align: 'center' });
+                
+                var ledgerEntries = [];
+                
+                // Payments as income
+                rePayments.forEach(function(p) {
+                    var bill = reBills.find(function(b) { return b.id === p.bill_id; });
+                    var prop = bill ? properties.find(function(pr) { return pr.id === bill.property_id; }) : null;
+                    var amount = parseFloat(p.amount) || 0;
+                    ledgerEntries.push({ 
+                        date: p.payment_date, 
+                        property: prop ? prop.name : 'N/A', 
+                        desc: 'Payment - ' + (p.reference || 'BILL-' + p.bill_id), 
+                        type: 'Income', 
+                        income: amount, 
+                        expense: 0 
+                    });
+                });
+                
+                // Expenses
+                reExpenses.forEach(function(e) {
+                    var prop = properties.find(function(p) { return p.id === e.property_id; });
+                    ledgerEntries.push({ 
+                        date: e.expense_date, 
+                        property: prop ? prop.name : 'General', 
+                        desc: e.description, 
+                        type: e.category, 
+                        income: 0, 
+                        expense: parseFloat(e.amount) || 0 
+                    });
+                });
+                
+                // Sort by date
+                ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+                
+                var balance = 0, totalIn = 0, totalOut = 0;
+                var tableData = ledgerEntries.map(function(e) {
+                    balance += e.income - e.expense;
+                    totalIn += e.income;
+                    totalOut += e.expense;
+                    return [
+                        fmtDate(e.date), 
+                        e.property, 
+                        e.desc, 
+                        e.type, 
+                        e.income > 0 ? fmt(Math.round(e.income)) : '-', 
+                        e.expense > 0 ? fmt(Math.round(e.expense)) : '-', 
+                        fmt(Math.round(balance))
+                    ];
+                });
+                
+                if (tableData.length === 0) {
+                    tableData = [['No transactions recorded', '-', '-', '-', '-', '-', '-']];
+                }
+                
+                doc.autoTable({
+                    startY: 54,
+                    head: [['Date', 'Property', 'Description', 'Type', 'Income', 'Expense', 'Balance']],
+                    body: tableData,
+                    styles: { fontSize: 8, cellPadding: 3 },
+                    headStyles: { fillColor: [44, 82, 130], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [254, 249, 231] },
+                    columnStyles: { 
+                        4: { halign: 'right', textColor: [56, 161, 105] },
+                        5: { halign: 'right', textColor: [229, 62, 62] },
+                        6: { halign: 'right', fontStyle: 'bold' }
+                    }
+                });
+                
+                // Summary boxes
+                var finalY = doc.lastAutoTable.finalY + 8;
+                
+                // Income box
+                doc.setFillColor(240, 255, 244);
+                doc.setDrawColor(56, 161, 105);
+                doc.roundedRect(10, finalY, 85, 20, 2, 2, 'FD');
+                doc.setTextColor(39, 103, 73);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TOTAL INCOME', 52, finalY + 7, { align: 'center' });
+                doc.setFontSize(12);
+                doc.setTextColor(56, 161, 105);
+                doc.text(fmt(Math.round(totalIn)) + ' ' + currency, 52, finalY + 15, { align: 'center' });
+                
+                // Expenses box
+                doc.setFillColor(254, 242, 242);
+                doc.setDrawColor(229, 62, 62);
+                doc.roundedRect(100, finalY, 85, 20, 2, 2, 'FD');
+                doc.setTextColor(116, 42, 42);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TOTAL EXPENSES', 142, finalY + 7, { align: 'center' });
+                doc.setFontSize(12);
+                doc.setTextColor(229, 62, 62);
+                doc.text(fmt(Math.round(totalOut)) + ' ' + currency, 142, finalY + 15, { align: 'center' });
+                
+                // Balance box
+                doc.setFillColor(235, 248, 255);
+                doc.setDrawColor(66, 153, 225);
+                doc.roundedRect(190, finalY, 97, 20, 2, 2, 'FD');
+                doc.setTextColor(44, 82, 130);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('NET BALANCE', 238, finalY + 7, { align: 'center' });
+                doc.setFontSize(12);
+                doc.setTextColor(balance >= 0 ? [56, 161, 105] : [229, 62, 62]);
+                doc.text(fmt(Math.round(balance)) + ' ' + currency, 238, finalY + 15, { align: 'center' });
+                
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('Generated on: ' + today, 148, finalY + 30, { align: 'center' });
+                
+                doc.save('re_ledger_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Ledger PDF exported!');
             });
-            
-            // Expenses
-            reExpenses.forEach(function(e) {
-                var prop = properties.find(function(p) { return p.id === e.property_id; });
-                ledgerEntries.push({ date: e.expense_date, property: prop ? prop.name : 'General', desc: e.description, type: e.category, income: 0, expense: parseFloat(e.amount) || 0 });
-            });
-            
-            ledgerEntries.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-            
-            var balance = 0, totalIn = 0, totalOut = 0;
-            var tableData = ledgerEntries.map(function(e) {
-                balance += e.income - e.expense;
-                totalIn += e.income;
-                totalOut += e.expense;
-                return [fmtDate(e.date), e.property, e.desc, e.type, e.income > 0 ? fmt(Math.round(e.income)) : '-', e.expense > 0 ? fmt(Math.round(e.expense)) : '-', fmt(Math.round(balance))];
-            });
-            
-            doc.autoTable({
-                startY: 35,
-                head: [['Date', 'Property', 'Description', 'Type', 'Income (Net)', 'Expense', 'Balance']],
-                body: tableData,
-                styles: { fontSize: 7 },
-                headStyles: { fillColor: [44, 82, 130] }
-            });
-            
-            doc.setFontSize(10);
-            doc.text('Total Income (Net): ' + fmt(Math.round(totalIn)) + ' XAF | Total Expenses: ' + fmt(Math.round(totalOut)) + ' XAF | Balance: ' + fmt(Math.round(balance)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
-            
-            doc.save('re_ledger_' + new Date().toISOString().split('T')[0] + '.pdf');
-            showAlert('Ledger PDF exported!');
         }
 
         function exportREHeirsPDF() {
@@ -5632,42 +5856,114 @@
         function exportRERentalIncomePDF() {
             var jsPDF = window.jspdf.jsPDF;
             var doc = new jsPDF();
-            var properties = JSON.parse(localStorage.getItem('familyProperties') || '[]');
+            var currency = getCurrency();
+            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('RENTAL INCOME REPORT', 105, 15, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('GHOUENZEN Soulemanou | Generated: ' + new Date().toLocaleDateString(), 105, 22, { align: 'center' });
-            doc.line(20, 25, 190, 25);
-            
-            var totalGross = 0, totalTax = 0, totalNet = 0;
-            var tableData = properties.map(function(p) {
-                var isRented = p.status === 'Rented';
-                var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
-                var taxRate = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
-                var taxAmt = rent * taxRate / 100;
-                var net = rent - taxAmt;
-                totalGross += rent;
-                totalTax += taxAmt;
-                totalNet += net;
-                return [p.name, p.location, p.status, fmt(rent), taxRate + '%', fmt(Math.round(taxAmt)), fmt(Math.round(net))];
+            api('/properties').then(function(properties) {
+                properties = properties || [];
+                
+                // Background
+                doc.setFillColor(254, 249, 231);
+                doc.rect(0, 0, 210, 297, 'F');
+                
+                // Header bar
+                doc.setFillColor(212, 175, 55);
+                doc.rect(10, 10, 190, 30, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FAMILY REAL ESTATES', 105, 22, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('NJIKAM SALIFU REAL ESTATE PROPERTIES', 105, 29, { align: 'center' });
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(255, 250, 240);
+                doc.text('Rental Income Report', 105, 36, { align: 'center' });
+                
+                // Title
+                doc.setTextColor(116, 66, 16);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RENTAL INCOME SUMMARY', 105, 52, { align: 'center' });
+                
+                var totalGross = 0, totalTax = 0, totalNet = 0;
+                var tableData = properties.map(function(p) {
+                    var isRented = p.status === 'Rented';
+                    var rent = isRented ? (parseFloat(p.rent_amount) || 0) : 0;
+                    var taxRate = isRented ? (parseFloat(p.tax_rate) || 0) : 0;
+                    var taxAmt = rent * taxRate / 100;
+                    var net = rent - taxAmt;
+                    totalGross += rent;
+                    totalTax += taxAmt;
+                    totalNet += net;
+                    return [p.name, p.location, p.status, p.rent_period || '-', fmt(rent), taxRate + '%', fmt(Math.round(taxAmt)), fmt(Math.round(net))];
+                });
+                
+                doc.autoTable({
+                    startY: 58,
+                    head: [['Property', 'Location', 'Status', 'Period', 'Gross Rent', 'Tax %', 'Tax Amt', 'Net Income']],
+                    body: tableData,
+                    styles: { fontSize: 8, cellPadding: 3 },
+                    headStyles: { fillColor: [212, 175, 55], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [255, 250, 240] },
+                    columnStyles: { 
+                        4: { halign: 'right' },
+                        6: { halign: 'right', textColor: [229, 62, 62] },
+                        7: { halign: 'right', fontStyle: 'bold', textColor: [56, 161, 105] }
+                    }
+                });
+                
+                // Summary boxes
+                var finalY = doc.lastAutoTable.finalY + 8;
+                
+                // Gross box
+                doc.setFillColor(254, 243, 199);
+                doc.setDrawColor(212, 175, 55);
+                doc.roundedRect(10, finalY, 60, 22, 2, 2, 'FD');
+                doc.setTextColor(116, 66, 16);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('GROSS INCOME', 40, finalY + 7, { align: 'center' });
+                doc.setFontSize(11);
+                doc.text(fmt(Math.round(totalGross)) + ' ' + currency, 40, finalY + 16, { align: 'center' });
+                
+                // Tax box
+                doc.setFillColor(254, 242, 242);
+                doc.setDrawColor(229, 62, 62);
+                doc.roundedRect(75, finalY, 60, 22, 2, 2, 'FD');
+                doc.setTextColor(116, 42, 42);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('TOTAL TAX', 105, finalY + 7, { align: 'center' });
+                doc.setFontSize(11);
+                doc.setTextColor(229, 62, 62);
+                doc.text(fmt(Math.round(totalTax)) + ' ' + currency, 105, finalY + 16, { align: 'center' });
+                
+                // Net box
+                doc.setFillColor(240, 255, 244);
+                doc.setDrawColor(56, 161, 105);
+                doc.roundedRect(140, finalY, 60, 22, 2, 2, 'FD');
+                doc.setTextColor(39, 103, 73);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('NET INCOME', 170, finalY + 7, { align: 'center' });
+                doc.setFontSize(11);
+                doc.setTextColor(56, 161, 105);
+                doc.text(fmt(Math.round(totalNet)) + ' ' + currency, 170, finalY + 16, { align: 'center' });
+                
+                // Footer
+                doc.setFillColor(247, 250, 252);
+                doc.rect(10, finalY + 28, 190, 20, 'F');
+                doc.setFontSize(8);
+                doc.setTextColor(113, 128, 150);
+                doc.text('This report shows expected rental income from all properties', 105, finalY + 36, { align: 'center' });
+                doc.text('Generated on: ' + today, 105, finalY + 42, { align: 'center' });
+                
+                doc.save('re_rental_income_' + new Date().toISOString().split('T')[0] + '.pdf');
+                showAlert('Rental Income PDF exported!');
             });
-            
-            doc.autoTable({
-                startY: 30,
-                head: [['Property', 'Location', 'Status', 'Gross Rent', 'Tax Rate', 'Tax Amount', 'Net Income']],
-                body: tableData,
-                styles: { fontSize: 7 },
-                headStyles: { fillColor: [212, 175, 55] }
-            });
-            
-            doc.setFontSize(10);
-            doc.text('Totals - Gross: ' + fmt(Math.round(totalGross)) + ' | Tax: ' + fmt(Math.round(totalTax)) + ' | Net: ' + fmt(Math.round(totalNet)) + ' XAF', 20, doc.lastAutoTable.finalY + 10);
-            
-            doc.save('re_rental_income_' + new Date().toISOString().split('T')[0] + '.pdf');
-            showAlert('Rental Income PDF exported!');
         }
 
         function exportAllRECSV() { 

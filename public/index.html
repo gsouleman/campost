@@ -1167,8 +1167,13 @@
                                 <label>Status</label>
                                 <select id="reSettingPropStatus">
                                     <option value="Rented">Rented</option>
-                                    <option value="Vacant">Vacant</option>
-                                    <option value="Under Maintenance">Under Maintenance</option>
+                                    <option value="Not for Rent">Not for Rent</option>
+                                    <option value="Sold">Sold</option>
+                                    <option value="For sale">For Sale</option>
+                                    <option value="Not to be sold">Not to be Sold</option>
+                                    <option value="Shared">Shared</option>
+                                    <option value="Admin issues">Admin Issues</option>
+                                    <option value="Others">Others</option>
                                 </select>
                             </div>
                         </div>
@@ -1240,6 +1245,7 @@
                             <label>Status *</label>
                             <select id="propStatus" onchange="toggleRentalFields()">
                                 <option value="Rented">Rented</option>
+                                <option value="Not for Rent">Not for Rent</option>
                                 <option value="Sold">Sold</option>
                                 <option value="For sale">For Sale</option>
                                 <option value="Not to be sold">Not to be Sold</option>

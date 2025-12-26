@@ -830,7 +830,7 @@
                         <input type="hidden" id="rePayId">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Select Bill (from Bills) *</label>
+                                <label>Select Bill *</label>
                                 <select id="rePayBill" onchange="onREBillSelect()"></select>
                             </div>
                             <div class="form-group">
@@ -838,12 +838,12 @@
                                 <input type="date" id="rePayDate">
                             </div>
                             <div class="form-group">
-                                <label>Amount (XAF) *</label>
-                                <input type="number" id="rePayAmount" placeholder="Payment amount">
+                                <label>Amount</label>
+                                <input type="number" id="rePayAmount" readonly style="background: #e2e8f0; font-weight: bold;">
                             </div>
                             <div class="form-group">
                                 <label>Reference</label>
-                                <input type="text" id="rePayRef" placeholder="Receipt/Reference number">
+                                <input type="text" id="rePayRef" readonly style="background: #e2e8f0;">
                             </div>
                         </div>
                         <div class="btn-group">
@@ -860,7 +860,7 @@
                         </p>
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>Date</th><th>Property</th><th>Bill #</th><th>Amount</th><th>Reference</th><th class="no-print">Actions</th></tr></thead>
+                                <thead><tr><th>Date</th><th>Property</th><th>Bill #</th><th>Amount</th><th>Amount Paid</th><th>Amount Due</th><th>Status</th><th>Reference</th><th class="no-print">Actions</th></tr></thead>
                                 <tbody id="rePaymentsTable"></tbody>
                                 <tfoot id="rePaymentsTotals"></tfoot>
                             </table>
@@ -3999,56 +3999,123 @@
         }
 
         // ========== RE PAYMENTS ==========
+        // Generate unique payment reference
+        function generatePaymentReference() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            return 'PAY-' + year + month + day + '-' + random;
+        }
+        
         function loadREPayments() {
             var currency = getCurrency();
 
-            // Populate Select Bill dropdown from Bills section (only unpaid/partial bills)
-            api('/re/bills').then(function(reBills) {
-                var unpaidBills = reBills.filter(function(b) { return b.status !== 'Paid'; });
-                document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill to Pay</option>' + 
-                    unpaidBills.map(function(b) { 
-                        return '<option value="' + b.id + '" data-amount="' + b.amount + '">' + 
-                            'BILL-' + b.id + ' | ' + (b.property_name || 'N/A') + ' | Amount: ' + fmt(b.amount) + ' ' + currency + ' (' + b.status + ')' + 
+            // Get bills and properties to calculate Net Amount Due properly
+            Promise.all([api('/re/bills'), api('/properties'), api('/re/payments')]).then(function(results) {
+                var reBills = results[0];
+                var properties = results[1];
+                var rePayments = results[2];
+                
+                // Calculate Net Amount Due for each bill (from property)
+                var billsWithNetAmount = reBills.map(function(b) {
+                    var prop = properties.find(function(p) { return p.id === b.property_id; });
+                    var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : (parseFloat(b.amount) || 0);
+                    var taxRate = prop ? parseFloat(prop.tax_rate) : 0;
+                    var netAmount = grossAmount - (grossAmount * taxRate / 100);
+                    return {
+                        id: b.id,
+                        property_id: b.property_id,
+                        property_name: prop ? prop.name : (b.property_name || 'N/A'),
+                        netAmount: netAmount,
+                        status: b.status
+                    };
+                });
+                
+                // Populate Select Bill dropdown - show all bills
+                document.getElementById('rePayBill').innerHTML = '<option value="">Select Bill</option>' + 
+                    billsWithNetAmount.map(function(b) { 
+                        return '<option value="' + b.id + '" data-amount="' + Math.round(b.netAmount) + '" data-property="' + b.property_name + '">' + 
+                            'BILL-' + b.id + ' | ' + b.property_name + ' | Amount: ' + fmt(Math.round(b.netAmount)) + ' ' + currency + 
                         '</option>'; 
                     }).join('');
-            });
 
-            if (!document.getElementById('rePayDate').value) { 
-                document.getElementById('rePayDate').valueAsDate = new Date(); 
-            }
+                if (!document.getElementById('rePayDate').value) { 
+                    document.getElementById('rePayDate').valueAsDate = new Date(); 
+                }
+                
+                // Generate reference for new payments
+                if (!document.getElementById('rePayRef').value) {
+                    document.getElementById('rePayRef').value = generatePaymentReference();
+                }
 
-            api('/re/payments').then(function(rePayments) {
-                var totalAmount = 0;
+                var totalAmount = 0, totalPaid = 0, totalDue = 0;
+                var isAdmin = currentUser && currentUser.role === 'admin';
                 
                 var html = rePayments.map(function(p) { 
-                    var amount = parseFloat(p.amount) || 0;
+                    // Find the corresponding bill to get Net Amount Due
+                    var bill = billsWithNetAmount.find(function(b) { return b.id === p.bill_id; });
+                    var amount = bill ? bill.netAmount : (parseFloat(p.amount) || 0);
+                    var amountPaid = parseFloat(p.amount) || 0;
+                    var amountDue = amount - amountPaid;
+                    
+                    // Determine status
+                    var status, statusClass;
+                    if (amountPaid === amount) {
+                        status = 'Paid in Full';
+                        statusClass = 'badge-paid';
+                    } else if (amountPaid < amount) {
+                        status = 'Partial Payment';
+                        statusClass = 'badge-new';
+                    } else {
+                        status = 'Overpayment, Credit on Account';
+                        statusClass = 'badge-inheritance';
+                    }
+                    
                     totalAmount += amount;
+                    totalPaid += amountPaid;
+                    totalDue += amountDue;
+                    
+                    // Actions: View, Print, Delete
+                    var actionsHtml = '<td class="no-print">';
+                    actionsHtml += '<button class="btn btn-primary btn-sm" onclick="viewREPayment(' + p.id + ')" title="View">👁️</button> ';
+                    actionsHtml += '<button class="btn btn-gold btn-sm" onclick="printREPayment(' + p.id + ')" title="Print">🖨️</button> ';
+                    if (isAdmin) {
+                        actionsHtml += '<button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')" title="Delete">🗑️</button>';
+                    }
+                    actionsHtml += '</td>';
                     
                     return '<tr>' +
                         '<td>' + fmtDate(p.payment_date) + '</td>' +
-                        '<td>' + (p.property_name || 'N/A') + '</td>' +
+                        '<td>' + (bill ? bill.property_name : (p.property_name || 'N/A')) + '</td>' +
                         '<td>BILL-' + (p.bill_id || 'N/A') + '</td>' +
                         '<td class="amount-positive"><strong>' + fmt(Math.round(amount)) + '</strong></td>' +
+                        '<td class="amount-positive">' + fmt(Math.round(amountPaid)) + '</td>' +
+                        '<td class="' + (amountDue > 0 ? 'amount-negative' : amountDue < 0 ? 'amount-gold' : '') + '">' + fmt(Math.round(amountDue)) + '</td>' +
+                        '<td><span class="badge ' + statusClass + '">' + status + '</span></td>' +
                         '<td>' + (p.reference || '-') + '</td>' +
-                        '<td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteREPayment(' + p.id + ')">🗑️</button></td>' +
+                        actionsHtml +
                     '</tr>'; 
                 }).join('');
 
-                document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="6">No payments</td></tr>';
+                document.getElementById('rePaymentsTable').innerHTML = html || '<tr><td colspan="9">No payments</td></tr>';
                 
                 // Add totals row
                 if (document.getElementById('rePaymentsTotals')) {
                     document.getElementById('rePaymentsTotals').innerHTML = 
                         '<tr style="background: #f7fafc; font-weight: bold;">' +
-                        '<td colspan="3" style="text-align: right;">TOTAL (' + currency + '):</td>' +
+                        '<td colspan="3" style="text-align: right;">TOTALS (' + currency + '):</td>' +
                         '<td class="amount-positive">' + fmt(Math.round(totalAmount)) + '</td>' +
-                        '<td colspan="2"></td>' +
+                        '<td class="amount-positive">' + fmt(Math.round(totalPaid)) + '</td>' +
+                        '<td class="' + (totalDue > 0 ? 'amount-negative' : '') + '">' + fmt(Math.round(totalDue)) + '</td>' +
+                        '<td colspan="3"></td>' +
                         '</tr>';
                 }
             });
         }
 
-        // Auto-populate amount when bill is selected
+        // Auto-populate amount and reference when bill is selected
         function onREBillSelect() {
             var select = document.getElementById('rePayBill');
             var selectedOption = select.options[select.selectedIndex];
@@ -4056,6 +4123,10 @@
             if (selectedOption && selectedOption.value) {
                 var amount = parseFloat(selectedOption.getAttribute('data-amount')) || 0;
                 document.getElementById('rePayAmount').value = amount;
+                // Generate new reference if empty
+                if (!document.getElementById('rePayRef').value) {
+                    document.getElementById('rePayRef').value = generatePaymentReference();
+                }
             } else {
                 document.getElementById('rePayAmount').value = '';
             }
@@ -4065,9 +4136,9 @@
             var billId = parseInt(document.getElementById('rePayBill').value);
             var payDate = document.getElementById('rePayDate').value;
             var amount = parseFloat(document.getElementById('rePayAmount').value) || 0;
-            var reference = document.getElementById('rePayRef').value;
+            var reference = document.getElementById('rePayRef').value || generatePaymentReference();
 
-            if (!billId || !amount) { showAlert('Please fill required fields', 'error'); return; }
+            if (!billId || !amount) { showAlert('Please select a bill', 'error'); return; }
 
             api('/re/payments', {
                 method: 'POST',
@@ -4091,7 +4162,7 @@
             if (document.getElementById('rePayId')) document.getElementById('rePayId').value = ''; 
             document.getElementById('rePayBill').value = ''; 
             document.getElementById('rePayAmount').value = ''; 
-            document.getElementById('rePayRef').value = ''; 
+            document.getElementById('rePayRef').value = generatePaymentReference();
         }
 
         function deleteREPayment(id) {
@@ -4101,6 +4172,128 @@
                 loadREPayments();
                 loadREBills();
                 loadRealEstate();
+            });
+        }
+        
+        // View payment details
+        function viewREPayment(id) {
+            Promise.all([api('/re/payments'), api('/re/bills'), api('/properties')]).then(function(results) {
+                var payments = results[0];
+                var bills = results[1];
+                var properties = results[2];
+                var payment = payments.find(function(p) { return p.id === id; });
+                
+                if (payment) {
+                    var bill = bills.find(function(b) { return b.id === payment.bill_id; });
+                    var prop = bill ? properties.find(function(p) { return p.id === bill.property_id; }) : null;
+                    var propName = prop ? prop.name : (payment.property_name || 'N/A');
+                    var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : 0;
+                    var taxRate = prop ? parseFloat(prop.tax_rate) : 0;
+                    var netAmount = grossAmount - (grossAmount * taxRate / 100);
+                    var amountPaid = parseFloat(payment.amount) || 0;
+                    var amountDue = netAmount - amountPaid;
+                    var status = amountPaid === netAmount ? 'Paid in Full' : amountPaid < netAmount ? 'Partial Payment' : 'Overpayment, Credit on Account';
+                    
+                    var currency = getCurrency();
+                    alert(
+                        '=== PAYMENT DETAILS ===\n\n' +
+                        'Reference: ' + (payment.reference || '-') + '\n' +
+                        'Date: ' + fmtDate(payment.payment_date) + '\n' +
+                        'Property: ' + propName + '\n' +
+                        'Bill: BILL-' + payment.bill_id + '\n\n' +
+                        'Amount Due: ' + fmt(Math.round(netAmount)) + ' ' + currency + '\n' +
+                        'Amount Paid: ' + fmt(Math.round(amountPaid)) + ' ' + currency + '\n' +
+                        'Balance: ' + fmt(Math.round(amountDue)) + ' ' + currency + '\n' +
+                        'Status: ' + status
+                    );
+                }
+            });
+        }
+        
+        // Print payment receipt
+        function printREPayment(id) {
+            Promise.all([api('/re/payments'), api('/re/bills'), api('/properties')]).then(function(results) {
+                var payments = results[0];
+                var bills = results[1];
+                var properties = results[2];
+                var payment = payments.find(function(p) { return p.id === id; });
+                
+                if (payment) {
+                    var bill = bills.find(function(b) { return b.id === payment.bill_id; });
+                    var prop = bill ? properties.find(function(p) { return p.id === bill.property_id; }) : null;
+                    var propName = prop ? prop.name : (payment.property_name || 'N/A');
+                    var grossAmount = prop ? (parseFloat(prop.rent_amount) || 0) : 0;
+                    var taxRate = prop ? parseFloat(prop.tax_rate) : 0;
+                    var netAmount = grossAmount - (grossAmount * taxRate / 100);
+                    var amountPaid = parseFloat(payment.amount) || 0;
+                    var amountDue = netAmount - amountPaid;
+                    var status = amountPaid === netAmount ? 'Paid in Full' : amountPaid < netAmount ? 'Partial Payment' : 'Overpayment, Credit on Account';
+                    
+                    var currency = getCurrency();
+                    var jsPDF = window.jspdf.jsPDF;
+                    var doc = new jsPDF();
+                    
+                    doc.setFontSize(18);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PAYMENT RECEIPT', 105, 20, { align: 'center' });
+                    
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('FAMILY REAL ESTATES', 105, 30, { align: 'center' });
+                    doc.text('GHOUENZEN Soulemanou', 105, 37, { align: 'center' });
+                    
+                    doc.line(20, 45, 190, 45);
+                    
+                    doc.setFontSize(10);
+                    var y = 55;
+                    doc.text('Reference:', 20, y);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(payment.reference || '-', 70, y);
+                    
+                    doc.setFont('helvetica', 'normal');
+                    y += 10;
+                    doc.text('Date:', 20, y);
+                    doc.text(fmtDate(payment.payment_date), 70, y);
+                    
+                    y += 10;
+                    doc.text('Property:', 20, y);
+                    doc.text(propName, 70, y);
+                    
+                    y += 10;
+                    doc.text('Bill #:', 20, y);
+                    doc.text('BILL-' + payment.bill_id, 70, y);
+                    
+                    doc.line(20, y + 5, 190, y + 5);
+                    
+                    y += 15;
+                    doc.text('Amount Due:', 20, y);
+                    doc.text(fmt(Math.round(netAmount)) + ' ' + currency, 70, y);
+                    
+                    y += 10;
+                    doc.text('Amount Paid:', 20, y);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(fmt(Math.round(amountPaid)) + ' ' + currency, 70, y);
+                    
+                    doc.setFont('helvetica', 'normal');
+                    y += 10;
+                    doc.text('Balance:', 20, y);
+                    doc.text(fmt(Math.round(amountDue)) + ' ' + currency, 70, y);
+                    
+                    y += 10;
+                    doc.text('Status:', 20, y);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(status, 70, y);
+                    
+                    doc.line(20, y + 10, 190, y + 10);
+                    
+                    y += 25;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.text('Generated on: ' + new Date().toLocaleString(), 105, y, { align: 'center' });
+                    
+                    doc.save('payment_receipt_' + (payment.reference || id) + '.pdf');
+                    showAlert('Payment receipt downloaded!');
+                }
             });
         }
 

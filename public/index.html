@@ -2058,7 +2058,8 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Relationship</th>
-                                        <th>Group</th>
+                                        <th>Fraction</th>
+                                        <th>Parts</th>
                                         <th>Share (%)</th>
                                         <th>Share (XAF)</th>
                                         <th class="no-print admin-only">Actions</th>
@@ -2609,7 +2610,8 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Relationship</th>
-                                        <th>Gender</th>
+                                        <th>Fraction</th>
+                                        <th>Parts</th>
                                         <th>Share (%)</th>
                                         <th>Share Amount</th>
                                         <th class="no-print">Actions</th>
@@ -3067,7 +3069,8 @@
                                     <tr>
                                         <th>Heir Name</th>
                                         <th>Relationship</th>
-                                        <th>Group</th>
+                                        <th>Fraction</th>
+                                        <th>Parts</th>
                                         <th style="text-align: center;">Share (%)</th>
                                         <th style="text-align: right;">Share (XAF)</th>
                                     </tr>
@@ -3075,7 +3078,7 @@
                                 <tbody id="assetsHeirsTable"></tbody>
                                 <tfoot>
                                     <tr style="background: #f0fff4; font-weight: bold;">
-                                        <td colspan="3">TOTAL RATIO</td>
+                                        <td colspan="4">BASE NUMBER (ASAL AL-MAS'ALAH)</td>
                                         <td style="text-align: center;" id="assetsTotalPortions">0</td>
                                         <td style="text-align: right;" id="assetsTotalDistributed">0 XAF</td>
                                     </tr>
@@ -5468,8 +5471,21 @@
                         document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
                         document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
                         document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
-                        document.getElementById('inhPortions').textContent = d.totalResiduaryPortions;
-                        document.getElementById('inhPer').textContent = fmt(Math.round(d.sharePerPortion));
+                        // Update summary cards
+                        document.getElementById('inhPortions').textContent = d.baseNumber;
+                        document.getElementById('inhPer').textContent = fmt(Math.round(d.inheritanceAmount / d.baseNumber));
+
+                        // Display notes/rationale
+                        var notesHtml = d.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('');
+                        var notesSection = document.getElementById('inhNotes');
+                        if (!notesSection) {
+                            var div = document.createElement('div');
+                            div.id = 'inhNotes';
+                            div.style = 'background: #fffbeb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d69e2e; font-size: 0.9rem;';
+                            document.getElementById('heirGroups').parentElement.insertBefore(div, document.getElementById('heirGroups').nextSibling);
+                            notesSection = div;
+                        }
+                        notesSection.innerHTML = '<strong>📜 Calculation Rationale:</strong><ul style="margin: 10px 0 0 20px;">' + notesHtml + '</ul>';
 
                         // Use group summary from backend
                         var html = '';
@@ -5482,8 +5498,8 @@
                         var isAdmin = currentUser && currentUser.role === 'admin';
                         document.getElementById('heirTable').innerHTML = d.heirs.map(function (h) {
                             var actionsHtml = isAdmin ? '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td>' : '';
-                            return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + (h.sharePercentage || h.portions) + '%</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td>' + actionsHtml + '</tr>';
-                        }).join('') || '<tr><td colspan="6">No beneficiaries selected</td></tr>';
+                            return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.fraction + '</td><td>' + h.parts + '</td><td>' + h.sharePercentage + '%</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td>' + actionsHtml + '</tr>';
+                        }).join('') || '<tr><td colspan="7">No beneficiaries selected</td></tr>';
                     });
                 });
             });
@@ -5677,7 +5693,17 @@
         }
 
         function generateCertificateBody(h, d) {
-            return '<div class="certificate"><div class="cert-header"><h1>CAMPOST MANKON</h1><p style="color:#666;font-size:12px;">GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div style="text-align:center;margin:15px 0;"><h2 style="color:#d69e2e;font-size:18px;">📜 INHERITANCE SHARE CERTIFICATE</h2></div><p style="text-align:center;color:#666;font-size:12px;">This certifies that the following heir is entitled to receive their share:</p><div class="heir-name">' + h.name + '</div><div class="cert-details"><div class="detail-row"><span>Relationship:</span><span style="font-weight:bold;">' + h.relationship + '</span></div><div class="detail-row"><span>Heir Group:</span><span style="font-weight:bold;">' + h.heir_group + '</span></div><div class="detail-row"><span>Share Percentage:</span><span style="font-weight:bold;">' + (h.sharePercentage || 0) + '%</span></div><div class="detail-row"><span>Total Distribution:</span><span style="font-weight:bold;">' + fmt(d.inheritanceAmount) + ' XAF</span></div><div class="detail-row"><span>Base Share:</span><span style="font-weight:bold;">' + fmt(d.sharePerPortion) + ' XAF</span></div></div><div class="share-amount"><p style="margin:0 0 5px;opacity:0.8;">ENTITLED SHARE AMOUNT</p><strong>' + fmt(Math.round(h.shareAmount)) + ' XAF</strong></div><div class="signature-line"><div class="sig-block"><div class="sig-line">Authorized Signature</div></div><div class="sig-block"><div class="sig-line">Heir Signature</div></div></div><p style="text-align:center;margin-top:20px;font-size:10px;color:#666;">Generated on ' + today() + '</p></div>';
+            return '<div class="certificate"><div class="cert-header"><h1>CAMPOST MANKON</h1><p style="color:#666;font-size:12px;">GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div style="text-align:center;margin:15px 0;"><h2 style="color:#d69e2e;font-size:18px;">📜 INHERITANCE SHARE CERTIFICATE</h2></div><p style="text-align:center;color:#666;font-size:12px;">This certifies that the following heir is entitled to receive their share:</p><div class="heir-name">' + h.name + '</div>' +
+                '<div class="cert-details">' +
+                '<div class="detail-row"><span>Relationship:</span><span style="font-weight:bold;">' + h.relationship + '</span></div>' +
+                '<div class="detail-row"><span>Share Fraction:</span><span style="font-weight:bold; color: #1a365d;">' + (h.fraction || 'N/A') + '</span></div>' +
+                '<div class="detail-row"><span>Parts of Base (' + d.baseNumber + '):</span><span style="font-weight:bold;">' + h.parts + '</span></div>' +
+                '<div class="detail-row"><span>Share Percentage:</span><span style="font-weight:bold;">' + (h.sharePercentage || 0) + '%</span></div>' +
+                '<div class="detail-row"><span>Total Estate:</span><span style="font-weight:bold;">' + fmt(d.inheritanceAmount) + ' XAF</span></div>' +
+                '</div>' +
+                '<div class="share-amount"><p style="margin:0 0 5px;opacity:0.8;">NET DISTRIBUTABLE AMOUNT</p><strong>' + fmt(Math.round(h.shareAmount)) + ' XAF</strong></div>' +
+                '<div class="signature-line"><div class="sig-block"><div class="sig-line">Authorized Signature</div></div><div class="sig-block"><div class="sig-line">Heir Signature</div></div></div>' +
+                '<p style="text-align:center;margin-top:20px;font-size:10px;color:#666;">Sequential Calculation Method (Fara\'id) | Generated on ' + today() + '</p></div>';
         }
 
         // Export functions
@@ -7335,8 +7361,21 @@
 
                 document.getElementById('reInhPool').textContent = fmt(Math.round(data.inheritancePool)) + ' ' + currency;
                 document.getElementById('reInhHeirs').textContent = beneficiaries.length;
-                document.getElementById('reInhPortions').textContent = Math.round(data.totalPortions * 1000) / 1000;
+                document.getElementById('reInhPortions').textContent = data.baseNumber;
                 document.getElementById('reInhPerPortion').textContent = fmt(Math.round(data.perPortion)) + ' ' + currency;
+
+                // Display notes/rationale
+                var notesHtml = (data.notes || []).map(function (n) { return '<li>' + n + '</li>'; }).join('');
+                var notesSection = document.getElementById('reInhNotes');
+                if (!notesSection) {
+                    var div = document.createElement('div');
+                    div.id = 'reInhNotes';
+                    div.style = 'background: #f0f4f8; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3182ce; font-size: 0.9rem;';
+                    var heirsTableContainer = document.getElementById('reHeirsTable').parentElement.parentElement;
+                    heirsTableContainer.parentElement.insertBefore(div, heirsTableContainer.nextSibling);
+                    notesSection = div;
+                }
+                notesSection.innerHTML = '<strong>📜 Calculation Rationale:</strong><ul style="margin: 10px 0 0 20px;">' + notesHtml + '</ul>';
 
                 // Store inheritance data for certificate printing
                 window.reInheritanceData = {
@@ -7365,8 +7404,9 @@
                     return '<tr>' +
                         '<td>' + h.name + '</td>' +
                         '<td>' + h.relationship + '</td>' +
-                        '<td>' + (h.gender || '-') + '</td>' +
-                        '<td>' + portionDisplay + '</td>' +
+                        '<td>' + h.fraction + '</td>' +
+                        '<td>' + h.parts + '</td>' +
+                        '<td>' + h.sharePercentage + '%</td>' +
                         '<td class="amount-positive">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</td>' +
                         actionsHtml +
                         '</tr>';
@@ -7529,9 +7569,14 @@
                 '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #1e40af;">' + fmt(Math.round(data.inheritancePool)) + ' ' + currency + '</p>' +
                 '</div>' +
                 '<div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">' +
-                '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL RATIO</p>' +
-                '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #92400e;">' + data.totalPortions + '</p>' +
+                '<p style="margin: 0; color: #6b7280; font-size: 12px;">BASE NUMBER (LCD)</p>' +
+                '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #92400e;">' + data.baseNumber + '</p>' +
                 '</div>' +
+                '</div>' +
+
+                '<div style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #d1d5db; display: flex; justify-content: space-around; text-align: center;">' +
+                '<div><p style="margin: 0; font-size: 10px; color: #6b7280;">SHARE FRACTION</p><p style="margin: 3px 0; font-size: 16px; font-weight: bold;">' + (heir.fraction || 'N/A') + '</p></div>' +
+                '<div><p style="margin: 0; font-size: 10px; color: #6b7280;">PARTS OF BASE</p><p style="margin: 3px 0; font-size: 16px; font-weight: bold;">' + heir.parts + '</p></div>' +
                 '</div>' +
 
                 '<div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 8px; text-align: center; margin-bottom: 25px; border: 2px solid #22c55e;">' +
@@ -9339,47 +9384,145 @@
                 return;
             }
 
-            // Correct Islamic Inheritance Calculation:
-            // 1. Heirs with portions < 1 are "Fixed Share" heirs (Fara'id)
-            // 2. Heirs with portions >= 1 are "Residuary" heirs (Asabat)
-            var fixedHeirs = selectedHeirs.filter(function (h) { return parseFloat(h.portions) < 1; });
-            var residuaryHeirs = selectedHeirs.filter(function (h) { return parseFloat(h.portions) >= 1; });
+            // Use common Faraid logic (Client-side implementation)
+            var calculation = calculateFaraidJS(pool, selectedHeirs);
 
-            var fixedTotalAmount = 0;
-            fixedHeirs.forEach(function (h) { fixedTotalAmount += pool * parseFloat(h.portions); });
+            document.getElementById('assetsTotalPortions').textContent = calculation.baseNumber;
+            document.getElementById('assetsTotalDistributed').textContent = fmt(Math.round(pool)) + ' XAF';
+            document.getElementById('assetsUndistributedWarning').style.display = 'none';
 
-            var residueAmount = Math.max(0, pool - fixedTotalAmount);
-            var totalResiduaryPortions = residuaryHeirs.reduce(function (sum, h) { return sum + parseFloat(h.portions); }, 0);
-            var perPortion = totalResiduaryPortions > 0 ? residueAmount / totalResiduaryPortions : 0;
-
-            var totalDistributed = 0;
-
-            // Render distribution table
-            var html = selectedHeirs.map(function (h) {
-                var share = parseFloat(h.portions) < 1 ? (pool * parseFloat(h.portions)) : (parseFloat(h.portions) * perPortion);
-                totalDistributed += share;
-                var sharePercent = pool > 0 ? (share / pool * 100).toFixed(2) : 0;
+            var html = calculation.heirs.map(function (h) {
                 return '<tr>' +
                     '<td><strong>' + h.name + '</strong></td>' +
                     '<td>' + h.relationship + '</td>' +
-                    '<td>' + h.heir_group + '</td>' +
-                    '<td style="text-align: center;">' + sharePercent + '%</td>' +
-                    '<td style="text-align: right; color: var(--success-green); font-weight: bold;">' + fmt(Math.round(share)) + '</td>' +
+                    '<td>' + h.fraction + '</td>' +
+                    '<td>' + h.parts + '</td>' +
+                    '<td style="text-align: center;">' + h.sharePercentage + '%</td>' +
+                    '<td style="text-align: right; color: var(--success-green); font-weight: bold;">' + fmt(Math.round(h.shareAmount)) + '</td>' +
                     '</tr>';
             }).join('');
 
             document.getElementById('assetsHeirsTable').innerHTML = html;
-            document.getElementById('assetsTotalPortions').textContent = totalResiduaryPortions;
-            document.getElementById('assetsTotalDistributed').textContent = fmt(Math.round(totalDistributed)) + ' XAF';
+        }
 
-            // Check for undistributed amount (should be 0 if all selected)
-            var undistributed = pool - totalDistributed;
-            if (Math.abs(undistributed) > 1) {
-                document.getElementById('assetsUndistributedWarning').style.display = 'block';
-                document.getElementById('assetsUndistributedAmount').textContent = fmt(Math.round(undistributed)) + ' XAF';
-            } else {
-                document.getElementById('assetsUndistributedWarning').style.display = 'none';
+        /**
+         * Frontend implementation of Faraid logic for real-time Combined View
+         */
+        function calculateFaraidJS(netEstate, heirs) {
+            var results = { heirs: [], baseNumber: 24, totalFixedParts: 0, residueParts: 0, notes: [] };
+            if (!heirs || heirs.length === 0) return results;
+
+            var countRel = function (rel) { return heirs.filter(function (h) { return h.relationship === rel; }).length; };
+            var findHeir = function (rel) { return heirs.find(function (h) { return h.relationship === rel; }); };
+
+            var hasSons = countRel('Son') > 0;
+            var hasDaughters = countRel('Daughter') > 0;
+            var hasGrandSons = countRel('Grandson') > 0;
+            var hasGrandDaughters = countRel('Granddaughter') > 0;
+            var hasDescendants = hasSons || hasDaughters || hasGrandSons || hasGrandDaughters;
+
+            var hasFather = !!findHeir('Father');
+            var hasMother = !!findHeir('Mother');
+            var hasGrandfather = !!findHeir('Grandfather');
+
+            var siblingCount = heirs.filter(function (h) {
+                return ['Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister', 'Brother', 'Sister'].includes(h.relationship);
+            }).length;
+
+            var excludedIds = new Set();
+            heirs.forEach(function (h) {
+                if (hasSons && ['Grandson', 'Granddaughter', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) excludedIds.add(h.id);
+                if (hasFather && ['Grandfather', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) excludedIds.add(h.id);
+                if ((hasDescendants || hasFather || hasGrandfather) && ['Uterine Brother', 'Uterine Sister'].includes(h.relationship)) excludedIds.add(h.id);
+            });
+
+            var activeHeirs = heirs.filter(function (h) { return !excludedIds.has(h.id); });
+            var lcd = 24;
+            var partsMap = {};
+            var shareLabels = {};
+
+            activeHeirs.forEach(function (h) {
+                var parts = 0;
+                var label = '';
+                if (h.relationship === 'Wife') {
+                    parts = (hasDescendants ? 3 : 6) / countRel('Wife');
+                    label = hasDescendants ? '1/8 (Shared)' : '1/4 (Shared)';
+                } else if (h.relationship === 'Husband') {
+                    parts = hasDescendants ? 6 : 12;
+                    label = hasDescendants ? '1/4' : '1/2';
+                } else if (h.relationship === 'Mother') {
+                    parts = (hasDescendants || siblingCount >= 2) ? 4 : 8;
+                    label = (hasDescendants || siblingCount >= 2) ? '1/6' : '1/3';
+                } else if (h.relationship === 'Father' && hasDescendants) {
+                    parts = 4;
+                    label = '1/6 (Fixed)';
+                } else if (h.relationship === 'Daughter' && !hasSons) {
+                    var dCount = countRel('Daughter');
+                    parts = (dCount === 1 ? 12 : 16) / dCount;
+                    label = dCount === 1 ? '1/2' : '2/3 (Shared)';
+                }
+
+                if (parts > 0) {
+                    partsMap[h.id] = parts;
+                    shareLabels[h.id] = label;
+                }
+            });
+
+            var totalFixedParts = 0;
+            for (var id in partsMap) totalFixedParts += partsMap[id];
+
+            var residueParts = Math.max(0, lcd - totalFixedParts);
+            var residuaries = activeHeirs.filter(function (h) {
+                if (h.relationship === 'Son') return true;
+                if (h.relationship === 'Daughter' && hasSons) return true;
+                if (h.relationship === 'Father' && !hasSons && !hasGrandSons) return true;
+                if (h.relationship === 'Full Brother') return true;
+                return false;
+            });
+
+            if (residueParts > 0 && residuaries.length > 0) {
+                var totalUnits = 0;
+                residuaries.forEach(function (r) {
+                    var weight = (r.relationship === 'Son' || r.relationship === 'Father' || r.relationship === 'Full Brother') ? 2 : 1;
+                    r.asabahWeight = weight;
+                    totalUnits += weight;
+                });
+                residuaries.forEach(function (r) {
+                    var rShare = (r.asabahWeight / totalUnits) * residueParts;
+                    partsMap[r.id] = (partsMap[r.id] || 0) + rShare;
+                    var existingLabel = shareLabels[r.id];
+                    shareLabels[r.id] = existingLabel ? existingLabel + ' + Residue' : 'Residue (' + r.asabahWeight + '/' + totalUnits + ')';
+                });
             }
+
+            if (totalFixedParts > lcd) {
+                lcd = totalFixedParts;
+            } else if (totalFixedParts < lcd && residuaries.length === 0) {
+                var raddHeirs = activeHeirs.filter(function (h) { return h.relationship !== 'Wife' && h.relationship !== 'Husband'; });
+                if (raddHeirs.length > 0) {
+                    var raddTotalParts = 0;
+                    raddHeirs.forEach(function (h) { raddTotalParts += (partsMap[h.id] || 0); });
+                    var remaining = lcd - totalFixedParts;
+                    raddHeirs.forEach(function (h) {
+                        var add = (partsMap[h.id] / raddTotalParts) * remaining;
+                        partsMap[h.id] = (partsMap[h.id] || 0) + add;
+                    });
+                }
+            }
+
+            results.baseNumber = lcd;
+            activeHeirs.forEach(function (h) {
+                var parts = partsMap[h.id] || 0;
+                results.heirs.push({
+                    name: h.name,
+                    relationship: h.relationship,
+                    fraction: shareLabels[h.id] || 'Excluded',
+                    parts: Math.round(parts * 100) / 100,
+                    sharePercentage: Math.round((parts / lcd) * 100 * 100) / 100,
+                    shareAmount: (parts / lcd) * netEstate
+                });
+            });
+            return results;
         }
 
         // Export Assets PDF

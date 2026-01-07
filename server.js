@@ -21,6 +21,184 @@ const pool = new Pool({
     ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
+/**
+ * Islamic Inheritance Calculation Engine (Fara'id)
+ * Follows the 10-step sequential logic flow provided.
+ */
+function calculateFaraid(netEstate, heirs) {
+    const results = {
+        heirs: [],
+        baseNumber: 24,
+        totalFixedParts: 0,
+        residueParts: 0,
+        notes: [],
+        case: 'Standard',
+        netEstate: netEstate
+    };
+
+    if (!heirs || heirs.length === 0) return results;
+
+    // Helper to count specific relatives
+    const countRel = (rel) => heirs.filter(h => h.relationship === rel).length;
+    const findHeir = (rel) => heirs.find(h => h.relationship === rel);
+
+    // 1. Identify Context (Children, Grandchildren, Parents, Siblings)
+    const hasSons = countRel('Son') > 0;
+    const hasDaughters = countRel('Daughter') > 0;
+    const hasGrandSons = countRel('Grandson') > 0;
+    const hasGrandDaughters = countRel('Granddaughter') > 0;
+    const hasDescendants = hasSons || hasDaughters || hasGrandSons || hasGrandDaughters;
+
+    const hasFather = !!findHeir('Father');
+    const hasMother = !!findHeir('Mother');
+    const hasGrandfather = !!findHeir('Grandfather');
+
+    const siblingCount = heirs.filter(h =>
+        ['Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister', 'Brother', 'Sister'].includes(h.relationship)
+    ).length;
+
+    // 2. Apply Exclusion Hierarchy (Hajb Hirman)
+    const excludedIds = new Set();
+    heirs.forEach(h => {
+        // Son excludes grandchildren, siblings, uncles
+        if (hasSons) {
+            if (['Grandson', 'Granddaughter', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
+                excludedIds.add(h.id);
+                results.notes.push(`${h.name} (${h.relationship}) is excluded by the Son.`);
+            }
+        }
+        // Father excludes grandfather, siblings
+        if (hasFather) {
+            if (['Grandfather', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
+                excludedIds.add(h.id);
+                results.notes.push(`${h.name} (${h.relationship}) is excluded by the Father.`);
+            }
+        }
+        // Descendants or Male Ascendants exclude Uterine Siblings
+        if (hasDescendants || hasFather || hasGrandfather) {
+            if (['Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
+                excludedIds.add(h.id);
+                results.notes.push(`${h.name} (${h.relationship}) is excluded by descendants or male ascendants.`);
+            }
+        }
+    });
+
+    const activeHeirs = heirs.filter(h => !excludedIds.has(h.id));
+
+    // 3. Distribute Fixed Shares (Furud)
+    let lcd = 24;
+    let partsMap = new Map(); // heir_id -> parts
+    let shareLabels = new Map(); // heir_id -> "1/8"
+
+    activeHeirs.forEach(h => {
+        let parts = 0;
+        let label = '';
+
+        if (h.relationship === 'Wife') {
+            parts = hasDescendants ? 3 : 6; // 1/8 or 1/4 of 24
+            parts = parts / countRel('Wife');
+            label = hasDescendants ? '1/8 (Shared)' : '1/4 (Shared)';
+        } else if (h.relationship === 'Husband') {
+            parts = hasDescendants ? 6 : 12; // 1/4 or 1/2 of 24
+            label = hasDescendants ? '1/4' : '1/2';
+        } else if (h.relationship === 'Mother') {
+            parts = (hasDescendants || siblingCount >= 2) ? 4 : 8; // 1/6 or 1/3
+            label = (hasDescendants || siblingCount >= 2) ? '1/6' : '1/3';
+        } else if (h.relationship === 'Father' && hasDescendants) {
+            parts = 4; // 1/6
+            label = '1/6 (Fixed)';
+        } else if (h.relationship === 'Daughter' && !hasSons) {
+            const dCount = countRel('Daughter');
+            parts = (dCount === 1 ? 12 : 16) / dCount; // 1/2 or 2/3
+            label = dCount === 1 ? '1/2' : '2/3 (Shared)';
+        } else if (h.relationship === 'Full Sister' && !hasSons && !hasDaughters && !hasFather) {
+            const sCount = countRel('Full Sister');
+            if (countRel('Full Brother') === 0) {
+                parts = (sCount === 1 ? 12 : 16) / sCount;
+                label = sCount === 1 ? '1/2' : '2/3 (Shared)';
+            }
+        }
+
+        if (parts > 0) {
+            partsMap.set(h.id, parts);
+            shareLabels.set(h.id, label);
+        }
+    });
+
+    let totalFixedParts = 0;
+    partsMap.forEach(v => totalFixedParts += v);
+
+    // 4. Distribute Residue (Asabah)
+    let residueParts = Math.max(0, lcd - totalFixedParts);
+    const residuaries = activeHeirs.filter(h => {
+        if (h.relationship === 'Son') return true;
+        if (h.relationship === 'Daughter' && hasSons) return true;
+        if (h.relationship === 'Father' && !hasSons && !hasGrandSons) return true; // Father takes residue if no male descendants
+        if (h.relationship === 'Full Brother') return true;
+        if (h.relationship === 'Full Sister' && countRel('Full Brother') > 0) return true;
+        return false;
+    });
+
+    if (residueParts > 0 && residuaries.length > 0) {
+        let totalUnits = 0;
+        residuaries.forEach(r => {
+            const weight = (r.relationship === 'Son' || r.relationship === 'Father' || r.relationship === 'Full Brother') ? 2 : 1;
+            r.asabahWeight = weight;
+            totalUnits += weight;
+        });
+
+        residuaries.forEach(r => {
+            const rShare = (r.asabahWeight / totalUnits) * residueParts;
+            const existing = partsMap.get(r.id) || 0;
+            partsMap.set(r.id, existing + rShare);
+
+            const existingLabel = shareLabels.get(r.id);
+            shareLabels.set(r.id, existingLabel ? `${existingLabel} + Residue` : `Residue (${r.asabahWeight}/${totalUnits})`);
+        });
+        residueParts = 0;
+    }
+
+    // 5. Handle Awl & Radd
+    if (totalFixedParts > lcd) {
+        lcd = totalFixedParts;
+        results.case = 'Awl';
+        results.notes.push("Total fixed shares exceed 1 (Awl). All shares reduced proportionally.");
+    } else if (totalFixedParts < lcd && residuaries.length === 0) {
+        const raddHeirs = activeHeirs.filter(h => h.relationship !== 'Wife' && h.relationship !== 'Husband');
+        if (raddHeirs.length > 0) {
+            const raddTotalParts = raddHeirs.reduce((sum, h) => sum + (partsMap.get(h.id) || 0), 0);
+            const remaining = lcd - totalFixedParts;
+            raddHeirs.forEach(h => {
+                const add = (partsMap.get(h.id) / raddTotalParts) * remaining;
+                partsMap.set(h.id, (partsMap.get(h.id) || 0) + add);
+            });
+            results.case = 'Radd';
+            results.notes.push("Total fixed shares less than 1 and no residuaries (Radd). Residual redistribution applied.");
+        }
+    }
+
+    // 6. Final Results
+    results.baseNumber = lcd;
+    results.totalFixedParts = totalFixedParts;
+    results.residueParts = residueParts;
+
+    activeHeirs.forEach(h => {
+        const parts = partsMap.get(h.id) || 0;
+        const percentage = (parts / lcd) * 100;
+        const amount = (parts / lcd) * netEstate;
+
+        results.heirs.push({
+            ...h,
+            fraction: shareLabels.get(h.id) || 'Excluded',
+            parts: Math.round(parts * 100) / 100,
+            sharePercentage: Math.round(percentage * 100) / 100,
+            shareAmount: Math.round(amount * 100) / 100
+        });
+    });
+
+    return results;
+}
+
 let dbConnected = false;
 
 async function initDatabase() {
@@ -606,46 +784,14 @@ app.get('/api/inheritance/calculate', async (req, res) => {
             heirs = heirs.filter(h => selectedIds.includes(h.id));
         }
 
-        // Correct Islamic Inheritance Calculation:
-        // 1. Heirs with portions < 1 are "Fixed Share" heirs (Fara'id) - portions are absolute fractions (e.g., 0.125 for 1/8)
-        // 2. Heirs with portions >= 1 are "Residuary" heirs (Asabat) - portions are relative ratios (e.g., 2 for Son, 1 for Daughter)
+        // Use the new Sequential Logic Flow
+        const calculation = calculateFaraid(inheritanceAmount, heirs);
 
-        const fixedHeirs = heirs.filter(h => parseFloat(h.portions) < 1);
-        const residuaryHeirs = heirs.filter(h => parseFloat(h.portions) >= 1);
-
-        let fixedTotalAmount = 0;
-        const heirShares = [];
-
-        // Calculate Fixed Shares first
-        fixedHeirs.forEach(h => {
-            const share = inheritanceAmount * parseFloat(h.portions);
-            fixedTotalAmount += share;
-            heirShares.push({
-                ...h,
-                shareAmount: Math.round(share * 100) / 100,
-                sharePercentage: Math.round((parseFloat(h.portions) * 100) * 100) / 100
-            });
-        });
-
-        // Distribute the residue among residuary heirs
-        const residueAmount = Math.max(0, inheritanceAmount - fixedTotalAmount);
-        const totalResiduaryPortions = residuaryHeirs.reduce((sum, h) => sum + parseFloat(h.portions), 0);
-        const sharePerResiduaryPortion = totalResiduaryPortions > 0 ? residueAmount / totalResiduaryPortions : 0;
-
-        residuaryHeirs.forEach(h => {
-            const share = parseFloat(h.portions) * sharePerResiduaryPortion;
-            heirShares.push({
-                ...h,
-                shareAmount: Math.round(share * 100) / 100,
-                sharePercentage: inheritanceAmount > 0 ? Math.round((share / inheritanceAmount) * 100 * 100) / 100 : 0
-            });
-        });
-
-        // Group summary (recalculated for the new logic)
+        // Recalculate group summary based on new results
         const groupSummary = {};
-        heirShares.forEach(h => {
+        calculation.heirs.forEach(h => {
             if (!groupSummary[h.heir_group]) {
-                groupSummary[h.heir_group] = { count: 0, totalShare: 0, portions: parseFloat(h.portions) };
+                groupSummary[h.heir_group] = { count: 0, totalShare: 0, portions: h.parts };
             }
             groupSummary[h.heir_group].count++;
             groupSummary[h.heir_group].totalShare += h.shareAmount;
@@ -653,11 +799,11 @@ app.get('/api/inheritance/calculate', async (req, res) => {
 
         res.json({
             totalBillsPaid, totalExpenses, reserveFunds, inheritanceAmount,
-            fixedTotalAmount: Math.round(fixedTotalAmount * 100) / 100,
-            residueAmount: Math.round(residueAmount * 100) / 100,
-            totalResiduaryPortions,
-            sharePerPortion: Math.round(sharePerResiduaryPortion * 100) / 100,
-            heirs: heirShares, groupSummary
+            baseNumber: calculation.baseNumber,
+            notes: calculation.notes,
+            calculationCase: calculation.case,
+            heirs: calculation.heirs,
+            groupSummary
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1571,60 +1717,29 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
             heirs = heirs.filter(h => selectedIds.includes(h.id));
         }
 
-        // Correct Islamic Inheritance Calculation:
-        // 1. Heirs with portions < 1 are "Fixed Share" heirs (Fara'id) - portions are absolute fractions (e.g., 0.125 for 1/8)
-        // 2. Heirs with portions >= 1 are "Residuary" heirs (Asabat) - portions are relative ratios (e.g., 2 for Son, 1 for Daughter)
-
-        const fixedHeirs = heirs.filter(h => parseFloat(h.portions) < 1);
-        const residuaryHeirs = heirs.filter(h => parseFloat(h.portions) >= 1);
-
-        let fixedTotalAmount = 0;
-        const heirShares = [];
-
-        // Calculate Fixed Shares first
-        fixedHeirs.forEach(h => {
-            const share = inheritancePool * parseFloat(h.portions);
-            fixedTotalAmount += share;
-            heirShares.push({
-                ...h,
-                shareAmount: Math.round(share * 100) / 100,
-                sharePercentage: Math.round((parseFloat(h.portions) * 100) * 100) / 100
-            });
-        });
-
-        // Distribute the residue among residuary heirs
-        const residueAmount = Math.max(0, inheritancePool - fixedTotalAmount);
-        const totalResiduaryPortions = residuaryHeirs.reduce((sum, h) => sum + parseFloat(h.portions), 0);
-        const sharePerResiduaryPortion = totalResiduaryPortions > 0 ? residueAmount / totalResiduaryPortions : 0;
-
-        residuaryHeirs.forEach(h => {
-            const share = parseFloat(h.portions) * sharePerResiduaryPortion;
-            heirShares.push({
-                ...h,
-                shareAmount: Math.round(share * 100) / 100,
-                sharePercentage: inheritancePool > 0 ? Math.round((share / inheritancePool) * 100 * 100) / 100 : 0
-            });
-        });
+        // Use the new Sequential Logic Flow
+        const calculation = calculateFaraid(inheritancePool, heirs);
 
         // Group summary
         const groupSummary = {};
-        heirShares.forEach(h => {
+        calculation.heirs.forEach(h => {
             if (!groupSummary[h.heir_group]) {
                 groupSummary[h.heir_group] = { count: 0, totalPortions: 0, totalShare: 0 };
             }
             groupSummary[h.heir_group].count++;
-            groupSummary[h.heir_group].totalPortions += parseFloat(h.portions);
+            groupSummary[h.heir_group].totalPortions += h.parts;
             groupSummary[h.heir_group].totalShare += h.shareAmount;
         });
 
         res.json({
             inheritancePool,
-            fixedTotalAmount,
-            residueAmount,
-            totalPortions: totalResiduaryPortions,
-            perPortion: sharePerResiduaryPortion,
-            heirs: heirShares,
-            groupSummary
+            baseNumber: calculation.baseNumber,
+            totalPortions: calculation.totalFixedParts + calculation.residueParts,
+            perPortion: calculation.baseNumber > 0 ? (inheritancePool / calculation.baseNumber) : 0,
+            heirs: calculation.heirs,
+            groupSummary,
+            notes: calculation.notes,
+            calculationCase: calculation.case
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

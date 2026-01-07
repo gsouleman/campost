@@ -1607,11 +1607,12 @@
                     </div>
 
                     <!-- Role Permissions Info -->
-                    <div class="card">
+                    <div class="card" id="role-permissions-card">
                         <div class="card-header"><span>🔐 Role Permissions</span></div>
                         <div class="card-body">
                             <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
-                                <!-- Admin -->
+
+                                <!-- Modals -->
                                 <div
                                     style="background: linear-gradient(135deg, rgba(214,158,46,0.1), rgba(237,137,54,0.1)); border: 2px solid var(--accent-gold); border-radius: 8px; padding: 1rem;">
                                     <h4 style="color: var(--accent-gold); margin-bottom: 0.5rem;">👑 ADMIN</h4>
@@ -2094,9 +2095,10 @@
                     </div>
                     <div class="card-body" id="heirGroups"></div>
                 </div>
-                <div class="card">
+                <div class="card" id="campost-heir-shares-card">
                     <div class="card-header"><span>📋 Heir Shares (Beneficiaries Only)</span><button
-                            class="btn btn-print btn-sm no-print" onclick="printPage('campost-inheritance')">🖨️ Print
+                            class="btn btn-print btn-sm no-print" onclick="printElement('campost-heir-shares-card')">🖨️
+                            Print
                             Summary</button></div>
                     <div class="card-body">
                         <div class="table-container">
@@ -2641,9 +2643,10 @@
                     <div class="card-body" id="reHeirGroups"></div>
                 </div>
 
-                <div class="card">
+                <div class="card" id="re-heir-shares-card">
                     <div class="card-header gold"><span>📋 Real Estate Inheritance Distribution</span><button
-                            class="btn btn-print btn-sm no-print" onclick="printPage('family-inheritance')">🖨️ Print
+                            class="btn btn-print btn-sm no-print" onclick="printElement('re-heir-shares-card')">🖨️
+                            Print
                             Summary</button></div>
                     <div class="no-print">
                         <button class="btn btn-success btn-sm admin-only" onclick="openREHeirModal()">➕ Add
@@ -3575,6 +3578,9 @@
         </div>
     </div>
     </main>
+
+    <!-- Temp Page for Printing Elements -->
+    <div id="print-temp-page" class="page"></div>
 
     <!-- Bill/Invoice Modal -->
     <div class="modal-overlay" id="billModal">
@@ -6152,6 +6158,16 @@
             a.download = filename;
             a.click();
             showAlert('Exported!');
+        }
+
+        // Print specific element by cloning to temp page
+        function printElement(sourceId) {
+            var content = document.getElementById(sourceId).innerHTML;
+            var tempPage = document.getElementById('print-temp-page');
+            // Wrap in a card for consistent styling if needed, or just raw content
+            // We'll wrap in a basic div to maintain some structure but avoid full card borders if redundant
+            tempPage.innerHTML = '<div class="card" style="box-shadow:none; border:none; margin:0;">' + content + '</div>';
+            printPage('print-temp-page');
         }
 
         function printPage(pageId) {

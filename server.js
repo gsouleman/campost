@@ -622,7 +622,8 @@ app.get('/api/inheritance/calculate', async (req, res) => {
             fixedTotalAmount += share;
             heirShares.push({
                 ...h,
-                shareAmount: Math.round(share * 100) / 100
+                shareAmount: Math.round(share * 100) / 100,
+                sharePercentage: Math.round((parseFloat(h.portions) * 100) * 100) / 100
             });
         });
 
@@ -635,7 +636,8 @@ app.get('/api/inheritance/calculate', async (req, res) => {
             const share = parseFloat(h.portions) * sharePerResiduaryPortion;
             heirShares.push({
                 ...h,
-                shareAmount: Math.round(share * 100) / 100
+                shareAmount: Math.round(share * 100) / 100,
+                sharePercentage: inheritanceAmount > 0 ? Math.round((share / inheritanceAmount) * 100 * 100) / 100 : 0
             });
         });
 
@@ -1585,7 +1587,8 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
             fixedTotalAmount += share;
             heirShares.push({
                 ...h,
-                shareAmount: Math.round(share * 100) / 100
+                shareAmount: Math.round(share * 100) / 100,
+                sharePercentage: Math.round((parseFloat(h.portions) * 100) * 100) / 100
             });
         });
 
@@ -1598,7 +1601,8 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
             const share = parseFloat(h.portions) * sharePerResiduaryPortion;
             heirShares.push({
                 ...h,
-                shareAmount: Math.round(share * 100) / 100
+                shareAmount: Math.round(share * 100) / 100,
+                sharePercentage: inheritancePool > 0 ? Math.round((share / inheritancePool) * 100 * 100) / 100 : 0
             });
         });
 

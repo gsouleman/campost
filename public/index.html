@@ -2007,7 +2007,7 @@
                     <div class="stat-card gold">
                         <div class="stat-icon">📊</div>
                         <div class="stat-value" id="inhPer">0</div>
-                        <div class="stat-label">Per Portion</div>
+                        <div class="stat-label">Base Share</div>
                     </div>
                 </div>
 
@@ -2040,7 +2040,7 @@
 
                 <div class="card">
                     <div class="card-header gold"><span>👨‍👩‍👧‍👦 Heirs (<span id="inhPortions">24</span>
-                            portions)</span>
+                            ratio)</span>
                         <div class="no-print"><button class="btn btn-outline btn-sm admin-only"
                                 onclick="openHeirModal()">➕ Add</button><button class="btn btn-gold btn-sm"
                                 onclick="printAllHeirCertificates()">🖨️ Print All Certificates</button></div>
@@ -2059,7 +2059,7 @@
                                         <th>Name</th>
                                         <th>Relationship</th>
                                         <th>Group</th>
-                                        <th>Portions</th>
+                                        <th>Share (%)</th>
                                         <th>Share (XAF)</th>
                                         <th class="no-print admin-only">Actions</th>
                                     </tr>
@@ -2550,12 +2550,12 @@
                     <div class="stat-card blue">
                         <div class="stat-icon">📊</div>
                         <div class="stat-value" id="reInhPortions">0</div>
-                        <div class="stat-label">Total Portions</div>
+                        <div class="stat-label">Total Ratio</div>
                     </div>
                     <div class="stat-card red">
                         <div class="stat-icon">💵</div>
                         <div class="stat-value" id="reInhPerPortion">0</div>
-                        <div class="stat-label">Per Portion</div>
+                        <div class="stat-label">Base Share</div>
                     </div>
                 </div>
 
@@ -2610,7 +2610,7 @@
                                         <th>Name</th>
                                         <th>Relationship</th>
                                         <th>Gender</th>
-                                        <th>Portions</th>
+                                        <th>Share (%)</th>
                                         <th>Share Amount</th>
                                         <th class="no-print">Actions</th>
                                     </tr>
@@ -5481,7 +5481,7 @@
                         var isAdmin = currentUser && currentUser.role === 'admin';
                         document.getElementById('heirTable').innerHTML = d.heirs.map(function (h) {
                             var actionsHtml = isAdmin ? '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td>' : '';
-                            return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td>' + actionsHtml + '</tr>';
+                            return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + (h.sharePercentage || h.portions) + '%</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td>' + actionsHtml + '</tr>';
                         }).join('') || '<tr><td colspan="6">No beneficiaries selected</td></tr>';
                     });
                 });
@@ -5676,7 +5676,7 @@
         }
 
         function generateCertificateBody(h, d) {
-            return '<div class="certificate"><div class="cert-header"><h1>CAMPOST MANKON</h1><p style="color:#666;font-size:12px;">GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div style="text-align:center;margin:15px 0;"><h2 style="color:#d69e2e;font-size:18px;">📜 INHERITANCE SHARE CERTIFICATE</h2></div><p style="text-align:center;color:#666;font-size:12px;">This certifies that the following heir is entitled to receive their share:</p><div class="heir-name">' + h.name + '</div><div class="cert-details"><div class="detail-row"><span>Relationship:</span><span style="font-weight:bold;">' + h.relationship + '</span></div><div class="detail-row"><span>Heir Group:</span><span style="font-weight:bold;">' + h.heir_group + '</span></div><div class="detail-row"><span>Portions:</span><span style="font-weight:bold;">' + h.portions + ' of ' + d.totalPortions + '</span></div><div class="detail-row"><span>Total Distribution:</span><span style="font-weight:bold;">' + fmt(d.inheritanceAmount) + ' XAF</span></div><div class="detail-row"><span>Per Portion:</span><span style="font-weight:bold;">' + fmt(d.sharePerPortion) + ' XAF</span></div></div><div class="share-amount"><p style="margin:0 0 5px;opacity:0.8;">ENTITLED SHARE AMOUNT</p><strong>' + fmt(Math.round(h.shareAmount)) + ' XAF</strong></div><div class="signature-line"><div class="sig-block"><div class="sig-line">Authorized Signature</div></div><div class="sig-block"><div class="sig-line">Heir Signature</div></div></div><p style="text-align:center;margin-top:20px;font-size:10px;color:#666;">Generated on ' + today() + '</p></div>';
+            return '<div class="certificate"><div class="cert-header"><h1>CAMPOST MANKON</h1><p style="color:#666;font-size:12px;">GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868</p></div><div style="text-align:center;margin:15px 0;"><h2 style="color:#d69e2e;font-size:18px;">📜 INHERITANCE SHARE CERTIFICATE</h2></div><p style="text-align:center;color:#666;font-size:12px;">This certifies that the following heir is entitled to receive their share:</p><div class="heir-name">' + h.name + '</div><div class="cert-details"><div class="detail-row"><span>Relationship:</span><span style="font-weight:bold;">' + h.relationship + '</span></div><div class="detail-row"><span>Heir Group:</span><span style="font-weight:bold;">' + h.heir_group + '</span></div><div class="detail-row"><span>Share Percentage:</span><span style="font-weight:bold;">' + (h.sharePercentage || 0) + '%</span></div><div class="detail-row"><span>Total Distribution:</span><span style="font-weight:bold;">' + fmt(d.inheritanceAmount) + ' XAF</span></div><div class="detail-row"><span>Base Share:</span><span style="font-weight:bold;">' + fmt(d.sharePerPortion) + ' XAF</span></div></div><div class="share-amount"><p style="margin:0 0 5px;opacity:0.8;">ENTITLED SHARE AMOUNT</p><strong>' + fmt(Math.round(h.shareAmount)) + ' XAF</strong></div><div class="signature-line"><div class="sig-block"><div class="sig-line">Authorized Signature</div></div><div class="sig-block"><div class="sig-line">Heir Signature</div></div></div><p style="text-align:center;margin-top:20px;font-size:10px;color:#666;">Generated on ' + today() + '</p></div>';
         }
 
         // Export functions
@@ -7346,13 +7346,7 @@
                 var isAdmin = currentUser && currentUser.role === 'admin';
                 var html = beneficiaries.map(function (h) {
                     var shareAmount = h.shareAmount || (data.perPortion * (parseFloat(h.portions) || 0));
-                    var portionDisplay = h.portions;
-                    // Show as fraction if possible
-                    if (h.portions === 0.125) portionDisplay = '1/8';
-                    else if (h.portions === 0.25) portionDisplay = '1/4';
-                    else if (h.portions === 0.5) portionDisplay = '1/2';
-                    else if (Math.abs(h.portions - 0.167) < 0.01) portionDisplay = '1/6';
-                    else if (Math.abs(h.portions - 0.333) < 0.01) portionDisplay = '1/3';
+                    var portionDisplay = (h.sharePercentage || 0) + '%';
 
                     // Print certificate button for all users, edit/delete only for admin
                     var actionsHtml = '<td class="no-print">' +
@@ -7531,14 +7525,14 @@
                 '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #1e40af;">' + fmt(Math.round(data.inheritancePool)) + ' ' + currency + '</p>' +
                 '</div>' +
                 '<div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">' +
-                '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL PORTIONS</p>' +
+                '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL RATIO</p>' +
                 '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #92400e;">' + data.totalPortions + '</p>' +
                 '</div>' +
                 '</div>' +
 
                 '<div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 8px; text-align: center; margin-bottom: 25px; border: 2px solid #22c55e;">' +
-                '<p style="margin: 0; color: #166534; font-size: 14px;">HEIR\'S PORTIONS</p>' +
-                '<p style="margin: 5px 0; font-size: 24px; font-weight: bold; color: #15803d;">' + heir.portions + ' portion(s)</p>' +
+                '<p style="margin: 0; color: #166534; font-size: 14px;">INHERITANCE SHARE (%)</p>' +
+                '<p style="margin: 5px 0; font-size: 24px; font-weight: bold; color: #15803d;">' + (heir.sharePercentage || 0) + '%</p>' +
                 '<hr style="border: none; border-top: 1px dashed #86efac; margin: 15px 0;">' +
                 '<p style="margin: 0; color: #166534; font-size: 14px;">INHERITANCE SHARE AMOUNT</p>' +
                 '<p style="margin: 5px 0; font-size: 32px; font-weight: bold; color: #15803d;">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</p>' +

@@ -299,9 +299,11 @@ function calculateFaraid(netEstate, heirs) {
 
     if (residue > 0 && residuaryGroup.length > 0) {
         // Calculate weights (Male = 2, Female = 1)
+        const maleTypes = ['Son', 'Grandson', 'Father', 'Grandfather', 'Full Brother', 'Consanguine Brother', 'Full Nephew', 'Brother', 'Paternal Brother', 'Son\'s Son', 'Grandson (Son\'s Son)'];
         let totalWeight = 0;
         residuaryGroup.forEach(h => {
-            const w = (h.gender === 'Male') ? 2 : 1;
+            const isMale = maleTypes.includes(h.relationship) || h.gender === 'Male';
+            const w = isMale ? 2 : 1;
             h._w = w;
             totalWeight += w;
         });

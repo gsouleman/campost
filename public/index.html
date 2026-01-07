@@ -9412,8 +9412,21 @@
             var results = { heirs: [], baseNumber: 24, totalFixedParts: 0, residueParts: 0, notes: [] };
             if (!heirs || heirs.length === 0) return results;
 
-            var countRel = function (rel) { return heirs.filter(function (h) { return h.relationship === rel; }).length; };
-            var findHeir = function (rel) { return heirs.find(function (h) { return h.relationship === rel; }); };
+            // Normalize relationships based on group/gender
+            var normalizedHeirs = heirs.map(function (h) {
+                var rel = h.relationship;
+                if (rel === 'Child' || rel === 'Children') {
+                    if (h.heir_group === 'Sons') rel = 'Son';
+                    else if (h.heir_group === 'Daughters') rel = 'Daughter';
+                } else if (rel === 'Spouse') {
+                    if (h.heir_group === 'Wives' || h.gender === 'Female') rel = 'Wife';
+                    else if (h.gender === 'Male') rel = 'Husband';
+                }
+                return Object.assign({}, h, { relationship: rel });
+            });
+
+            var countRel = function (rel) { return normalizedHeirs.filter(function (h) { return h.relationship === rel; }).length; };
+            var findHeir = function (rel) { return normalizedHeirs.find(function (h) { return h.relationship === rel; }); };
 
             var hasSons = countRel('Son') > 0;
             var hasDaughters = countRel('Daughter') > 0;
@@ -9425,18 +9438,18 @@
             var hasMother = !!findHeir('Mother');
             var hasGrandfather = !!findHeir('Grandfather');
 
-            var siblingCount = heirs.filter(function (h) {
+            var siblingCount = normalizedHeirs.filter(function (h) {
                 return ['Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister', 'Brother', 'Sister'].includes(h.relationship);
             }).length;
 
             var excludedIds = new Set();
-            heirs.forEach(function (h) {
+            normalizedHeirs.forEach(function (h) {
                 if (hasSons && ['Grandson', 'Granddaughter', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) excludedIds.add(h.id);
                 if (hasFather && ['Grandfather', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) excludedIds.add(h.id);
                 if ((hasDescendants || hasFather || hasGrandfather) && ['Uterine Brother', 'Uterine Sister'].includes(h.relationship)) excludedIds.add(h.id);
             });
 
-            var activeHeirs = heirs.filter(function (h) { return !excludedIds.has(h.id); });
+            var activeHeirs = normalizedHeirs.filter(function (h) { return !excludedIds.has(h.id); });
             var lcd = 24;
             var partsMap = {};
             var shareLabels = {};

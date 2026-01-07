@@ -38,9 +38,22 @@ function calculateFaraid(netEstate, heirs) {
 
     if (!heirs || heirs.length === 0) return results;
 
+    // Helper to normalize relationships based on group/gender
+    const normalizedHeirs = heirs.map(h => {
+        let rel = h.relationship;
+        if (rel === 'Child' || rel === 'Children') {
+            if (h.heir_group === 'Sons') rel = 'Son';
+            else if (h.heir_group === 'Daughters') rel = 'Daughter';
+        } else if (rel === 'Spouse') {
+            if (h.heir_group === 'Wives' || h.gender === 'Female') rel = 'Wife';
+            else if (h.gender === 'Male') rel = 'Husband';
+        }
+        return { ...h, relationship: rel };
+    });
+
     // Helper to count specific relatives
-    const countRel = (rel) => heirs.filter(h => h.relationship === rel).length;
-    const findHeir = (rel) => heirs.find(h => h.relationship === rel);
+    const countRel = (rel) => normalizedHeirs.filter(h => h.relationship === rel).length;
+    const findHeir = (rel) => normalizedHeirs.find(h => h.relationship === rel);
 
     // 1. Identify Context (Children, Grandchildren, Parents, Siblings)
     const hasSons = countRel('Son') > 0;
@@ -53,13 +66,13 @@ function calculateFaraid(netEstate, heirs) {
     const hasMother = !!findHeir('Mother');
     const hasGrandfather = !!findHeir('Grandfather');
 
-    const siblingCount = heirs.filter(h =>
+    const siblingCount = normalizedHeirs.filter(h =>
         ['Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister', 'Brother', 'Sister'].includes(h.relationship)
     ).length;
 
     // 2. Apply Exclusion Hierarchy (Hajb Hirman)
     const excludedIds = new Set();
-    heirs.forEach(h => {
+    normalizedHeirs.forEach(h => {
         // Son excludes grandchildren, siblings, uncles
         if (hasSons) {
             if (['Grandson', 'Granddaughter', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
@@ -83,7 +96,7 @@ function calculateFaraid(netEstate, heirs) {
         }
     });
 
-    const activeHeirs = heirs.filter(h => !excludedIds.has(h.id));
+    const activeHeirs = normalizedHeirs.filter(h => !excludedIds.has(h.id));
 
     // 3. Distribute Fixed Shares (Furud)
     let lcd = 24;

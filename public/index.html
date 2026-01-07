@@ -6184,13 +6184,36 @@
         }
 
         // Print specific element by cloning to temp page
+        // Print specific element by opening a new window with clean styles
         function printElement(sourceId) {
             var content = document.getElementById(sourceId).innerHTML;
-            var tempPage = document.getElementById('print-temp-page');
-            // Wrap in a card for consistent styling if needed, or just raw content
-            // We'll wrap in a basic div to maintain some structure but avoid full card borders if redundant
-            tempPage.innerHTML = '<div class="card" style="box-shadow:none; border:none; margin:0;">' + content + '</div>';
-            printPage('print-temp-page');
+
+            // Create a clean print window
+            var w = window.open('', '_blank');
+            w.document.write('<html><head><title>Print Summary</title>');
+            w.document.write('<style>');
+            w.document.write('body { font-family: Arial, sans-serif; padding: 20px; color: black; background: white; }');
+            w.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
+            w.document.write('th, td { border: 1px solid #ddd; padding: 8px; text-align: left; color: black !important; }');
+            w.document.write('th { background-color: #f2f2f2; font-weight: bold; }');
+            w.document.write('.card-header { display: none; }'); // Hide header buttons in print
+            w.document.write('.no-print { display: none !important; }'); // Hide buttons from content
+            w.document.write('h2, h3, h4, span { color: black !important; }');
+            w.document.write('</style>');
+            w.document.write('</head><body>');
+
+            w.document.write('<div class="print-container">');
+            w.document.write(content);
+            w.document.write('</div>');
+
+            w.document.write('</body></html>');
+            w.document.close();
+
+            // Wait for content to load then print
+            setTimeout(function () {
+                w.focus();
+                w.print();
+            }, 500);
         }
 
         function printPage(pageId) {

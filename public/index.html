@@ -1164,11 +1164,34 @@
         @media print {
             body {
                 background: white !important;
+                color: black !important;
                 margin: 0;
                 padding: 0;
             }
 
-            .no-print,
+            /* Force all text inside cards to be black */
+            .card,
+            .card-header,
+            .card-body,
+            table,
+            th,
+            td,
+            span,
+            div,
+            p {
+                color: black !important;
+                background: white !important;
+                box-shadow: none !important;
+            }
+
+            /* Ensure temp page is visible */
+            #print-temp-page {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 20px !important;
+            }
+
             .sidebar,
             .header,
             .nav,

@@ -10,7 +10,7 @@ databases:
 
 services:
   - type: web
-    name: salifu
+    name: campost-billing
     env: node
     plan: free
     buildCommand: npm install

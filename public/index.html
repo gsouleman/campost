@@ -3024,9 +3024,10 @@
 
                 <p
                     style="font-size: 0.85rem; color: #718096; margin: 15px 0; background: #fffaf0; padding: 10px; border-radius: 6px; border-left: 4px solid var(--accent-gold);">
-                    📌 <strong>Islamic Inheritance:</strong> Distribution follows the same heir portions as defined in
-                    the Family Estates module. Wives receive 1/8 collectively, Sons receive 2 portions each, Daughters
-                    receive 1 portion each.
+                    📌 <strong>Islamic Inheritance:</strong> Distribution follows the same inheritance ratios as defined
+                    in
+                    the Family Estates module. Wives receive 1/8 collectively, Sons receive ratio 2 each, Daughters
+                    receive ratio 1 each.
                 </p>
 
                 <!-- Beneficiary Selection -->
@@ -3067,14 +3068,14 @@
                                         <th>Heir Name</th>
                                         <th>Relationship</th>
                                         <th>Group</th>
-                                        <th style="text-align: center;">Portions</th>
+                                        <th style="text-align: center;">Share (%)</th>
                                         <th style="text-align: right;">Share (XAF)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="assetsHeirsTable"></tbody>
                                 <tfoot>
                                     <tr style="background: #f0fff4; font-weight: bold;">
-                                        <td colspan="3">TOTAL DISTRIBUTED</td>
+                                        <td colspan="3">TOTAL RATIO</td>
                                         <td style="text-align: center;" id="assetsTotalPortions">0</td>
                                         <td style="text-align: right;" id="assetsTotalDistributed">0 XAF</td>
                                     </tr>
@@ -3381,7 +3382,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Portions (Auto-Calculated)</label>
+                        <label>Ratio (Auto-Calculated)</label>
                         <input type="number" id="reHeirPor" value="1" min="0" step="0.125" readonly
                             style="background: #f0f0f0;">
                     </div>
@@ -3512,7 +3513,7 @@
                         <option value="Daughters">Daughters</option>
                         <option value="Sons">Sons</option>
                     </select></div>
-                <div class="form-group"><label>Portions</label><input type="number" id="heirPor" value="3" step="0.5">
+                <div class="form-group"><label>Ratio</label><input type="number" id="heirPor" value="3" step="0.5">
                 </div>
                 <div class="btn-group"><button class="btn btn-success" onclick="saveHeir()">💾 Save</button></div>
             </div>
@@ -5497,7 +5498,7 @@
                     '<input type="checkbox" id="campost-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleCampostBeneficiary(' + h.id + ', this.checked)">' +
                     '<label for="campost-ben-' + h.id + '">' + h.name + '</label>' +
                     '<span class="heir-info">' + h.relationship + '</span>' +
-                    '<span class="heir-portions">' + h.portions + ' portions</span>' +
+                    '<span class="heir-portions">' + (h.sharePercentage || 0) + '% Share</span>' +
                     '</div>';
             }).join('');
             document.getElementById('campostBeneficiaryList').innerHTML = html || '<p>No heirs available</p>';
@@ -5746,8 +5747,11 @@
                 all.payments.forEach(function (p) { csv += p.payment_date + ',' + p.bill_number + ',' + p.amount + ',"' + (p.reference || '') + '"\n'; });
                 csv += '\n\nEXPENSES\nDate,Description,Category,Amount\n';
                 all.expenses.forEach(function (e) { csv += e.expense_date + ',"' + e.description + '",' + e.category_name + ',' + e.amount + '\n'; });
-                csv += '\n\nHEIRS\nName,Relationship,Group,Portions\n';
-                all.heirs.forEach(function (h) { csv += h.name + ',' + h.relationship + ',' + h.heir_group + ',' + h.portions + '\n'; });
+                csv += '\n\nHEIRS\nName,Relationship,Group,Share (%)\n';
+                all.heirs.forEach(function (h) {
+                    var p = h.sharePercentage || (h.portions || 0);
+                    csv += h.name + ',' + h.relationship + ',' + h.heir_group + ',' + p + (h.sharePercentage ? '%' : '') + '\n';
+                });
                 download(csv, 'campost_all_data.csv');
             });
         }
@@ -5872,8 +5876,8 @@
                     doc.setFont('helvetica', 'bold');
                     doc.text('INHERITANCE REPORT', 105, 35, { align: 'center' });
                     doc.setFontSize(10);
-                    doc.text('Amount: ' + fmt(d.inheritanceAmount) + ' XAF | Per Portion: ' + fmt(d.sharePerPortion) + ' XAF', 105, 42, { align: 'center' });
-                    doc.autoTable({ startY: 48, head: [['Name', 'Relationship', 'Group', 'Portions', 'Share']], body: d.heirs.map(function (h) { return [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(h.shareAmount))]; }), styles: { fontSize: 8 } });
+                    doc.text('Amount: ' + fmt(d.inheritanceAmount) + ' XAF | Base Share: ' + fmt(d.sharePerPortion) + ' XAF', 105, 42, { align: 'center' });
+                    doc.autoTable({ startY: 48, head: [['Name', 'Relationship', 'Group', 'Share (%)', 'Amount']], body: d.heirs.map(function (h) { return [h.name, h.relationship, h.heir_group, (h.sharePercentage || 0) + '%', fmt(Math.round(h.shareAmount))]; }), styles: { fontSize: 8 } });
                     doc.save('campost_heirs.pdf');
                     showAlert('PDF exported!');
                 });
@@ -5984,7 +5988,7 @@
                 doc.autoTable({ startY: y + 3, head: [['Date', 'Description', 'Category', 'Amount']], body: all.expenses.map(function (e) { return [e.expense_date ? e.expense_date.split('T')[0] : '', e.description ? e.description.substring(0, 25) : '', e.category_name || '', fmt(e.amount)]; }), styles: { fontSize: 7 } });
                 doc.addPage();
                 doc.text('INHERITANCE (' + fmt(inh.inheritanceAmount) + ' XAF)', 20, 15);
-                doc.autoTable({ startY: 20, head: [['Name', 'Relationship', 'Group', 'Portions', 'Share']], body: inh.heirs.map(function (h) { return [h.name, h.relationship, h.heir_group, h.portions, fmt(Math.round(h.shareAmount))]; }), styles: { fontSize: 7 } });
+                doc.autoTable({ startY: 20, head: [['Name', 'Relationship', 'Group', 'Share (%)', 'Amount']], body: inh.heirs.map(function (h) { return [h.name, h.relationship, h.heir_group, (h.sharePercentage || 0) + '%', fmt(Math.round(h.shareAmount))]; }), styles: { fontSize: 7 } });
                 doc.save('campost_complete_report.pdf');
                 showAlert('Complete PDF exported!');
             });
@@ -7381,7 +7385,7 @@
                         '<input type="checkbox" id="re-ben-' + h.id + '" ' + (isSelected ? 'checked' : '') + ' onchange="toggleREBeneficiary(' + h.id + ', this.checked)">' +
                         '<label for="re-ben-' + h.id + '">' + h.name + '</label>' +
                         '<span class="heir-info">' + h.relationship + '</span>' +
-                        '<span class="heir-portions">' + h.portions + ' portions</span>' +
+                        '<span class="heir-portions">' + (h.sharePercentage || 0) + '% Share</span>' +
                         '</div>';
                 }).join('');
                 document.getElementById('reBeneficiaryList').innerHTML = html || '<p>No heirs available. Add heirs first.</p>';
@@ -9354,11 +9358,12 @@
             var html = selectedHeirs.map(function (h) {
                 var share = parseFloat(h.portions) < 1 ? (pool * parseFloat(h.portions)) : (parseFloat(h.portions) * perPortion);
                 totalDistributed += share;
+                var sharePercent = pool > 0 ? (share / pool * 100).toFixed(2) : 0;
                 return '<tr>' +
                     '<td><strong>' + h.name + '</strong></td>' +
                     '<td>' + h.relationship + '</td>' +
                     '<td>' + h.heir_group + '</td>' +
-                    '<td style="text-align: center;">' + h.portions + '</td>' +
+                    '<td style="text-align: center;">' + sharePercent + '%</td>' +
                     '<td style="text-align: right; color: var(--success-green); font-weight: bold;">' + fmt(Math.round(share)) + '</td>' +
                     '</tr>';
             }).join('');

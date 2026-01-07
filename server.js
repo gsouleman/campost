@@ -23,7 +23,7 @@ const pool = new Pool({
 
 /**
  * Islamic Inheritance Calculation Engine (Fara'id)
- * Follows the 10-step sequential logic flow provided.
+ * Follows the specific rules from the user-provided chart.
  */
 function calculateFaraid(netEstate, heirs) {
     const results = {
@@ -33,14 +33,16 @@ function calculateFaraid(netEstate, heirs) {
         residueParts: 0,
         notes: [],
         case: 'Standard',
-        netEstate: netEstate
+        netEstate: netEstate,
+        groupSummary: {}
     };
 
     if (!heirs || heirs.length === 0) return results;
 
-    // Helper to normalize relationships based on group/gender
+    // --- 1. Normalization & Grouping ---
     const normalizedHeirs = heirs.map(h => {
         let rel = h.relationship;
+        // Map synonyms to standard keys used in calculation logic
         if (rel === 'Child' || rel === 'Children') {
             if (h.heir_group === 'Sons') rel = 'Son';
             else if (h.heir_group === 'Daughters') rel = 'Daughter';
@@ -48,166 +50,350 @@ function calculateFaraid(netEstate, heirs) {
             if (h.heir_group === 'Wives' || h.gender === 'Female') rel = 'Wife';
             else if (h.gender === 'Male') rel = 'Husband';
         }
+
+        // Detailed mappings based on the image's dropdown list
+        // Synonyms for standard handling
+        if (rel === 'Grandson (Son\'s Son)' || rel === 'Son\'s Son') rel = 'Grandson';
+        if (rel === 'Son\'s Daughter') rel = 'Granddaughter';
+        if (rel === 'Paternal Brother') rel = 'Consanguine Brother';
+        if (rel === 'Paternal Sister') rel = 'Consanguine Sister';
+        if (rel === 'Maternal Sibling') rel = h.gender === 'Male' ? 'Uterine Brother' : 'Uterine Sister';
+        if (rel === 'Grandfather' || rel === 'Paternal Grandfather') rel = 'Grandfather'; // True Grandfather
+        if (rel === 'Grandmother' || rel === 'Maternal Grandmother' || rel === 'Paternal Grandmother') rel = 'Grandmother'; // Handling generic, but logic will separate maternal/paternal if needed. For now treating as True Grandmother.
+        if (rel === 'Nephew (Sister\'s Son)') rel = 'Nephew (Sis)'; // Distant
+        if (rel === 'Full Nephew (Brother\'s Son)' || rel === 'Brother\'s Son') rel = 'Full Nephew'; // Residuary
+
         return { ...h, relationship: rel };
     });
 
-    // Helper to count specific relatives
-    const countRel = (rel) => normalizedHeirs.filter(h => h.relationship === rel).length;
-    const findHeir = (rel) => normalizedHeirs.find(h => h.relationship === rel);
+    const count = (r) => normalizedHeirs.filter(h => h.relationship === r).length;
+    const exists = (r) => count(r) > 0;
 
-    // 1. Identify Context (Children, Grandchildren, Parents, Siblings)
-    const hasSons = countRel('Son') > 0;
-    const hasDaughters = countRel('Daughter') > 0;
-    const hasGrandSons = countRel('Grandson') > 0;
-    const hasGrandDaughters = countRel('Granddaughter') > 0;
-    const hasDescendants = hasSons || hasDaughters || hasGrandSons || hasGrandDaughters;
+    // --- 2. Exclusion Logic (Hajb) ---
+    // Define "Excluded" explicitly from image
+    const alwaysExcluded = ['Step-father', 'Step-mother', 'Adopted Child', 'Foster Relations', 'Illegitimate Child'];
+    const distantKindred = [
+        'Maternal Grandfather', // False Grandfather
+        'Daughter\'s Children',
+        'Paternal Aunt',
+        'Maternal Aunt',
+        'Nephew (Sis)',
+        'Niece (Sister\'s Daughter)',
+        'Granddaughter (Daughter\'s Daughter)'
+    ];
 
-    const hasFather = !!findHeir('Father');
-    const hasMother = !!findHeir('Mother');
-    const hasGrandfather = !!findHeir('Grandfather');
+    const isExcluded = new Set();
+    const addNote = (msg) => results.notes.push(msg);
 
-    const siblingCount = normalizedHeirs.filter(h =>
-        ['Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister', 'Brother', 'Sister'].includes(h.relationship)
-    ).length;
+    // Identify blockers
+    const hasSon = exists('Son');
+    const hasSonDescendant = hasSon || exists('Grandson'); // Male descendant
+    const hasMaleDescendant = hasSonDescendant; // Logic equivalence
+    const hasFemaleDescendant = exists('Daughter') || exists('Granddaughter');
+    const hasDescendant = hasMaleDescendant || hasFemaleDescendant;
+    const hasFather = exists('Father');
+    const hasGrandfather = exists('Grandfather');
+    const hasMaleAscendant = hasFather || hasGrandfather;
 
-    // 2. Apply Exclusion Hierarchy (Hajb Hirman)
-    const excludedIds = new Set();
     normalizedHeirs.forEach(h => {
-        // Son excludes grandchildren, siblings, uncles
-        if (hasSons) {
-            if (['Grandson', 'Granddaughter', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
-                excludedIds.add(h.id);
-                results.notes.push(`${h.name} (${h.relationship}) is excluded by the Son.`);
+        // 1. Explicitly Excluded Categories
+        if (alwaysExcluded.includes(h.relationship)) {
+            isExcluded.add(h.id);
+            addNote(`${h.name} (${h.relationship}) is excluded (No inheritance rights).`);
+            return;
+        }
+        // 2. Distant Kindred (Excluded by closer heirs - generally always excluded in presence of any Quranic heir, simplified here to always 0 unless extended implementation requested)
+        if (distantKindred.includes(h.relationship) || h.relationship.includes('Distant')) {
+            isExcluded.add(h.id);
+            addNote(`${h.name} (${h.relationship}) is Distant Kindred (Excluded).`);
+            return;
+        }
+
+        // 3. Hajb Rules (Blocking)
+        // Grandson: Excluded by Son
+        if (h.relationship === 'Grandson' && hasSon) {
+            isExcluded.add(h.id);
+            addNote(`${h.name} excluded by Son.`);
+        }
+        // Grandfather: Excluded by Father
+        if (h.relationship === 'Grandfather' && hasFather) {
+            isExcluded.add(h.id);
+            addNote(`${h.name} excluded by Father.`);
+        }
+        // Grandmother: Excluded by Mother
+        if (h.relationship === 'Grandmother' && exists('Mother')) {
+            isExcluded.add(h.id);
+            addNote(`${h.name} excluded by Mother.`);
+        }
+        // Brothers/Sisters (Full/Consanguine/Uterine): Excluded by Son, Grandson, Father
+        if (['Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister', 'Brother', 'Sister'].includes(h.relationship)) {
+            if (hasMaleDescendant) {
+                isExcluded.add(h.id);
+                addNote(`${h.name} excluded by Male Descendant.`);
+            } else if (hasFather) {
+                isExcluded.add(h.id);
+                addNote(`${h.name} excluded by Father.`);
             }
         }
-        // Father excludes grandfather, siblings
-        if (hasFather) {
-            if (['Grandfather', 'Brother', 'Sister', 'Full Brother', 'Full Sister', 'Consanguine Brother', 'Consanguine Sister', 'Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
-                excludedIds.add(h.id);
-                results.notes.push(`${h.name} (${h.relationship}) is excluded by the Father.`);
+        // Consanguine Siblings: Excluded by Full Brother
+        if (['Consanguine Brother', 'Consanguine Sister'].includes(h.relationship) && exists('Full Brother')) {
+            isExcluded.add(h.id);
+            addNote(`${h.name} excluded by Full Brother.`);
+        }
+        // Uterine Siblings: Excluded by any Descendant or Male Ascendant (Father/Grandfather)
+        if (['Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
+            if (hasDescendant || hasMaleAscendant) {
+                isExcluded.add(h.id); // Redundant check but clearer
+                addNote(`${h.name} excluded by Descendant or Male Ascendant.`);
             }
         }
-        // Descendants or Male Ascendants exclude Uterine Siblings
-        if (hasDescendants || hasFather || hasGrandfather) {
-            if (['Uterine Brother', 'Uterine Sister'].includes(h.relationship)) {
-                excludedIds.add(h.id);
-                results.notes.push(`${h.name} (${h.relationship}) is excluded by descendants or male ascendants.`);
+        // Granddaughter: Excluded by Son, or 2+ Daughters (unless Musahih/Blessed Grandson exists - ignoring complex blessed grandson for now unless implicit)
+        if (h.relationship === 'Granddaughter') {
+            if (hasSon) {
+                isExcluded.add(h.id); addNote(`${h.name} excluded by Son.`);
+            } else if (count('Daughter') >= 2 && !exists('Grandson')) {
+                isExcluded.add(h.id); addNote(`${h.name} excluded by 2+ Daughters (no Blessed Son).`);
+            }
+        }
+        // Full Nephew: Excluded by Son, Grandson, Father, Grandfather, Brother
+        if (h.relationship === 'Full Nephew') {
+            if (hasMaleDescendant || hasMaleAscendant || exists('Full Brother')) {
+                isExcluded.add(h.id); addNote(`${h.name} excluded by closer male heir.`);
             }
         }
     });
 
-    const activeHeirs = normalizedHeirs.filter(h => !excludedIds.has(h.id));
+    const activeHeirs = normalizedHeirs.filter(h => !isExcluded.has(h.id));
 
-    // 3. Distribute Fixed Shares (Furud)
-    let lcd = 24;
-    let partsMap = new Map(); // heir_id -> parts
-    let shareLabels = new Map(); // heir_id -> "1/8"
+    // --- 3. Fixed Shares (Furud) Calculation ---
+    // lcd is Base Number (usually 24 covers all, but we calculate parts out of 24)
+    let partsMap = new Map(); // heir_id -> parts (out of 24)
+    let labelMap = new Map();
+    const setShare = (id, p, l) => { partsMap.set(id, p); labelMap.set(id, l); };
 
     activeHeirs.forEach(h => {
         let parts = 0;
         let label = '';
+        const r = h.relationship;
 
-        if (h.relationship === 'Wife') {
-            parts = hasDescendants ? 3 : 6; // 1/8 or 1/4 of 24
-            parts = parts / countRel('Wife');
-            label = hasDescendants ? '1/8 (Shared)' : '1/4 (Shared)';
-        } else if (h.relationship === 'Husband') {
-            parts = hasDescendants ? 6 : 12; // 1/4 or 1/2 of 24
-            label = hasDescendants ? '1/4' : '1/2';
-        } else if (h.relationship === 'Mother') {
-            parts = (hasDescendants || siblingCount >= 2) ? 4 : 8; // 1/6 or 1/3
-            label = (hasDescendants || siblingCount >= 2) ? '1/6' : '1/3';
-        } else if (h.relationship === 'Father' && hasDescendants) {
-            parts = 4; // 1/6
-            label = '1/6 (Fixed)';
-        } else if (h.relationship === 'Daughter' && !hasSons) {
-            const dCount = countRel('Daughter');
-            parts = (dCount === 1 ? 12 : 16) / dCount; // 1/2 or 2/3
-            label = dCount === 1 ? '1/2' : '2/3 (Shared)';
-        } else if (h.relationship === 'Full Sister' && !hasSons && !hasDaughters && !hasFather) {
-            const sCount = countRel('Full Sister');
-            if (countRel('Full Brother') === 0) {
-                parts = (sCount === 1 ? 12 : 16) / sCount;
-                label = sCount === 1 ? '1/2' : '2/3 (Shared)';
+        if (r === 'Husband') {
+            // 1/2 or 1/4
+            parts = hasDescendant ? 6 : 12;
+            label = hasDescendant ? '1/4' : '1/2';
+        } else if (r === 'Wife') {
+            // 1/4 or 1/8 (Shared among wives)
+            const wCount = count('Wife');
+            const totalWifeParts = hasDescendant ? 3 : 6;
+            parts = totalWifeParts / wCount;
+            label = hasDescendant ? (wCount > 1 ? '1/8 (Shared)' : '1/8') : (wCount > 1 ? '1/4 (Shared)' : '1/4');
+        } else if (r === 'Father') {
+            // 1/6 if Male Descendant exists. (If Female Descendant only, 1/6 + Residue)
+            if (hasMaleDescendant) {
+                parts = 4; label = '1/6';
+            } else if (hasFemaleDescendant) {
+                parts = 4; label = '1/6 + Residue'; // Will handle residue later
             }
+            // If no descendants, Father is purely Residuary (handled later)
+        } else if (r === 'Mother') {
+            // 1/6 if Descendant or 2+ Siblings, else 1/3
+            // (Omitting Umariyyatain/Gharawain special case for Husband/Wife+Mother+Father for simplicity unless triggered)
+            const sibCount = normalizedHeirs.filter(n => n.relationship.includes('Brother') || n.relationship.includes('Sister')).length;
+            if (hasDescendant || sibCount >= 2) {
+                parts = 4; label = '1/6';
+            } else {
+                parts = 8; label = '1/3';
+            }
+        } else if (r === 'Daughter') {
+            // 1/2 (single), 2/3 (multiple) - Residuary if Son exists (Tasib)
+            if (!hasSon) {
+                const dCount = count('Daughter');
+                if (dCount === 1) { parts = 12; label = '1/2'; }
+                else { parts = 16 / dCount; label = '2/3 (Shared)'; }
+            }
+        } else if (r === 'Granddaughter') {
+            // 1/2 (single), 2/3 (shared) if no Daughter
+            // 1/6 (shared) if 1 Daughter (to make 2/3)
+            // Residuary if Grandson exists
+            if (!exists('Grandson')) {
+                if (!exists('Daughter')) {
+                    const gdCount = count('Granddaughter');
+                    if (gdCount === 1) { parts = 12; label = '1/2'; }
+                    else { parts = 16 / gdCount; label = '2/3 (Shared)'; }
+                } else if (count('Daughter') === 1) {
+                    const gdCount = count('Granddaughter');
+                    parts = 4 / gdCount; label = '1/6 (Complement)';
+                }
+            }
+        } else if (r === 'Grandfather') {
+            // 1/6 if Male Descendant
+            if (hasMaleDescendant) {
+                parts = 4; label = '1/6';
+            } else if (hasFemaleDescendant) {
+                parts = 4; label = '1/6 + Residue';
+            }
+        } else if (r === 'Grandmother') {
+            // 1/6 Shared
+            const gCount = count('Grandmother');
+            parts = 4 / gCount; label = '1/6 (Shared)';
+        } else if (r.includes('Sister') && r !== 'Maternal Sister') {
+            // Full/Consanguine Sisters are Residuary with Brother
+            // Fixed shares if no Brother
+            if (r === 'Full Sister' && !exists('Full Brother') && !hasDescendant && !hasMaleAscendant) {
+                const sCount = count('Full Sister');
+                if (sCount === 1) { parts = 12; label = '1/2'; }
+                else { parts = 16 / sCount; label = '2/3 (Shared)'; }
+            }
+            if (r === 'Consanguine Sister' && !exists('Consanguine Brother') && !exists('Full Brother') && !exists('Full Sister') && !hasDescendant && !hasMaleAscendant) {
+                const csCount = count('Consanguine Sister');
+                if (csCount === 1) { parts = 12; label = '1/2'; }
+                else { parts = 16 / csCount; label = '2/3 (Shared)'; }
+            }
+            // Consanguine Sister with 1 Full Sister -> 1/6 Complement
+            if (r === 'Consanguine Sister' && count('Full Sister') === 1 && !exists('Full Brother') && !exists('Consanguine Brother') && !hasDescendant && !hasMaleAscendant) {
+                const csCount = count('Consanguine Sister');
+                parts = 4 / csCount; label = '1/6 (Complement)';
+            }
+        } else if (r === 'Uterine Brother' || r === 'Uterine Sister') {
+            // 1/6 (single), 1/3 (multiple)
+            const uCount = count('Uterine Brother') + count('Uterine Sister');
+            parts = (uCount === 1 ? 4 : 8) / uCount;
+            label = uCount === 1 ? '1/6' : '1/3 (Shared)';
         }
 
-        if (parts > 0) {
-            partsMap.set(h.id, parts);
-            shareLabels.set(h.id, label);
-        }
+        if (parts > 0) setShare(h.id, parts, label);
     });
 
-    let totalFixedParts = 0;
-    partsMap.forEach(v => totalFixedParts += v);
+    // --- 4. Residue (Asabah) Distribution ---
+    // Calculate total fixed parts used
+    let totalFixed = 0;
+    partsMap.forEach(p => totalFixed += p);
 
-    // 4. Distribute Residue (Asabah)
-    let residueParts = Math.max(0, lcd - totalFixedParts);
-    const residuaries = activeHeirs.filter(h => {
-        if (h.relationship === 'Son') return true;
-        if (h.relationship === 'Daughter' && hasSons) return true;
-        if (h.relationship === 'Father' && !hasSons && !hasGrandSons) return true; // Father takes residue if no male descendants
-        if (h.relationship === 'Full Brother') return true;
-        if (h.relationship === 'Full Sister' && countRel('Full Brother') > 0) return true;
-        return false;
-    });
+    let residue = 24 - totalFixed;
 
-    if (residueParts > 0 && residuaries.length > 0) {
-        let totalUnits = 0;
-        residuaries.forEach(r => {
-            const weight = (r.relationship === 'Son' || r.relationship === 'Father' || r.relationship === 'Full Brother') ? 2 : 1;
-            r.asabahWeight = weight;
-            totalUnits += weight;
-        });
+    // Identify Residuary Heirs by priority (Order: Son, Grandson, Father, Grandfather, Full Brother, Consanguine Brother, Full Nephew)
+    // Note: Daughters/Granddaughters/Sisters become Residuary with counterparts (Tasib bi-ghayrihi)
 
-        residuaries.forEach(r => {
-            const rShare = (r.asabahWeight / totalUnits) * residueParts;
-            const existing = partsMap.get(r.id) || 0;
-            partsMap.set(r.id, existing + rShare);
+    let residuaryGroup = [];
 
-            const existingLabel = shareLabels.get(r.id);
-            shareLabels.set(r.id, existingLabel ? `${existingLabel} + Residue` : `Residue (${r.asabahWeight}/${totalUnits})`);
-        });
-        residueParts = 0;
+    if (hasSon) {
+        residuaryGroup = [...activeHeirs.filter(h => h.relationship === 'Son'), ...activeHeirs.filter(h => h.relationship === 'Daughter')];
+    } else if (exists('Grandson')) {
+        residuaryGroup = [...activeHeirs.filter(h => h.relationship === 'Grandson'), ...activeHeirs.filter(h => h.relationship === 'Granddaughter')];
+    } else if (hasFather) {
+        // Father is residuary if no children (already got 1/6 if female present, so he takes residue too)
+        residuaryGroup = [activeHeirs.find(h => h.relationship === 'Father')];
+        // If Female Descendant exists, Father was already in fixed list. He gets +Residue
+        // If No Descendants, Father gets *only* residue (so we must ensure he isn't excluded from residuary logic if he didn't get fixed share)
+    } else if (hasGrandfather) {
+        residuaryGroup = [activeHeirs.find(h => h.relationship === 'Grandfather')];
+    } else if (exists('Full Brother')) {
+        residuaryGroup = [...activeHeirs.filter(h => h.relationship === 'Full Brother'), ...activeHeirs.filter(h => h.relationship === 'Full Sister')];
+    } else if (exists('Consanguine Brother')) {
+        residuaryGroup = [...activeHeirs.filter(h => h.relationship === 'Consanguine Brother'), ...activeHeirs.filter(h => h.relationship === 'Consanguine Sister')];
+    } else if (exists('Full Nephew')) {
+        residuaryGroup = activeHeirs.filter(h => h.relationship === 'Full Nephew');
     }
 
-    // 5. Handle Awl & Radd
-    if (totalFixedParts > lcd) {
-        lcd = totalFixedParts;
+    // Special case: Father/Grandfather with Female Descendant -> Checks if they are in residuaryGroup
+    // If they were fixed share holders (1/6), they simply absorb the residue on top.
+
+    if (residue > 0 && residuaryGroup.length > 0) {
+        // Calculate weights (Male = 2, Female = 1)
+        let totalWeight = 0;
+        residuaryGroup.forEach(h => {
+            const w = (h.gender === 'Male') ? 2 : 1;
+            h._w = w;
+            totalWeight += w;
+        });
+
+        residuaryGroup.forEach(h => {
+            if (!h) return;
+            const share = (h._w / totalWeight) * residue;
+            const currentParts = partsMap.get(h.id) || 0;
+            const currentLabel = labelMap.get(h.id);
+
+            partsMap.set(h.id, currentParts + share);
+
+            if (currentLabel) labelMap.set(h.id, currentLabel + ' + Residue');
+            else labelMap.set(h.id, 'Residue');
+        });
+
+        // Residue fully distributed
+        results.residueParts = 0; // Consumed
+    } else {
+        results.residueParts = Math.max(0, residue);
+    }
+
+    // --- 5. Radd (Return) & Awl (Increase) ---
+    // Re-sum total parts
+    let finalTotal = 0;
+    partsMap.forEach(p => finalTotal += p);
+
+    if (finalTotal > 24) {
         results.case = 'Awl';
-        results.notes.push("Total fixed shares exceed 1 (Awl). All shares reduced proportionally.");
-    } else if (totalFixedParts < lcd && residuaries.length === 0) {
-        const raddHeirs = activeHeirs.filter(h => h.relationship !== 'Wife' && h.relationship !== 'Husband');
+        results.baseNumber = finalTotal; // Base increases
+        addNote(`Awl Case: Total shares (${finalTotal}/24) exceed estate. Shares reduced proportionally.`);
+    } else if (finalTotal < 24 && residue > 0) {
+        // Radd Logic (if no residuary heir was found to take it)
+        // Radd ignores Spouse
+        const raddHeirs = activeHeirs.filter(h => h.relationship !== 'Husband' && h.relationship !== 'Wife' && partsMap.has(h.id));
         if (raddHeirs.length > 0) {
-            const raddTotalParts = raddHeirs.reduce((sum, h) => sum + (partsMap.get(h.id) || 0), 0);
-            const remaining = lcd - totalFixedParts;
-            raddHeirs.forEach(h => {
-                const add = (partsMap.get(h.id) / raddTotalParts) * remaining;
-                partsMap.set(h.id, (partsMap.get(h.id) || 0) + add);
-            });
             results.case = 'Radd';
-            results.notes.push("Total fixed shares less than 1 and no residuaries (Radd). Residual redistribution applied.");
+            addNote(`Radd Case: Surplus (${24 - finalTotal}/24) returned to blood heirs.`);
+
+            let raddBase = 0;
+            raddHeirs.forEach(h => raddBase += partsMap.get(h.id));
+
+            const spouseParts = (partsMap.get(activeHeirs.find(h => h.relationship === 'Husband')?.id) || 0) +
+                (activeHeirs.filter(h => h.relationship === 'Wife').reduce((s, w) => s + (partsMap.get(w.id) || 0), 0));
+
+            // Simplification: We scale the Radd heirs' parts to look like they fill the remainder
+            // New Formula: (Individual Share / Total Radd Shares) * Remainder after Spouse
+            // Easier: Just keep 24 base, but increase parts of Radd heirs? No.
+            // Standard Radd: Reduce Base Number to (Spouse Share denominator?) No.
+            // We will simply allocate the residue proportionally to Radd Heirs.
+            const surplus = 24 - finalTotal;
+            raddHeirs.forEach(h => {
+                const boost = (partsMap.get(h.id) / raddBase) * surplus;
+                partsMap.set(h.id, partsMap.get(h.id) + boost);
+            });
+            finalTotal = 24;
+            results.residueParts = 0;
         }
     }
 
-    // 6. Final Results
-    results.baseNumber = lcd;
-    results.totalFixedParts = totalFixedParts;
-    results.residueParts = residueParts;
+    // --- 6. Formulate Output ---
+    results.baseNumber = (results.case === 'Awl') ? finalTotal : 24;
+    results.perPortion = netEstate / results.baseNumber;
+    results.groupSummary = {};
 
     activeHeirs.forEach(h => {
         const parts = partsMap.get(h.id) || 0;
-        const percentage = (parts / lcd) * 100;
-        const amount = (parts / lcd) * netEstate;
+        const pct = (parts / results.baseNumber) * 100;
+        const amt = (parts / results.baseNumber) * netEstate;
 
         results.heirs.push({
             ...h,
-            fraction: shareLabels.get(h.id) || 'Excluded',
-            parts: Math.round(parts * 100) / 100,
-            sharePercentage: Math.round(percentage * 100) / 100,
-            shareAmount: Math.round(amount * 100) / 100
+            fraction: labelMap.get(h.id) || 'Excluded',
+            parts: parseFloat(parts.toFixed(3)),
+            sharePercentage: parseFloat(pct.toFixed(2)),
+            shareAmount: Math.round(amt)
         });
+
+        // Group Summary
+        if (!results.groupSummary[h.heir_group]) {
+            results.groupSummary[h.heir_group] = {
+                count: 0,
+                totalShare: 0,
+                fraction: labelMap.get(h.id) || 'N/A',
+                partsPerHeir: parseFloat(parts.toFixed(3))
+            };
+        }
+        results.groupSummary[h.heir_group].count++;
+        results.groupSummary[h.heir_group].totalShare += amt;
     });
+
+    results.totalFixedParts = finalTotal;
 
     return results;
 }
@@ -800,23 +986,14 @@ app.get('/api/inheritance/calculate', async (req, res) => {
         // Use the new Sequential Logic Flow
         const calculation = calculateFaraid(inheritanceAmount, heirs);
 
-        // Recalculate group summary based on new results
-        const groupSummary = {};
-        calculation.heirs.forEach(h => {
-            if (!groupSummary[h.heir_group]) {
-                groupSummary[h.heir_group] = { count: 0, totalShare: 0, portions: h.parts };
-            }
-            groupSummary[h.heir_group].count++;
-            groupSummary[h.heir_group].totalShare += h.shareAmount;
-        });
-
         res.json({
             totalBillsPaid, totalExpenses, reserveFunds, inheritanceAmount,
             baseNumber: calculation.baseNumber,
+            perPortion: calculation.baseNumber > 0 ? (inheritanceAmount / calculation.baseNumber) : 0,
             notes: calculation.notes,
             calculationCase: calculation.case,
             heirs: calculation.heirs,
-            groupSummary
+            groupSummary: calculation.groupSummary
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1733,26 +1910,14 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
         // Use the new Sequential Logic Flow
         const calculation = calculateFaraid(inheritancePool, heirs);
 
-        // Group summary
-        const groupSummary = {};
-        calculation.heirs.forEach(h => {
-            if (!groupSummary[h.heir_group]) {
-                groupSummary[h.heir_group] = { count: 0, totalPortions: 0, totalShare: 0 };
-            }
-            groupSummary[h.heir_group].count++;
-            groupSummary[h.heir_group].totalPortions += h.parts;
-            groupSummary[h.heir_group].totalShare += h.shareAmount;
-        });
-
         res.json({
             inheritancePool,
             baseNumber: calculation.baseNumber,
-            totalPortions: calculation.totalFixedParts + calculation.residueParts,
             perPortion: calculation.baseNumber > 0 ? (inheritancePool / calculation.baseNumber) : 0,
-            heirs: calculation.heirs,
-            groupSummary,
             notes: calculation.notes,
-            calculationCase: calculation.case
+            calculationCase: calculation.case,
+            heirs: calculation.heirs,
+            groupSummary: calculation.groupSummary
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

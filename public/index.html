@@ -1164,10 +1164,57 @@
         @media print {
             body {
                 background: white !important;
+                margin: 0;
+                padding: 0;
             }
 
-            .no-print {
+            .no-print,
+            .sidebar,
+            .header,
+            .nav,
+            .btn,
+            .modal-overlay {
                 display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            .page:not(.printing) {
+                display: none !important;
+            }
+
+            .page.printing {
+                display: block !important;
+            }
+
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+                margin-bottom: 20px !important;
+            }
+
+            .card-header {
+                background: #f8f9fa !important;
+                color: black !important;
+                border-bottom: 1px solid #ddd !important;
+            }
+
+            .table-container {
+                overflow: visible !important;
+            }
+
+            table {
+                font-size: 10pt !important;
+                width: 100% !important;
+            }
+
+            th,
+            td {
+                border: 1px solid #eee !important;
             }
         }
 
@@ -2049,7 +2096,7 @@
                 </div>
                 <div class="card">
                     <div class="card-header"><span>📋 Heir Shares (Beneficiaries Only)</span><button
-                            class="btn btn-print btn-sm no-print" onclick="printPage('inheritance')">🖨️ Print
+                            class="btn btn-print btn-sm no-print" onclick="printPage('campost-inheritance')">🖨️ Print
                             Summary</button></div>
                     <div class="card-body">
                         <div class="table-container">
@@ -2589,269 +2636,277 @@
 
                 <div class="card">
                     <div class="card-header gold">
-                        <span>👨‍👩‍👧‍👦 Real Estate Inheritance Distribution</span>
-                        <div class="no-print">
-                            <button class="btn btn-success btn-sm admin-only" onclick="openREHeirModal()">➕ Add
-                                Heir</button>
-                            <button class="btn btn-gold btn-sm" onclick="printAllREHeirCertificates()">🖨️ Print All
-                                Certificates</button>
-                            <button class="btn btn-print btn-sm" onclick="exportREHeirsPDF()">📥 Export PDF</button>
+                        <span>👨‍👩‍👧‍👦 Real Estate Inheritance Summary</span>
+                    </div>
+                    <div class="card-body" id="reHeirGroups"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header gold"><span>📋 Real Estate Inheritance Distribution</span><button
+                            class="btn btn-print btn-sm no-print" onclick="printPage('family-inheritance')">🖨️ Print
+                            Summary</button></div>
+                    <div class="no-print">
+                        <button class="btn btn-success btn-sm admin-only" onclick="openREHeirModal()">➕ Add
+                            Heir</button>
+                        <button class="btn btn-gold btn-sm" onclick="printAllREHeirCertificates()">🖨️ Print All
+                            Certificates</button>
+                        <button class="btn btn-print btn-sm" onclick="exportREHeirsPDF()">📥 Export PDF</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                        📌 Inheritance amount is the total of all <strong>Inheritance Allocation</strong> expenses
+                        recorded in the Expenses section.
+                        <br>Only <strong>selected beneficiaries</strong> are included in the distribution below.
+                    </p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Relationship</th>
+                                    <th>Fraction</th>
+                                    <th>Parts</th>
+                                    <th>Share (%)</th>
+                                    <th>Share Amount</th>
+                                    <th class="no-print">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reHeirsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- ========== RE LEDGER TAB ========== -->
+    <div id="family-ledger" class="page">
+        <div class="card">
+            <div class="card-header">
+                <span>📒 Estate Ledger</span>
+                <div class="no-print">
+                    <button class="btn btn-print btn-sm" onclick="exportRELedgerPDF()">📥 Export PDF</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">📥 Export
+                        CSV</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
+                    📌 <strong>Income</strong> = Payments from bills (Paid/Partial) | <strong>Expenses</strong>
+                    = All property expenses
+                </p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Property</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th style="background: #c6f6d5;">Income</th>
+                                <th style="background: #fed7d7;">Expense</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reLedgerTable"></tbody>
+                        <tfoot id="reLedgerTotals"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== RE EXPORT TAB ========== -->
+    <div id="family-export" class="page">
+        <div class="card">
+            <div class="card-header"><span>📥 Export Estate Data</span></div>
+            <div class="card-body">
+                <p style="margin-bottom: 15px; color: #718096;">Export all Estate data with headers.</p>
+                <div class="btn-group" style="flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="exportAllRECSV()">📄 All Data CSV</button>
+                    <button class="btn btn-print" onclick="exportAllREPDF()">📑 All Data PDF</button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><span>📊 Individual PDF Exports</span></div>
+            <div class="card-body">
+                <div class="btn-group" style="flex-wrap: wrap;">
+                    <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">🏠 Properties
+                        PDF</button>
+                    <button class="btn btn-print btn-sm" onclick="exportRERentalIncomePDF()">💵 Rental Income
+                        PDF</button>
+                    <button class="btn btn-print btn-sm" onclick="exportREBillsPDF()">📄 Bills PDF</button>
+                    <button class="btn btn-print btn-sm" onclick="exportREPaymentsPDF()">💳 Payments
+                        PDF</button>
+                    <button class="btn btn-print btn-sm" onclick="exportREExpensesPDF()">💸 Expenses
+                        PDF</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportRELedgerPDF()">📒 Ledger PDF</button>
+                    <button class="btn btn-gold btn-sm" onclick="exportREHeirsPDF()">👨‍👩‍👧‍👦 Inheritance
+                        PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== RE SETTINGS TAB ========== -->
+    <div id="family-settings" class="page">
+        <div class="user-restricted-notice">
+            <strong>🔒 Access Restricted</strong><br>
+            Only administrators can access Settings. Please contact an admin if you need to modify system
+            settings.
+        </div>
+        <div class="admin-only-section">
+            <div class="card">
+                <div class="card-header gold"><span>⚙️ Global Default Settings</span></div>
+                <div class="card-body">
+                    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                        These defaults will be applied to new properties. Changes here will update all existing
+                        properties.
+                    </p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Default Tax Rate (%)</label>
+                            <select id="reSettingTaxRate" onchange="previewGlobalSettings()">
+                                <option value="0">0%</option>
+                                <option value="5">5%</option>
+                                <option value="10">10%</option>
+                                <option value="15" selected>15%</option>
+                                <option value="20">20%</option>
+                                <option value="25">25%</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Default Rental Period</label>
+                            <select id="reSettingPeriod" onchange="previewGlobalSettings()">
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly</option>
+                                <option value="Yearly">Yearly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <select id="reSettingCurrency">
+                                <option value="XAF">XAF (CFA Franc)</option>
+                                <option value="USD">USD (US Dollar)</option>
+                                <option value="EUR">EUR (Euro)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reserved Funds (% of Income)</label>
+                            <select id="reSettingReservedPercent">
+                                <option value="0">0% - No Reserve</option>
+                                <option value="5">5%</option>
+                                <option value="10" selected>10%</option>
+                                <option value="15">15%</option>
+                                <option value="20">20%</option>
+                                <option value="25">25%</option>
+                                <option value="30">30%</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                            📌 Inheritance amount is the total of all <strong>Inheritance Allocation</strong> expenses
-                            recorded in the Expenses section.
-                            <br>Only <strong>selected beneficiaries</strong> are included in the distribution below.
+                    <div style="background: #f0f4f8; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                        <p style="font-size: 0.85rem; color: #4a5568; margin: 0;">
+                            🏦 <strong>Reserved Funds:</strong> A percentage of total income set aside for
+                            maintenance, emergencies, or future investments.
+                            <br>📊 <strong>Net Balance</strong> = Total Income - Total Expenses - Reserved Funds
                         </p>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Relationship</th>
-                                        <th>Fraction</th>
-                                        <th>Parts</th>
-                                        <th>Share (%)</th>
-                                        <th>Share Amount</th>
-                                        <th class="no-print">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reHeirsTable"></tbody>
-                            </table>
-                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveGlobalRESettings()">💾 Save & Apply to All
+                            Properties</button>
                     </div>
                 </div>
             </div>
 
-            <!-- ========== RE LEDGER TAB ========== -->
-            <div id="family-ledger" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <span>📒 Estate Ledger</span>
-                        <div class="no-print">
-                            <button class="btn btn-print btn-sm" onclick="exportRELedgerPDF()">📥 Export PDF</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportCSV('reLedger')">📥 Export
-                                CSV</button>
+            <div class="card">
+                <div class="card-header"><span>🏠 Property-Specific Settings</span></div>
+                <div class="card-body">
+                    <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
+                        Override global settings for individual properties.
+                    </p>
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Select Property</label>
+                            <select id="reSettingProperty" onchange="loadPropertySettings()">
+                                <option value="">-- Select a Property --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tax Rate (%)</label>
+                            <select id="reSettingPropTaxRate">
+                                <option value="0">0%</option>
+                                <option value="5">5%</option>
+                                <option value="10">10%</option>
+                                <option value="15">15%</option>
+                                <option value="20">20%</option>
+                                <option value="25">25%</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rental Period</label>
+                            <select id="reSettingPropPeriod">
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly</option>
+                                <option value="Yearly">Yearly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rent Amount</label>
+                            <input type="number" id="reSettingPropRent" placeholder="Rent amount">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="reSettingPropStatus">
+                                <option value="Rented">Rented</option>
+                                <option value="Not for Rent">Not for Rent</option>
+                                <option value="Sold">Sold</option>
+                                <option value="For sale">For Sale</option>
+                                <option value="Not to be sold">Not to be Sold</option>
+                                <option value="Shared">Shared</option>
+                                <option value="Admin issues">Admin Issues</option>
+                                <option value="Others">Others</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <p style="font-size: 0.8rem; color: #718096; margin-bottom: 10px;">
-                            📌 <strong>Income</strong> = Payments from bills (Paid/Partial) | <strong>Expenses</strong>
-                            = All property expenses
-                        </p>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Property</th>
-                                        <th>Description</th>
-                                        <th>Type</th>
-                                        <th style="background: #c6f6d5;">Income</th>
-                                        <th style="background: #fed7d7;">Expense</th>
-                                        <th>Balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reLedgerTable"></tbody>
-                                <tfoot id="reLedgerTotals"></tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========== RE EXPORT TAB ========== -->
-            <div id="family-export" class="page">
-                <div class="card">
-                    <div class="card-header"><span>📥 Export Estate Data</span></div>
-                    <div class="card-body">
-                        <p style="margin-bottom: 15px; color: #718096;">Export all Estate data with headers.</p>
-                        <div class="btn-group" style="flex-wrap: wrap;">
-                            <button class="btn btn-primary" onclick="exportAllRECSV()">📄 All Data CSV</button>
-                            <button class="btn btn-print" onclick="exportAllREPDF()">📑 All Data PDF</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><span>📊 Individual PDF Exports</span></div>
-                    <div class="card-body">
-                        <div class="btn-group" style="flex-wrap: wrap;">
-                            <button class="btn btn-print btn-sm" onclick="exportREPropertiesPDF()">🏠 Properties
-                                PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportRERentalIncomePDF()">💵 Rental Income
-                                PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportREBillsPDF()">📄 Bills PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportREPaymentsPDF()">💳 Payments
-                                PDF</button>
-                            <button class="btn btn-print btn-sm" onclick="exportREExpensesPDF()">💸 Expenses
-                                PDF</button>
-                            <button class="btn btn-primary btn-sm" onclick="exportRELedgerPDF()">📒 Ledger PDF</button>
-                            <button class="btn btn-gold btn-sm" onclick="exportREHeirsPDF()">👨‍👩‍👧‍👦 Inheritance
-                                PDF</button>
-                        </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="savePropertySettings()">💾 Save Property
+                            Settings</button>
                     </div>
                 </div>
             </div>
 
-            <!-- ========== RE SETTINGS TAB ========== -->
-            <div id="family-settings" class="page">
-                <div class="user-restricted-notice">
-                    <strong>🔒 Access Restricted</strong><br>
-                    Only administrators can access Settings. Please contact an admin if you need to modify system
-                    settings.
-                </div>
-                <div class="admin-only-section">
-                    <div class="card">
-                        <div class="card-header gold"><span>⚙️ Global Default Settings</span></div>
-                        <div class="card-body">
-                            <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                                These defaults will be applied to new properties. Changes here will update all existing
-                                properties.
-                            </p>
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label>Default Tax Rate (%)</label>
-                                    <select id="reSettingTaxRate" onchange="previewGlobalSettings()">
-                                        <option value="0">0%</option>
-                                        <option value="5">5%</option>
-                                        <option value="10">10%</option>
-                                        <option value="15" selected>15%</option>
-                                        <option value="20">20%</option>
-                                        <option value="25">25%</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Default Rental Period</label>
-                                    <select id="reSettingPeriod" onchange="previewGlobalSettings()">
-                                        <option value="Monthly">Monthly</option>
-                                        <option value="Quarterly">Quarterly</option>
-                                        <option value="Yearly">Yearly</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Currency</label>
-                                    <select id="reSettingCurrency">
-                                        <option value="XAF">XAF (CFA Franc)</option>
-                                        <option value="USD">USD (US Dollar)</option>
-                                        <option value="EUR">EUR (Euro)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Reserved Funds (% of Income)</label>
-                                    <select id="reSettingReservedPercent">
-                                        <option value="0">0% - No Reserve</option>
-                                        <option value="5">5%</option>
-                                        <option value="10" selected>10%</option>
-                                        <option value="15">15%</option>
-                                        <option value="20">20%</option>
-                                        <option value="25">25%</option>
-                                        <option value="30">30%</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="background: #f0f4f8; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                                <p style="font-size: 0.85rem; color: #4a5568; margin: 0;">
-                                    🏦 <strong>Reserved Funds:</strong> A percentage of total income set aside for
-                                    maintenance, emergencies, or future investments.
-                                    <br>📊 <strong>Net Balance</strong> = Total Income - Total Expenses - Reserved Funds
-                                </p>
-                            </div>
-                            <div class="btn-group">
-                                <button class="btn btn-success" onclick="saveGlobalRESettings()">💾 Save & Apply to All
-                                    Properties</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header"><span>🏠 Property-Specific Settings</span></div>
-                        <div class="card-body">
-                            <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">
-                                Override global settings for individual properties.
-                            </p>
-                            <div class="form-grid">
-                                <div class="form-group" style="grid-column: span 2;">
-                                    <label>Select Property</label>
-                                    <select id="reSettingProperty" onchange="loadPropertySettings()">
-                                        <option value="">-- Select a Property --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Tax Rate (%)</label>
-                                    <select id="reSettingPropTaxRate">
-                                        <option value="0">0%</option>
-                                        <option value="5">5%</option>
-                                        <option value="10">10%</option>
-                                        <option value="15">15%</option>
-                                        <option value="20">20%</option>
-                                        <option value="25">25%</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Rental Period</label>
-                                    <select id="reSettingPropPeriod">
-                                        <option value="Monthly">Monthly</option>
-                                        <option value="Quarterly">Quarterly</option>
-                                        <option value="Yearly">Yearly</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Rent Amount</label>
-                                    <input type="number" id="reSettingPropRent" placeholder="Rent amount">
-                                </div>
-                                <div class="form-group">
-                                    <label>Status</label>
-                                    <select id="reSettingPropStatus">
-                                        <option value="Rented">Rented</option>
-                                        <option value="Not for Rent">Not for Rent</option>
-                                        <option value="Sold">Sold</option>
-                                        <option value="For sale">For Sale</option>
-                                        <option value="Not to be sold">Not to be Sold</option>
-                                        <option value="Shared">Shared</option>
-                                        <option value="Admin issues">Admin Issues</option>
-                                        <option value="Others">Others</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="btn-group">
-                                <button class="btn btn-primary" onclick="savePropertySettings()">💾 Save Property
-                                    Settings</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header"><span>📋 Properties Overview</span></div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Property</th>
-                                            <th>Status</th>
-                                            <th>Tax Rate</th>
-                                            <th>Period</th>
-                                            <th>Rent</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="reSettingsPropertiesTable"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header red"><span>⚠️ Data Management</span></div>
-                        <div class="card-body">
-                            <p style="margin-bottom: 15px; color: #e53e3e;">Warning: These actions cannot be undone!</p>
-                            <div class="btn-group">
-                                <button class="btn btn-danger" onclick="resetREData()">🗑️ Reset All RE Data</button>
-                            </div>
-                        </div>
+            <div class="card">
+                <div class="card-header"><span>📋 Properties Overview</span></div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Status</th>
+                                    <th>Tax Rate</th>
+                                    <th>Period</th>
+                                    <th>Rent</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reSettingsPropertiesTable"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header red"><span>⚠️ Data Management</span></div>
+                <div class="card-body">
+                    <p style="margin-bottom: 15px; color: #e53e3e;">Warning: These actions cannot be undone!</p>
+                    <div class="btn-group">
+                        <button class="btn btn-danger" onclick="resetREData()">🗑️ Reset All RE Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- ==================== RESIDENCE ASSETS MODULE ==================== -->
@@ -3015,6 +3070,8 @@
         <div class="card">
             <div class="card-header gold">
                 <span>👨‍👩‍👧‍👦 Assets Inheritance Distribution</span>
+                <button class="btn btn-print btn-sm no-print" onclick="printPage('assets-inheritance')">🖨️ Print
+                    Summary</button>
             </div>
             <div class="card-body">
                 <div class="highlight-box">
@@ -3364,17 +3421,48 @@
                     <div class="form-group">
                         <label>Relationship *</label>
                         <select id="reHeirRel" onchange="updateIslamicPortions()">
-                            <option value="Wife">Wife</option>
-                            <option value="Husband">Husband</option>
-                            <option value="Son">Son</option>
-                            <option value="Daughter">Daughter</option>
                             <option value="Father">Father</option>
                             <option value="Mother">Mother</option>
-                            <option value="Brother">Brother</option>
-                            <option value="Sister">Sister</option>
-                            <option value="Grandfather">Grandfather</option>
+                            <option value="Husband">Husband</option>
+                            <option value="Wife">Wife</option>
+                            <option value="Son">Son</option>
+                            <option value="Daughter">Daughter</option>
+                            <option value="Son's Daughter">Son's Daughter</option>
+                            <option value="Full Sister">Full Sister</option>
+                            <option value="Paternal Sister">Paternal Sister</option>
+                            <option value="Maternal Sibling">Maternal Sibling</option>
+                            <option value="Paternal Grandfather">Paternal Grandfather</option>
+                            <option value="Full Brother">Full Brother</option>
+                            <option value="Paternal Brother">Paternal Brother</option>
+                            <option value="Son's Son">Son's Son</option>
+                            <option value="Maternal Grandfather">Maternal Grandfather</option>
+                            <option value="Maternal Grandmother">Maternal Grandmother</option>
+                            <option value="Daughter's Children">Daughter's Children</option>
+                            <option value="Paternal Aunt">Paternal Aunt</option>
+                            <option value="Maternal Aunt">Maternal Aunt</option>
+                            <option value="Nephew (Sister's Son)">Nephew (Sister's Son)</option>
+                            <option value="Niece (Sister's Daughter)">Niece (Sister's Daughter)</option>
+                            <option value="Granddaughter (Daughter's Daughter)">Granddaughter (Daughter's Daughter)
+                            </option>
                             <option value="Grandmother">Grandmother</option>
-                            <option value="Other">Other</option>
+                            <option value="Grandfather">Grandfather</option>
+                            <option value="Uterine Sibling">Uterine Sibling</option>
+                            <option value="Grandson (Son's Son)">Grandson (Son's Son)</option>
+                            <option value="Step-father">Step-father</option>
+                            <option value="Step-mother">Step-mother</option>
+                            <option value="Adopted Child">Adopted Child</option>
+                            <option value="Foster Relations">Foster Relations</option>
+                            <option value="Illegitimate Child">Illegitimate Child</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Group *</label>
+                        <select id="reHeirGrp">
+                            <option value="Primary Heir">Primary Heir</option>
+                            <option value="Residuary Heir">Residuary Heir</option>
+                            <option value="Distant Kindred">Distant Kindred</option>
+                            <option value="Special Case">Special Case</option>
+                            <option value="Excluded">Excluded</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -3508,13 +3596,44 @@
                 <input type="hidden" id="heirId">
                 <div class="form-group"><label>Name</label><input type="text" id="heirName"></div>
                 <div class="form-group"><label>Relationship</label><select id="heirRel">
-                        <option value="Spouse">Spouse</option>
-                        <option value="Child">Child</option>
+                        <option value="Father">Father</option>
+                        <option value="Mother">Mother</option>
+                        <option value="Husband">Husband</option>
+                        <option value="Wife">Wife</option>
+                        <option value="Son">Son</option>
+                        <option value="Daughter">Daughter</option>
+                        <option value="Son's Daughter">Son's Daughter</option>
+                        <option value="Full Sister">Full Sister</option>
+                        <option value="Paternal Sister">Paternal Sister</option>
+                        <option value="Maternal Sibling">Maternal Sibling</option>
+                        <option value="Paternal Grandfather">Paternal Grandfather</option>
+                        <option value="Full Brother">Full Brother</option>
+                        <option value="Paternal Brother">Paternal Brother</option>
+                        <option value="Son's Son">Son's Son</option>
+                        <option value="Maternal Grandfather">Maternal Grandfather</option>
+                        <option value="Maternal Grandmother">Maternal Grandmother</option>
+                        <option value="Daughter's Children">Daughter's Children</option>
+                        <option value="Paternal Aunt">Paternal Aunt</option>
+                        <option value="Maternal Aunt">Maternal Aunt</option>
+                        <option value="Nephew (Sister's Son)">Nephew (Sister's Son)</option>
+                        <option value="Niece (Sister's Daughter)">Niece (Sister's Daughter)</option>
+                        <option value="Granddaughter (Daughter's Daughter)">Granddaughter (Daughter's Daughter)</option>
+                        <option value="Grandmother">Grandmother</option>
+                        <option value="Grandfather">Grandfather</option>
+                        <option value="Uterine Sibling">Uterine Sibling</option>
+                        <option value="Grandson (Son's Son)">Grandson (Son's Son)</option>
+                        <option value="Step-father">Step-father</option>
+                        <option value="Step-mother">Step-mother</option>
+                        <option value="Adopted Child">Adopted Child</option>
+                        <option value="Foster Relations">Foster Relations</option>
+                        <option value="Illegitimate Child">Illegitimate Child</option>
                     </select></div>
                 <div class="form-group"><label>Group</label><select id="heirGrp">
-                        <option value="Wives">Wives</option>
-                        <option value="Daughters">Daughters</option>
-                        <option value="Sons">Sons</option>
+                        <option value="Primary Heir">Primary Heir</option>
+                        <option value="Residuary Heir">Residuary Heir</option>
+                        <option value="Distant Kindred">Distant Kindred</option>
+                        <option value="Special Case">Special Case</option>
+                        <option value="Excluded">Excluded</option>
                     </select></div>
                 <div class="form-group"><label>Ratio</label><input type="number" id="heirPor" value="3" step="0.5">
                 </div>
@@ -5473,7 +5592,7 @@
                         document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
                         // Update summary cards
                         document.getElementById('inhPortions').textContent = d.baseNumber;
-                        document.getElementById('inhPer').textContent = fmt(Math.round(d.inheritanceAmount / d.baseNumber));
+                        document.getElementById('inhPer').textContent = fmt(Math.round(d.perPortion));
 
                         // Display notes/rationale
                         var notesHtml = d.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('');
@@ -5491,7 +5610,12 @@
                         var html = '';
                         for (var g in d.groupSummary) {
                             var gInfo = d.groupSummary[g];
-                            html += '<div class="heir-group"><h4>' + g + ' <span>' + gInfo.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(gInfo.totalShare / gInfo.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(gInfo.totalShare)) + ' XAF</span></div></div>';
+                            html += '<div class="heir-group"><h4>' + g + ' <span>' + gInfo.count + '</span></h4>' +
+                                '<div class="summary-row"><span>Fraction:</span><span style="font-weight:bold;">' + gInfo.fraction + '</span></div>' +
+                                '<div class="summary-row"><span>Parts (Group):</span><span>' + (Math.round(gInfo.partsPerHeir * gInfo.count * 100) / 100) + '</span></div>' +
+                                '<div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(gInfo.totalShare / gInfo.count)) + ' XAF</span></div>' +
+                                '<div class="summary-row"><span>Total:</span><span style="font-weight:bold;">' + fmt(Math.round(gInfo.totalShare)) + ' XAF</span></div>' +
+                                '</div>';
                         }
                         document.getElementById('heirGroups').innerHTML = html || '<p>No beneficiaries selected</p>';
 
@@ -6030,8 +6154,14 @@
 
         function printPage(pageId) {
             document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('printing'); });
-            document.getElementById(pageId).classList.add('printing');
-            window.print();
+            var p = document.getElementById(pageId);
+            if (p) {
+                p.classList.add('printing');
+                // Small delay to allow CSS classes to apply
+                setTimeout(function () {
+                    window.print();
+                }, 200);
+            }
         }
 
         // Settings
@@ -7315,11 +7445,30 @@
                         document.getElementById('reHeirGender').value = 'Female';
                         break;
                     case 'Father':
-                        portions = hasChildren ? (1 / 6) : 1;
+                    case 'Paternal Grandfather':
+                    case 'Maternal Grandfather':
+                    case 'Grandfather':
+                    case 'Son\'s Son':
+                    case 'Grandson (Son\'s Son)':
+                    case 'Full Brother':
+                    case 'Paternal Brother':
+                    case 'Nephew (Sister\'s Son)':
+                    case 'Step-father':
+                        portions = 1;
                         document.getElementById('reHeirGender').value = 'Male';
                         break;
                     case 'Mother':
-                        portions = hasChildren ? (1 / 6) : (1 / 3);
+                    case 'Maternal Grandmother':
+                    case 'Grandmother':
+                    case 'Son\'s Daughter':
+                    case 'Full Sister':
+                    case 'Paternal Sister':
+                    case 'Paternal Aunt':
+                    case 'Maternal Aunt':
+                    case 'Niece (Sister\'s Daughter)':
+                    case 'Granddaughter (Daughter\'s Daughter)':
+                    case 'Step-mother':
+                        portions = 1;
                         document.getElementById('reHeirGender').value = 'Female';
                         break;
                     case 'Brother':
@@ -7377,10 +7526,23 @@
                 }
                 notesSection.innerHTML = '<strong>📜 Calculation Rationale:</strong><ul style="margin: 10px 0 0 20px;">' + notesHtml + '</ul>';
 
+                // Use group summary from backend
+                var groupHtml = '';
+                for (var g in data.groupSummary) {
+                    var gInfo = data.groupSummary[g];
+                    groupHtml += '<div class="heir-group"><h4>' + g + ' <span>' + gInfo.count + '</span></h4>' +
+                        '<div class="summary-row"><span>Fraction:</span><span style="font-weight:bold;">' + gInfo.fraction + '</span></div>' +
+                        '<div class="summary-row"><span>Parts (Group):</span><span>' + (Math.round(gInfo.partsPerHeir * gInfo.count * 100) / 100) + '</span></div>' +
+                        '<div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(gInfo.totalShare / gInfo.count)) + ' ' + currency + '</span></div>' +
+                        '<div class="summary-row"><span>Total:</span><span style="font-weight:bold;">' + fmt(Math.round(gInfo.totalShare)) + ' ' + currency + '</span></div>' +
+                        '</div>';
+                }
+                document.getElementById('reHeirGroups').innerHTML = groupHtml || '<p>No beneficiaries selected</p>';
+
                 // Store inheritance data for certificate printing
                 window.reInheritanceData = {
                     inheritancePool: data.inheritancePool,
-                    totalPortions: data.totalPortions,
+                    baseNumber: data.baseNumber,
                     perPortion: data.perPortion,
                     beneficiaries: beneficiaries,
                     currency: currency
@@ -7388,10 +7550,8 @@
 
                 var isAdmin = currentUser && currentUser.role === 'admin';
                 var html = beneficiaries.map(function (h) {
-                    var shareAmount = h.shareAmount || (data.perPortion * (parseFloat(h.portions) || 0));
-                    var portionDisplay = (h.sharePercentage || 0) + '%';
+                    var shareAmount = h.shareAmount;
 
-                    // Print certificate button for all users, edit/delete only for admin
                     var actionsHtml = '<td class="no-print">' +
                         '<button class="btn btn-gold btn-sm" onclick="printREHeirCertificate(' + h.id + ')" title="Print Certificate">📜</button> ';
 
@@ -7412,7 +7572,7 @@
                         '</tr>';
                 }).join('');
 
-                document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="6">No beneficiaries selected. Select heirs above to calculate Islamic inheritance distribution.</td></tr>';
+                document.getElementById('reHeirsTable').innerHTML = html || '<tr><td colspan="7">No beneficiaries selected. Select heirs above to calculate Islamic inheritance distribution.</td></tr>';
             });
         }
 
@@ -7526,8 +7686,7 @@
             }
 
             var allCerts = data.beneficiaries.map(function (h) {
-                var shareAmount = data.perPortion * (parseFloat(h.portions) || 0);
-                return generateRECertificateHTML(h, data, shareAmount, true);
+                return generateRECertificateHTML(h, data, h.shareAmount, true);
             }).join('<div style="page-break-after: always;"></div>');
 
             var w = window.open('', '_blank');
@@ -7538,75 +7697,39 @@
 
         // Generate RE certificate HTML
         function generateRECertificateHTML(heir, data, shareAmount, isPartOfBatch) {
-            var today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            var todayDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             var currency = data.currency || 'XAF';
 
-            return (isPartOfBatch ? '' : '<html><head><title>Heir Certificate - ' + heir.name + '</title></head><body>') +
-                '<div style="max-width: 800px; margin: 0 auto; padding: 40px; font-family: Georgia, serif; border: 3px double #d69e2e; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">' +
-                '<div style="text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 20px; margin-bottom: 30px;">' +
-                '<h1 style="color: #92400e; margin: 0; font-size: 28px;">🏠 FAMILY ESTATES</h1>' +
-                '<h2 style="color: #78350f; margin: 10px 0; font-size: 20px;">NJIKAM SALIFU ESTATE</h2>' +
-                '<p style="color: #a16207; font-style: italic; margin: 5px 0;">Islamic Inheritance Distribution Certificate</p>' +
+            var content = '<div class="certificate" style="padding: 20mm; border: 3px double #1a365d; margin: 10mm; background: white; font-family: Georgia, serif; page-break-after: always; min-height: 180mm;">' +
+                '<div style="text-align: center; border-bottom: 2px solid #d69e2e; padding-bottom: 15px; margin-bottom: 20px;">' +
+                '<h1 style="color: #1a365d; font-size: 24px; margin: 0;">FAMILY ESTATES</h1>' +
+                '<p style="color: #666; font-size: 12px; margin: 5px 0;">NJIKAM SALIFU ESTATE | B.P 36 Mankon-Bamenda | Tel: 675299868</p>' +
+                '</div>' +
+                '<div style="text-align: center; margin: 15px 0;"><h2 style="color: #d69e2e; font-size: 18px; margin: 0;">📜 INHERITANCE SHARE CERTIFICATE</h2></div>' +
+                '<p style="text-align: center; color: #666; font-size: 12px;">This certifies that the following heir is entitled to receive their share of the Family Estate:</p>' +
+                '<div style="text-align: center; font-size: 28px; color: #1a365d; font-weight: bold; margin: 25px 0; padding: 15px; background: linear-gradient(135deg, rgba(214,158,46,0.1), rgba(237,137,54,0.1)); border-radius: 10px;">' + heir.name + '</div>' +
+
+                '<div style="margin: 20px 0;">' +
+                '<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted #ccc;"><span>Relationship:</span><span style="font-weight: bold;">' + heir.relationship + '</span></div>' +
+                '<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted #ccc;"><span>Share Fraction:</span><span style="font-weight: bold; color: #1a365d;">' + (heir.fraction || 'N/A') + '</span></div>' +
+                '<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted #ccc;"><span>Parts of Base (' + (data.baseNumber || 24) + '):</span><span style="font-weight: bold;">' + heir.parts + '</span></div>' +
+                '<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted #ccc;"><span>Share Percentage:</span><span style="font-weight: bold;">' + (heir.sharePercentage || 0) + '%</span></div>' +
+                '<div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted #ccc;"><span>Total Estate:</span><span style="font-weight: bold;">' + fmt(Math.round(data.inheritancePool)) + ' ' + currency + '</span></div>' +
                 '</div>' +
 
-                '<div style="text-align: center; margin-bottom: 30px;">' +
-                '<h2 style="color: #1e40af; font-size: 24px; margin: 0;">CERTIFICATE OF INHERITANCE</h2>' +
-                '<p style="color: #6b7280; font-size: 14px;">Certificate No: RE-' + new Date().getFullYear() + '-' + String(heir.id).padStart(4, '0') + '</p>' +
+                '<div style="text-align: center; margin: 25px 0; padding: 20px; background: #1a365d; color: white; border-radius: 10px;">' +
+                '<p style="margin: 0 0 5px; opacity: 0.8; font-size: 14px; text-transform: uppercase;">Net Distributable Amount</p>' +
+                '<strong style="font-size: 32px; color: #d69e2e;">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</strong>' +
                 '</div>' +
 
-                '<div style="background: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e5e7eb;">' +
-                '<p style="font-size: 16px; line-height: 1.8; text-align: justify;">' +
-                'This is to certify that <strong style="color: #1e40af; font-size: 18px;">' + heir.name + '</strong>, ' +
-                'being a <strong>' + heir.relationship + '</strong> (' + (heir.gender || 'N/A') + ') of the deceased, ' +
-                'is entitled to receive their rightful share of the Family Estate inheritance ' +
-                'in accordance with Islamic law (Sharia).' +
-                '</p>' +
+                '<div style="margin-top: 50px; display: flex; justify-content: space-between;">' +
+                '<div style="text-align: center; width: 40%;"><div style="border-top: 1px solid #333; margin-top: 50px; padding-top: 5px;">Authorized Signature</div></div>' +
+                '<div style="text-align: center; width: 40%;"><div style="border-top: 1px solid #333; margin-top: 50px; padding-top: 5px;">Heir Signature</div></div>' +
                 '</div>' +
+                '<p style="text-align: center; margin-top: 30px; font-size: 10px; color: #666;">Sequential Calculation Method (Fara\'id) | Generated on ' + todayDate + '</p>' +
+                '</div>';
 
-                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">' +
-                '<div style="background: #dbeafe; padding: 15px; border-radius: 8px; text-align: center;">' +
-                '<p style="margin: 0; color: #6b7280; font-size: 12px;">TOTAL INHERITANCE AMOUNT</p>' +
-                '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #1e40af;">' + fmt(Math.round(data.inheritancePool)) + ' ' + currency + '</p>' +
-                '</div>' +
-                '<div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">' +
-                '<p style="margin: 0; color: #6b7280; font-size: 12px;">BASE NUMBER (LCD)</p>' +
-                '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #92400e;">' + data.baseNumber + '</p>' +
-                '</div>' +
-                '</div>' +
-
-                '<div style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #d1d5db; display: flex; justify-content: space-around; text-align: center;">' +
-                '<div><p style="margin: 0; font-size: 10px; color: #6b7280;">SHARE FRACTION</p><p style="margin: 3px 0; font-size: 16px; font-weight: bold;">' + (heir.fraction || 'N/A') + '</p></div>' +
-                '<div><p style="margin: 0; font-size: 10px; color: #6b7280;">PARTS OF BASE</p><p style="margin: 3px 0; font-size: 16px; font-weight: bold;">' + heir.parts + '</p></div>' +
-                '</div>' +
-
-                '<div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 8px; text-align: center; margin-bottom: 25px; border: 2px solid #22c55e;">' +
-                '<p style="margin: 0; color: #166534; font-size: 14px;">INHERITANCE SHARE (%)</p>' +
-                '<p style="margin: 5px 0; font-size: 24px; font-weight: bold; color: #15803d;">' + (heir.sharePercentage || 0) + '%</p>' +
-                '<hr style="border: none; border-top: 1px dashed #86efac; margin: 15px 0;">' +
-                '<p style="margin: 0; color: #166534; font-size: 14px;">INHERITANCE SHARE AMOUNT</p>' +
-                '<p style="margin: 5px 0; font-size: 32px; font-weight: bold; color: #15803d;">' + fmt(Math.round(shareAmount)) + ' ' + currency + '</p>' +
-                '</div>' +
-
-                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; padding-top: 30px; border-top: 1px solid #e5e7eb;">' +
-                '<div style="text-align: center;">' +
-                '<div style="border-top: 2px solid #1e40af; width: 200px; margin: 0 auto;"></div>' +
-                '<p style="margin: 10px 0 5px; font-weight: bold;">Estate Administrator</p>' +
-                '<p style="margin: 0; color: #6b7280; font-size: 12px;">Date: ' + today + '</p>' +
-                '</div>' +
-                '<div style="text-align: center;">' +
-                '<div style="border-top: 2px solid #1e40af; width: 200px; margin: 0 auto;"></div>' +
-                '<p style="margin: 10px 0 5px; font-weight: bold;">Witness</p>' +
-                '<p style="margin: 0; color: #6b7280; font-size: 12px;">Date: ' + today + '</p>' +
-                '</div>' +
-                '</div>' +
-
-                '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #d69e2e;">' +
-                '<p style="color: #92400e; font-size: 11px; margin: 0;">This certificate is issued as part of the Islamic inheritance distribution</p>' +
-                '<p style="color: #92400e; font-size: 11px; margin: 5px 0;">for the Family Estate properties of the late NJIKAM SALIFU</p>' +
-                '<p style="color: #6b7280; font-size: 10px; margin-top: 10px;">Generated on: ' + today + '</p>' +
-                '</div>' +
-                '</div>' +
-                (isPartOfBatch ? '' : '</body></html>');
+            return (isPartOfBatch ? '' : '<html><head><title>Heir Certificate - ' + heir.name + '</title><style>@page{size:A4;margin:0;}body{margin:0;padding:0;}</style></head><body>') + content + (isPartOfBatch ? '' : '</body></html>');
         }
 
         function openREHeirModal() {

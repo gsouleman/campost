@@ -5455,70 +5455,35 @@
 
         // Inheritance
         function loadInheritance() {
-            // First load all heirs for the beneficiary selection
-            api('/heirs').then(function (allHeirs) {
-                loadCampostBeneficiaryList(allHeirs);
+            // First ensure we have the latest beneficiary selection from API
+            loadCampostBeneficiariesFromAPI().then(function () {
+                // Now load all heirs to display the selection list
+                api('/heirs').then(function (allHeirs) {
+                    loadCampostBeneficiaryList(allHeirs);
 
-                // Get selected beneficiaries
-                var selectedIds = getCampostBeneficiaries();
+                    // Get inheritance calculation from backend (which now handles filtering)
+                    api('/inheritance/calculate').then(function (d) {
+                        document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
+                        document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
+                        document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
+                        document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
+                        document.getElementById('inhPortions').textContent = d.totalResiduaryPortions;
+                        document.getElementById('inhPer').textContent = fmt(Math.round(d.sharePerPortion));
 
-                // Calculate inheritance only for selected beneficiaries
-                api('/inheritance/calculate').then(function (d) {
-                    // Filter heirs to only include selected beneficiaries
-                    var beneficiaries = d.heirs.filter(function (h) {
-                        return selectedIds.length === 0 || selectedIds.includes(h.id);
-                    });
-
-                    // If NO beneficiaries are selected, show none (unless selection is empty which might mean 'show all' initially)
-                    // But in this logic, if we want strict selection-based calculation:
-                    // If selection list exists but nothing checked, beneficiaries will be empty.
-
-                    // Islamic Inheritance Calculation logic (frontend version)
-                    var fixedHeirs = beneficiaries.filter(function (h) { return parseFloat(h.portions) < 1; });
-                    var residuaryHeirs = beneficiaries.filter(function (h) { return parseFloat(h.portions) >= 1; });
-
-                    var fixedTotalAmount = 0;
-                    fixedHeirs.forEach(function (h) { fixedTotalAmount += d.inheritanceAmount * parseFloat(h.portions); });
-
-                    var residueAmount = Math.max(0, d.inheritanceAmount - fixedTotalAmount);
-                    var totalResiduaryPortions = residuaryHeirs.reduce(function (sum, h) { return sum + parseFloat(h.portions); }, 0);
-                    var sharePerPortion = totalResiduaryPortions > 0 ? residueAmount / totalResiduaryPortions : 0;
-
-                    document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
-                    document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
-                    document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
-                    document.getElementById('inhRes').textContent = fmt(d.reserveFunds);
-                    document.getElementById('inhPortions').textContent = totalResiduaryPortions; // Now shows residuary portions
-                    document.getElementById('inhPer').textContent = fmt(Math.round(sharePerPortion));
-
-                    // Calculate group summary for beneficiaries
-                    var groupSummary = {};
-                    beneficiaries.forEach(function (h) {
-                        if (!groupSummary[h.heir_group]) {
-                            groupSummary[h.heir_group] = { count: 0, totalShare: 0 };
+                        // Use group summary from backend
+                        var html = '';
+                        for (var g in d.groupSummary) {
+                            var gInfo = d.groupSummary[g];
+                            html += '<div class="heir-group"><h4>' + g + ' <span>' + gInfo.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(gInfo.totalShare / gInfo.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(gInfo.totalShare)) + ' XAF</span></div></div>';
                         }
-                        var share = parseFloat(h.portions) < 1 ?
-                            (d.inheritanceAmount * parseFloat(h.portions)) :
-                            (parseFloat(h.portions) * sharePerPortion);
-                        groupSummary[h.heir_group].count++;
-                        groupSummary[h.heir_group].totalShare += share;
+                        document.getElementById('heirGroups').innerHTML = html || '<p>No beneficiaries selected</p>';
+
+                        var isAdmin = currentUser && currentUser.role === 'admin';
+                        document.getElementById('heirTable').innerHTML = d.heirs.map(function (h) {
+                            var actionsHtml = isAdmin ? '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td>' : '';
+                            return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(h.shareAmount)) + '</td>' + actionsHtml + '</tr>';
+                        }).join('') || '<tr><td colspan="6">No beneficiaries selected</td></tr>';
                     });
-
-                    var html = '';
-                    for (var g in groupSummary) {
-                        var i = groupSummary[g];
-                        html += '<div class="heir-group"><h4>' + g + ' <span>' + i.count + '</span></h4><div class="summary-row"><span>Per heir:</span><span>' + fmt(Math.round(i.totalShare / i.count)) + ' XAF</span></div><div class="summary-row"><span>Total:</span><span>' + fmt(Math.round(i.totalShare)) + ' XAF</span></div></div>';
-                    }
-                    document.getElementById('heirGroups').innerHTML = html || '<p>No beneficiaries selected</p>';
-
-                    var isAdmin = currentUser && currentUser.role === 'admin';
-                    document.getElementById('heirTable').innerHTML = beneficiaries.map(function (h) {
-                        var share = parseFloat(h.portions) < 1 ?
-                            (d.inheritanceAmount * parseFloat(h.portions)) :
-                            (parseFloat(h.portions) * sharePerPortion);
-                        var actionsHtml = isAdmin ? '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="printHeirCertificate(' + h.id + ')">📜</button> <button class="btn btn-warning btn-sm" onclick="editHeir(' + h.id + ')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteHeir(' + h.id + ')">🗑️</button></td>' : '';
-                        return '<tr><td>' + h.name + '</td><td>' + h.relationship + '</td><td>' + h.heir_group + '</td><td>' + h.portions + '</td><td class="amount-positive">' + fmt(Math.round(share)) + '</td>' + actionsHtml + '</tr>';
-                    }).join('') || '<tr><td colspan="6">No beneficiaries selected</td></tr>';
                 });
             });
         }

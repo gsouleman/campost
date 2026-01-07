@@ -594,8 +594,17 @@ app.get('/api/inheritance/calculate', async (req, res) => {
         `);
         const inheritanceAmount = parseInt(inheritanceResult.rows[0].total);
 
+        // Get selected beneficiaries
+        const beneficiariesResult = await pool.query('SELECT heir_id FROM campost_beneficiaries WHERE is_selected = TRUE');
+        const selectedIds = beneficiariesResult.rows.map(r => r.heir_id);
+
         const heirsResult = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
         let heirs = heirsResult.rows;
+
+        // Filter heirs to only include selected beneficiaries
+        if (selectedIds.length > 0) {
+            heirs = heirs.filter(h => selectedIds.includes(h.id));
+        }
 
         // Correct Islamic Inheritance Calculation:
         // 1. Heirs with portions < 1 are "Fixed Share" heirs (Fara'id) - portions are absolute fractions (e.g., 0.125 for 1/8)
@@ -905,8 +914,8 @@ app.post('/api/heirs/reset-defaults', async (req, res) => {
 
         // Insert default family members from NJIKAM SALIFU estate
         const heirs = [
-            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 3],
-            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Wives', 3],
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 0.0625],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Wives', 0.0625],
             ['SAHNATU SALIFU', 'Child', 'Daughters', 1],
             ['MOHAMAN SALIFU', 'Child', 'Sons', 2],
             ['ABIBATU SALIFU', 'Child', 'Daughters', 1],
@@ -1098,8 +1107,8 @@ app.post('/api/re/heirs/reset-defaults', async (req, res) => {
     try {
         await pool.query('DELETE FROM re_heirs');
         const reHeirs = [
-            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 1.5],
-            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 1.5],
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 0.0625],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 0.0625],
             ['SAHNATU SALIFU', 'Child', 'Female', 'Daughters', 1],
             ['MOHAMAN SALIFU', 'Child', 'Male', 'Sons', 2],
             ['ABIBATU SALIFU', 'Child', 'Female', 'Daughters', 1],

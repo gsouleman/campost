@@ -98,7 +98,7 @@ async function initDatabase() {
         `);
 
         // ==================== FAMILY ESTATES TABLES ====================
-        
+
         // RE Heirs (separate from CAMPOST heirs)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS re_heirs (
@@ -112,7 +112,7 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // RE Bills
         await pool.query(`
             CREATE TABLE IF NOT EXISTS re_bills (
@@ -127,7 +127,7 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // RE Payments
         await pool.query(`
             CREATE TABLE IF NOT EXISTS re_payments (
@@ -140,7 +140,7 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // RE Expenses
         await pool.query(`
             CREATE TABLE IF NOT EXISTS re_expenses (
@@ -153,7 +153,7 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // RE Settings
         await pool.query(`
             CREATE TABLE IF NOT EXISTS re_settings (
@@ -163,7 +163,7 @@ async function initDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // CAMPOST Settings
         await pool.query(`
             CREATE TABLE IF NOT EXISTS campost_settings (
@@ -173,7 +173,7 @@ async function initDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // Users table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS app_users (
@@ -188,7 +188,7 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
+
         // Add email and must_change_password columns if they don't exist (for existing databases)
         await pool.query(`
             DO $$ 
@@ -201,7 +201,7 @@ async function initDatabase() {
                 END IF;
             END $$;
         `);
-        
+
         // CAMPOST Beneficiaries selection
         await pool.query(`
             CREATE TABLE IF NOT EXISTS campost_beneficiaries (
@@ -211,7 +211,7 @@ async function initDatabase() {
                 UNIQUE(heir_id)
             )
         `);
-        
+
         // RE Beneficiaries selection
         await pool.query(`
             CREATE TABLE IF NOT EXISTS re_beneficiaries (
@@ -274,8 +274,8 @@ async function initializeDefaultData() {
     if (parseInt(heirResult.rows[0].count) === 0) {
         // Family members from NJIKAM SALIFU estate
         const heirs = [
-            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 3],
-            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Wives', 3],
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 0.0625],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Wives', 0.0625],
             ['SAHNATU SALIFU', 'Child', 'Daughters', 1],
             ['MOHAMAN SALIFU', 'Child', 'Sons', 2],
             ['ABIBATU SALIFU', 'Child', 'Daughters', 1],
@@ -303,8 +303,8 @@ async function initializeDefaultData() {
     const reHeirResult = await pool.query('SELECT COUNT(*) FROM re_heirs');
     if (parseInt(reHeirResult.rows[0].count) === 0) {
         const reHeirs = [
-            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 3],
-            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 3],
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 0.0625],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 0.0625],
             ['SAHNATU SALIFU', 'Child', 'Female', 'Daughters', 1],
             ['MOHAMAN SALIFU', 'Child', 'Male', 'Sons', 2],
             ['ABIBATU SALIFU', 'Child', 'Female', 'Daughters', 1],
@@ -327,7 +327,7 @@ async function initializeDefaultData() {
             );
         }
     }
-    
+
     // Initialize default users - only if table is empty, otherwise ensure admin exists
     const userResult = await pool.query('SELECT COUNT(*) FROM app_users');
     if (parseInt(userResult.rows[0].count) === 0) {
@@ -356,14 +356,14 @@ async function initializeDefaultData() {
             );
         }
     }
-    
+
     // Initialize default settings
     const settingsResult = await pool.query('SELECT COUNT(*) FROM re_settings');
     if (parseInt(settingsResult.rows[0].count) === 0) {
         await pool.query("INSERT INTO re_settings (setting_key, setting_value) VALUES ('currency', 'XAF') ON CONFLICT (setting_key) DO NOTHING");
         await pool.query("INSERT INTO re_settings (setting_key, setting_value) VALUES ('reservedFundsPercent', '10') ON CONFLICT (setting_key) DO NOTHING");
     }
-    
+
     const campostSettingsResult = await pool.query('SELECT COUNT(*) FROM campost_settings');
     if (parseInt(campostSettingsResult.rows[0].count) === 0) {
         await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('currency', 'XAF') ON CONFLICT (setting_key) DO NOTHING");
@@ -594,17 +594,43 @@ app.get('/api/inheritance/calculate', async (req, res) => {
         `);
         const inheritanceAmount = parseInt(inheritanceResult.rows[0].total);
 
-        const totalPortionsResult = await pool.query('SELECT SUM(portions) as total FROM heirs');
-        const totalPortions = parseFloat(totalPortionsResult.rows[0].total) || 24;
+        const heirsResult = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
+        let heirs = heirsResult.rows;
 
-        const sharePerPortion = inheritanceAmount > 0 ? inheritanceAmount / totalPortions : 0;
+        // Correct Islamic Inheritance Calculation:
+        // 1. Heirs with portions < 1 are "Fixed Share" heirs (Fara'id) - portions are absolute fractions (e.g., 0.125 for 1/8)
+        // 2. Heirs with portions >= 1 are "Residuary" heirs (Asabat) - portions are relative ratios (e.g., 2 for Son, 1 for Daughter)
 
-        const individualHeirs = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
-        const heirShares = individualHeirs.rows.map(h => ({
-            ...h,
-            shareAmount: Math.round(sharePerPortion * parseFloat(h.portions) * 100) / 100
-        }));
+        const fixedHeirs = heirs.filter(h => parseFloat(h.portions) < 1);
+        const residuaryHeirs = heirs.filter(h => parseFloat(h.portions) >= 1);
 
+        let fixedTotalAmount = 0;
+        const heirShares = [];
+
+        // Calculate Fixed Shares first
+        fixedHeirs.forEach(h => {
+            const share = inheritanceAmount * parseFloat(h.portions);
+            fixedTotalAmount += share;
+            heirShares.push({
+                ...h,
+                shareAmount: Math.round(share * 100) / 100
+            });
+        });
+
+        // Distribute the residue among residuary heirs
+        const residueAmount = Math.max(0, inheritanceAmount - fixedTotalAmount);
+        const totalResiduaryPortions = residuaryHeirs.reduce((sum, h) => sum + parseFloat(h.portions), 0);
+        const sharePerResiduaryPortion = totalResiduaryPortions > 0 ? residueAmount / totalResiduaryPortions : 0;
+
+        residuaryHeirs.forEach(h => {
+            const share = parseFloat(h.portions) * sharePerResiduaryPortion;
+            heirShares.push({
+                ...h,
+                shareAmount: Math.round(share * 100) / 100
+            });
+        });
+
+        // Group summary (recalculated for the new logic)
         const groupSummary = {};
         heirShares.forEach(h => {
             if (!groupSummary[h.heir_group]) {
@@ -616,7 +642,10 @@ app.get('/api/inheritance/calculate', async (req, res) => {
 
         res.json({
             totalBillsPaid, totalExpenses, reserveFunds, inheritanceAmount,
-            totalPortions, sharePerPortion: Math.round(sharePerPortion * 100) / 100,
+            fixedTotalAmount: Math.round(fixedTotalAmount * 100) / 100,
+            residueAmount: Math.round(residueAmount * 100) / 100,
+            totalResiduaryPortions,
+            sharePerPortion: Math.round(sharePerResiduaryPortion * 100) / 100,
             heirs: heirShares, groupSummary
         });
     } catch (err) {
@@ -643,13 +672,13 @@ app.get('/api/bills/:billNumber', async (req, res) => {
         const result = await pool.query('SELECT * FROM bills WHERE bill_number = $1', [req.params.billNumber]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'Bill not found' });
         const row = result.rows[0];
-        
+
         // Get payments for this bill
         const payments = await pool.query(
             'SELECT * FROM payments WHERE bill_number = $1 ORDER BY payment_date DESC',
             [req.params.billNumber]
         );
-        
+
         res.json({
             billNumber: row.bill_number, quarter: row.quarter, year: row.year,
             period: row.period, amountDue: row.amount_due, paidAmount: row.paid_amount,
@@ -684,7 +713,7 @@ app.put('/api/bills/:billNumber', async (req, res) => {
         const current = await pool.query('SELECT paid_amount FROM bills WHERE bill_number = $1', [req.params.billNumber]);
         const paidAmount = current.rows[0]?.paid_amount || 0;
         const outstanding = amountDue - paidAmount;
-        
+
         await pool.query(
             'UPDATE bills SET quarter = $1, year = $2, period = $3, amount_due = $4, outstanding = $5 WHERE bill_number = $6',
             [quarter, year, period, amountDue, outstanding, req.params.billNumber]
@@ -769,7 +798,7 @@ app.put('/api/payments/:id', async (req, res) => {
     try {
         const { amount, date, reference } = req.body;
         await client.query('BEGIN');
-        
+
         // Get old payment amount
         const oldPayment = await client.query('SELECT amount, bill_number FROM payments WHERE id = $1', [req.params.id]);
         if (oldPayment.rows.length === 0) {
@@ -779,19 +808,19 @@ app.put('/api/payments/:id', async (req, res) => {
         const oldAmount = oldPayment.rows[0].amount;
         const billNumber = oldPayment.rows[0].bill_number;
         const diff = amount - oldAmount;
-        
+
         // Update payment
         await client.query(
             'UPDATE payments SET amount = $1, payment_date = $2, reference = $3 WHERE id = $4',
             [amount, date, reference || '', req.params.id]
         );
-        
+
         // Update bill totals
         await client.query(
             `UPDATE bills SET paid_amount = paid_amount + $1, outstanding = outstanding - $1 WHERE bill_number = $2`,
             [diff, billNumber]
         );
-        
+
         await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
@@ -806,7 +835,7 @@ app.delete('/api/payments/:id', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        
+
         // Get payment details
         const payment = await client.query('SELECT amount, bill_number FROM payments WHERE id = $1', [req.params.id]);
         if (payment.rows.length === 0) {
@@ -814,16 +843,16 @@ app.delete('/api/payments/:id', async (req, res) => {
             return res.status(404).json({ error: 'Payment not found' });
         }
         const { amount, bill_number } = payment.rows[0];
-        
+
         // Delete payment
         await client.query('DELETE FROM payments WHERE id = $1', [req.params.id]);
-        
+
         // Update bill totals
         await client.query(
             `UPDATE bills SET paid_amount = paid_amount - $1, outstanding = outstanding + $1 WHERE bill_number = $2`,
             [amount, bill_number]
         );
-        
+
         await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
@@ -849,7 +878,7 @@ app.get('/api/export/all', async (req, res) => {
         const heirs = await pool.query('SELECT * FROM heirs ORDER BY heir_group, name');
         const summary = await pool.query('SELECT COALESCE(SUM(amount), 0) as total_paid FROM payments');
         const expTotal = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM expenses');
-        
+
         res.json({
             bills: bills.rows,
             payments: payments.rows,
@@ -873,7 +902,7 @@ app.post('/api/heirs/reset-defaults', async (req, res) => {
     try {
         // Delete all existing heirs
         await pool.query('DELETE FROM heirs');
-        
+
         // Insert default family members from NJIKAM SALIFU estate
         const heirs = [
             ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Wives', 3],
@@ -893,14 +922,14 @@ app.post('/api/heirs/reset-defaults', async (req, res) => {
             ['MBALLEY ABDOU RAHAMA SALIFOU', 'Child', 'Sons', 2],
             ['NGAMDAMOUN IBRAHIM SALIFOU', 'Child', 'Sons', 2]
         ];
-        
+
         for (const [name, rel, group, portions] of heirs) {
             await pool.query(
                 'INSERT INTO heirs (name, relationship, heir_group, portions) VALUES ($1, $2, $3, $4)',
                 [name, rel, group, portions]
             );
         }
-        
+
         res.json({ success: true, message: 'Heirs reset to default family members', count: heirs.length });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -951,10 +980,10 @@ app.get('/api/properties/:id', async (req, res) => {
 // Create property
 app.post('/api/properties', async (req, res) => {
     const { name, location, type, status, rent_amount, rent_period, tax_rate, islamic_inheritance, notes } = req.body;
-    
+
     // If not rented, income is zero
     const actualRentAmount = status === 'Rented' ? (rent_amount || 0) : 0;
-    
+
     try {
         const result = await pool.query(
             `INSERT INTO properties (name, location, type, status, rent_amount, rent_period, tax_rate, islamic_inheritance, notes)
@@ -970,10 +999,10 @@ app.post('/api/properties', async (req, res) => {
 // Update property
 app.put('/api/properties/:id', async (req, res) => {
     const { name, location, type, status, rent_amount, rent_period, tax_rate, islamic_inheritance, notes } = req.body;
-    
+
     // If not rented, income is zero
     const actualRentAmount = status === 'Rented' ? (rent_amount || 0) : 0;
-    
+
     try {
         const result = await pool.query(
             `UPDATE properties SET 
@@ -1069,8 +1098,8 @@ app.post('/api/re/heirs/reset-defaults', async (req, res) => {
     try {
         await pool.query('DELETE FROM re_heirs');
         const reHeirs = [
-            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 3],
-            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 3],
+            ['MODER PASMA IDRISU EPSE SALIFOU', 'Spouse', 'Female', 'Wives', 1.5],
+            ['MENJIKOUE ABIBA SPOUSE NJIKAM', 'Spouse', 'Female', 'Wives', 1.5],
             ['SAHNATU SALIFU', 'Child', 'Female', 'Daughters', 1],
             ['MOHAMAN SALIFU', 'Child', 'Male', 'Sons', 2],
             ['ABIBATU SALIFU', 'Child', 'Female', 'Daughters', 1],
@@ -1172,7 +1201,7 @@ app.post('/api/re/payments', async (req, res) => {
             'INSERT INTO re_payments (bill_id, amount, payment_date, payment_method, reference) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [billId, amount, paymentDate, paymentMethod || 'Cash', reference]
         );
-        
+
         // Update bill status based on payments
         const billPayments = await pool.query('SELECT SUM(amount) as total FROM re_payments WHERE bill_id = $1', [billId]);
         const billInfo = await pool.query('SELECT amount FROM re_bills WHERE id = $1', [billId]);
@@ -1184,7 +1213,7 @@ app.post('/api/re/payments', async (req, res) => {
             else if (totalPaid > 0) status = 'Partial';
             await pool.query('UPDATE re_bills SET status = $1 WHERE id = $2', [status, billId]);
         }
-        
+
         res.json(result.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1209,7 +1238,7 @@ app.delete('/api/re/payments/:id', async (req, res) => {
         // Get bill_id before deleting
         const payment = await pool.query('SELECT bill_id FROM re_payments WHERE id = $1', [req.params.id]);
         await pool.query('DELETE FROM re_payments WHERE id = $1', [req.params.id]);
-        
+
         // Recalculate bill status
         if (payment.rows.length > 0) {
             const billId = payment.rows[0].bill_id;
@@ -1224,7 +1253,7 @@ app.delete('/api/re/payments/:id', async (req, res) => {
                 await pool.query('UPDATE re_bills SET status = $1 WHERE id = $2', [status, billId]);
             }
         }
-        
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1488,20 +1517,20 @@ app.post('/api/users/reset-password', async (req, res) => {
             res.status(400).json({ error: 'No active account found with that username and email' });
             return;
         }
-        
+
         // Generate temporary password
         const tempPassword = 'temp' + Math.random().toString(36).substring(2, 8);
-        
+
         // Update password and set must_change_password flag
         await pool.query(
             'UPDATE app_users SET password = $1, must_change_password = TRUE WHERE id = $2',
             [tempPassword, result.rows[0].id]
         );
-        
+
         // In production, you would send an email here
         // For now, we'll return the temp password (in real app, this would be sent via email)
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Temporary password has been set. Please check your email.',
             // In production, remove this line - only for demo purposes
             tempPassword: tempPassword
@@ -1517,30 +1546,53 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
         // Get total "Inheritance Allocation" expenses - this is the inheritance pool
         const inheritanceResult = await pool.query("SELECT COALESCE(SUM(amount), 0) as total FROM re_expenses WHERE category = 'Inheritance Allocation'");
         const inheritancePool = parseFloat(inheritanceResult.rows[0].total) || 0;
-        
+
         // Get selected beneficiaries
         const beneficiariesResult = await pool.query('SELECT heir_id FROM re_beneficiaries WHERE is_selected = TRUE');
         const selectedIds = beneficiariesResult.rows.map(r => r.heir_id);
-        
+
         // Get heirs (filtered by beneficiaries if any selected)
         let heirsQuery = 'SELECT * FROM re_heirs ORDER BY heir_group, name';
         const heirsResult = await pool.query(heirsQuery);
         let heirs = heirsResult.rows;
-        
+
         if (selectedIds.length > 0) {
             heirs = heirs.filter(h => selectedIds.includes(h.id));
         }
-        
-        // Calculate portions
-        const totalPortions = heirs.reduce((sum, h) => sum + parseFloat(h.portions), 0);
-        const perPortion = totalPortions > 0 ? inheritancePool / totalPortions : 0;
-        
-        // Calculate shares
-        const heirShares = heirs.map(h => ({
-            ...h,
-            shareAmount: parseFloat(h.portions) * perPortion
-        }));
-        
+
+        // Correct Islamic Inheritance Calculation:
+        // 1. Heirs with portions < 1 are "Fixed Share" heirs (Fara'id) - portions are absolute fractions (e.g., 0.125 for 1/8)
+        // 2. Heirs with portions >= 1 are "Residuary" heirs (Asabat) - portions are relative ratios (e.g., 2 for Son, 1 for Daughter)
+
+        const fixedHeirs = heirs.filter(h => parseFloat(h.portions) < 1);
+        const residuaryHeirs = heirs.filter(h => parseFloat(h.portions) >= 1);
+
+        let fixedTotalAmount = 0;
+        const heirShares = [];
+
+        // Calculate Fixed Shares first
+        fixedHeirs.forEach(h => {
+            const share = inheritancePool * parseFloat(h.portions);
+            fixedTotalAmount += share;
+            heirShares.push({
+                ...h,
+                shareAmount: Math.round(share * 100) / 100
+            });
+        });
+
+        // Distribute the residue among residuary heirs
+        const residueAmount = Math.max(0, inheritancePool - fixedTotalAmount);
+        const totalResiduaryPortions = residuaryHeirs.reduce((sum, h) => sum + parseFloat(h.portions), 0);
+        const sharePerResiduaryPortion = totalResiduaryPortions > 0 ? residueAmount / totalResiduaryPortions : 0;
+
+        residuaryHeirs.forEach(h => {
+            const share = parseFloat(h.portions) * sharePerResiduaryPortion;
+            heirShares.push({
+                ...h,
+                shareAmount: Math.round(share * 100) / 100
+            });
+        });
+
         // Group summary
         const groupSummary = {};
         heirShares.forEach(h => {
@@ -1551,11 +1603,13 @@ app.get('/api/re/inheritance/calculate', async (req, res) => {
             groupSummary[h.heir_group].totalPortions += parseFloat(h.portions);
             groupSummary[h.heir_group].totalShare += h.shareAmount;
         });
-        
+
         res.json({
             inheritancePool,
-            totalPortions,
-            perPortion,
+            fixedTotalAmount,
+            residueAmount,
+            totalPortions: totalResiduaryPortions,
+            perPortion: sharePerResiduaryPortion,
             heirs: heirShares,
             groupSummary
         });
@@ -1571,15 +1625,15 @@ app.get('/api/re/dashboard', async (req, res) => {
         const rentedProps = await pool.query("SELECT COUNT(*) as count FROM properties WHERE status = 'Rented'");
         const totalIncome = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM re_payments');
         const totalExpenses = await pool.query('SELECT COALESCE(SUM(amount), 0) as total FROM re_expenses');
-        
+
         const settingsResult = await pool.query("SELECT setting_value FROM re_settings WHERE setting_key = 'reservedFundsPercent'");
         const reservedPercent = settingsResult.rows.length > 0 ? parseFloat(settingsResult.rows[0].setting_value) : 10;
-        
+
         const income = parseFloat(totalIncome.rows[0].total) || 0;
         const expenses = parseFloat(totalExpenses.rows[0].total) || 0;
         const netBalance = income - expenses;
         const reservedFunds = netBalance * (reservedPercent / 100);
-        
+
         res.json({
             totalProperties: parseInt(totalProps.rows[0].count),
             rentedProperties: parseInt(rentedProps.rows[0].count),
@@ -1605,7 +1659,7 @@ app.get('/api/re/ledger', async (req, res) => {
             LEFT JOIN re_bills b ON pay.bill_id = b.id
             LEFT JOIN properties p ON b.property_id = p.id
         `);
-        
+
         // Get all expenses
         const expenses = await pool.query(`
             SELECT e.expense_date as date, COALESCE(p.name, 'General') as property,
@@ -1613,17 +1667,17 @@ app.get('/api/re/ledger', async (req, res) => {
             FROM re_expenses e
             LEFT JOIN properties p ON e.property_id = p.id
         `);
-        
+
         // Combine and sort
         const ledger = [...payments.rows, ...expenses.rows].sort((a, b) => new Date(a.date) - new Date(b.date));
-        
+
         // Calculate running balance
         let balance = 0;
         const ledgerWithBalance = ledger.map(entry => {
             balance += (parseFloat(entry.income) || 0) - (parseFloat(entry.expense) || 0);
             return { ...entry, balance };
         });
-        
+
         res.json(ledgerWithBalance);
     } catch (err) {
         res.status(500).json({ error: err.message });

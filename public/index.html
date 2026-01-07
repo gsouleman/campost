@@ -3595,7 +3595,8 @@
             <div class="modal-body">
                 <input type="hidden" id="heirId">
                 <div class="form-group"><label>Name</label><input type="text" id="heirName"></div>
-                <div class="form-group"><label>Relationship</label><select id="heirRel">
+                <div class="form-group"><label>Relationship</label><select id="heirRel"
+                        onchange="autoSelectGroup('heirRel', 'heirGrp')">
                         <option value="Father">Father</option>
                         <option value="Mother">Mother</option>
                         <option value="Husband">Husband</option>
@@ -7408,8 +7409,26 @@
 
         // ========== RE INHERITANCE - ISLAMIC LAW ==========
 
+        // Auto-select group based on relationship
+        function autoSelectGroup(relId, grpId) {
+            var rel = document.getElementById(relId).value;
+            var grp = document.getElementById(grpId);
+
+            var primary = ['Father', 'Mother', 'Husband', 'Wife', 'Daughter', 'Son\'s Daughter', 'Full Sister', 'Paternal Sister', 'Maternal Sibling', 'Grandmother', 'Uterine Sibling'];
+            var residuary = ['Son', 'Paternal Grandfather', 'Full Brother', 'Paternal Brother', 'Son\'s Son', 'Full Nephew', 'Grandson (Son\'s Son)', 'Grandfather'];
+            var distant = ['Maternal Grandfather', 'Maternal Grandmother', 'Daughter\'s Children', 'Paternal Aunt', 'Maternal Aunt', 'Nephew (Sister\'s Son)', 'Niece (Sister\'s Daughter)', 'Granddaughter (Daughter\'s Daughter)'];
+            var excluded = ['Step-father', 'Step-mother', 'Adopted Child', 'Foster Relations', 'Illegitimate Child'];
+
+            if (primary.includes(rel)) grp.value = 'Primary Heir';
+            else if (residuary.includes(rel)) grp.value = 'Residuary Heir';
+            else if (distant.includes(rel)) grp.value = 'Distant Kindred';
+            else if (excluded.includes(rel)) grp.value = 'Excluded';
+            else grp.value = 'Special Case'; // Fallback
+        }
+
         // Calculate Islamic inheritance portions based on relationship and existing heirs
         function updateIslamicPortions() {
+            autoSelectGroup('reHeirRel', 'reHeirGrp');
             var rel = document.getElementById('reHeirRel').value;
             var gender = document.getElementById('reHeirGender').value;
 

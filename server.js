@@ -1093,8 +1093,47 @@ app.get('/api/payments', async (req, res) => {
         res.json(result.rows.map(row => ({
             id: row.id, billNumber: row.bill_number, amount: row.amount,
             date: row.payment_date, reference: row.reference,
+            receiptNumber: row.receipt_number || null,
             period: row.period, year: row.year
         })));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Generate receipt for regular Campost payment
+app.post('/api/receipts/generate', async (req, res) => {
+    try {
+        const { paymentId, receiptDate } = req.body;
+
+        // 1. Verify Payment
+        const check = await pool.query('SELECT * FROM payments WHERE id = $1', [paymentId]);
+        if (check.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
+        if (check.rows[0].receipt_number) return res.status(400).json({ error: 'Receipt already exists' });
+
+        // 2. Generate Receipt Number
+        // Format: RCP-[YEAR]-[0000]
+        const year = new Date().getFullYear();
+        const countRes = await pool.query('SELECT COUNT(*) FROM payments WHERE receipt_number IS NOT NULL');
+        const nextNum = parseInt(countRes.rows[0].count) + 1;
+        const receiptNumber = `RCP-${year}-${String(nextNum).padStart(4, '0')}`;
+        const actualDate = receiptDate || new Date();
+
+        // 3. Update Payment
+        const result = await pool.query(
+            'UPDATE payments SET receipt_number = $1, receipt_date = $2 WHERE id = $3 RETURNING *',
+            [receiptNumber, actualDate, paymentId]
+        );
+
+        // Fetch full details for return
+        const fullDetails = await pool.query(`
+            SELECT p.*, b.period, b.year, b.bill_number as bill_ref
+            FROM payments p 
+            JOIN bills b ON p.bill_number = b.bill_number
+            WHERE p.id = $1
+        `, [paymentId]);
+
+        res.json(fullDetails.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -2060,7 +2099,21 @@ app.get('/api/status', async (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/health', (req, res) => res.json({ status: 'ok', database: dbConnected }));
 
-initDatabase().then(() => {
+async function ensureCampostReceiptColumns() {
+    try {
+        await pool.query(`
+            ALTER TABLE payments 
+            ADD COLUMN IF NOT EXISTS receipt_number VARCHAR(50),
+            ADD COLUMN IF NOT EXISTS receipt_date TIMESTAMP
+        `);
+        console.log('✓ Receipt columns verified in payments (Campost)');
+    } catch (err) {
+        console.error('Migration Error (Campost):', err.message);
+    }
+}
+
+initDatabase().then(async () => {
+    await ensureCampostReceiptColumns();
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`\n✓ CAMPOST Server running on port ${PORT}\n`);
     });

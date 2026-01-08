@@ -1294,6 +1294,7 @@
                 <button class="nav-btn" data-page="campost-expenses">💸 Expenses</button>
                 <button class="nav-btn" data-page="campost-bills">📄 Bills</button>
                 <button class="nav-btn" data-page="campost-payments">💵 Payments</button>
+                <button class="nav-btn" data-page="campost-receipts">🧾 Receipts</button>
                 <button class="nav-btn" data-page="campost-inheritance">👨‍👩‍👧‍👦 Inheritance</button>
                 <button class="nav-btn" data-page="campost-export">📥 Export</button>
                 <button class="nav-btn" data-page="campost-settings">⚙️ Settings</button>
@@ -2052,6 +2053,37 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            </div>
+
+            <!-- RECEIPTS -->
+            <div id="campost-receipts" class="page">
+                <div class="card">
+                    <div class="card-header"><span>🧾 Receipts</span></div>
+                    <div class="card-body">
+                        <p style="margin-bottom: 1rem; color: #718096; font-size: 0.9rem;">
+                            View and print receipts for payments requiring official documentation.
+                        </p>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Receipt #</th>
+                                        <th>Bill Ref</th>
+                                        <th>Amount</th>
+                                        <th>Period</th>
+                                        <th class="no-print">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="campostReceiptsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- Hidden Receipt Container for Printing -->
+                <div id="campostReceiptPrintContainer" style="display:none;"></div>
             </div>
 
             <!-- INHERITANCE -->
@@ -5017,6 +5049,7 @@
             else if (p === 'campost-expenses') loadExpenses();
             else if (p === 'campost-bills') { loadBills(); updateCalcDisplays(); }
             else if (p === 'campost-payments') loadPayments();
+            else if (p === 'campost-receipts') loadCampostReceipts();
             else if (p === 'campost-inheritance') loadInheritance();
             else if (p === 'campost-settings') { loadSettings(); setupSettingsListeners(); checkDb(); }
             // Family RE pages
@@ -5646,6 +5679,99 @@
             document.getElementById('payOut').value = '';
             document.getElementById('payAmt').value = '';
             document.getElementById('payRef').value = '';
+        }
+
+        // Campost Receipts
+        function loadCampostReceipts() {
+            api('/payments').then(function (payments) {
+                // Filter valid payments (amount > 0)
+                var validPayments = payments.filter(function(p) { return p.amount > 0; });
+                
+                var html = validPayments.map(function (p) {
+                    var hasReceipt = !!p.receiptNumber;
+                    var actionBtn = hasReceipt 
+                        ? '<button class="btn btn-print btn-sm" onclick="printCampostReceipt(' + p.id + ')">🖨️ Reprint</button>'
+                        : '<button class="btn btn-gold btn-sm" onclick="generateCampostReceipt(' + p.id + ')">📄 Generate</button>';
+                    
+                    var receiptDisplay = hasReceipt 
+                        ? '<span class="badge badge-paid">' + p.receiptNumber + '</span>'
+                        : '<span class="badge badge-new">Pending</span>';
+
+                    return '<tr>' +
+                        '<td>' + fmtDate(p.date) + '</td>' +
+                        '<td>' + receiptDisplay + '</td>' +
+                        '<td>' + p.billNumber + '</td>' +
+                        '<td class="amount-positive">' + fmt(p.amount) + ' XAF</td>' +
+                        '<td>' + p.period + ' ' + p.year + '</td>' +
+                        '<td class="no-print">' + actionBtn + '</td>' +
+                        '</tr>';
+                }).join('');
+                
+                document.getElementById('campostReceiptsTable').innerHTML = html || '<tr><td colspan="6">No payments found</td></tr>';
+            });
+        }
+
+        function generateCampostReceipt(paymentId) {
+            if(!confirm('Generate official receipt for this payment?')) return;
+            
+            api('/receipts/generate', {
+                method: 'POST',
+                body: JSON.stringify({ paymentId: paymentId })
+            }).then(function(receipt) {
+                if(receipt.error) {
+                    showAlert(receipt.error, 'error');
+                } else {
+                    showAlert('Receipt Generated: ' + receipt.receipt_number);
+                    loadCampostReceipts();
+                    // Auto print
+                    printCampostReceipt(paymentId);
+                }
+            });
+        }
+
+        function printCampostReceipt(paymentId) {
+            api('/payments/' + paymentId).then(function(p) {
+                // Determine format
+                var dateStr = new Date(p.date).toLocaleDateString();
+                var receiptNo = p.receiptNumber || 'DRAFT';
+                
+                var content = `
+                <div style="font-family: 'Courier New', monospace; padding: 20px; border: 2px dashed #333; max-width: 600px; margin: 0 auto; background: #fff;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">NJIKAM SALIFU ESTATE</h2>
+                        <p style="margin: 5px 0;">Property & Billing Management</p>
+                        <p style="font-size: 12px;">B.P 36 Mankon-Bamenda | Tel: 675299868</p>
+                    </div>
+                    
+                    <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 10px 0; margin-bottom: 20px;">
+                        <h3 style="margin: 0; text-align: center;">PAYMENT RECEIPT</h3>
+                        <p style="text-align: center; margin: 5px 0 0; font-weight: bold;">NO: ${receiptNo}</p>
+                    </div>
+
+                    <table style="width: 100%; font-size: 14px;">
+                        <tr><td style="padding: 5px;"><strong>Date:</strong></td><td style="text-align: right;">${dateStr}</td></tr>
+                        <tr><td style="padding: 5px;"><strong>Received From:</strong></td><td style="text-align: right;">CAMPOST MANKON</td></tr>
+                        <tr><td style="padding: 5px;"><strong>Reference:</strong></td><td style="text-align: right;">Bill #${p.billNumber}</td></tr>
+                        <tr><td style="padding: 5px;"><strong>Period:</strong></td><td style="text-align: right;">${p.period} ${p.year}</td></tr>
+                        <tr style="border-top: 1px solid #ccc;"><td style="padding: 10px 5px;"><strong>AMOUNT:</strong></td><td style="text-align: right; font-weight: bold; font-size: 16px;">${fmt(p.amount)} XAF</td></tr>
+                    </table>
+
+                    <div style="margin-top: 30px; text-align: right;">
+                        <p style="margin-bottom: 40px;"><strong>Authorized Signature:</strong></p>
+                        <hr style="width: 150px; display: inline-block; border: 0; border-bottom: 1px solid #000;">
+                    </div>
+                    
+                    <div style="font-size: 10px; text-align: center; margin-top: 20px; color: #666;">
+                        Generated by System on ${new Date().toLocaleString()}
+                    </div>
+                </div>
+                `;
+
+                var w = window.open('', '_blank');
+                w.document.write('<html><head><title>Receipt ' + receiptNo + '</title></head><body>' + content + '</body></html>');
+                w.document.close();
+                // w.print(); // Optional auto-print, user might block popups
+            });
         }
 
         // Inheritance

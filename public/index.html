@@ -5693,9 +5693,14 @@
 
                 var html = validPayments.map(function (p) {
                     var hasReceipt = !!p.receiptNumber;
-                    var actionBtn = hasReceipt
-                        ? '<button class="btn btn-print btn-sm" onclick="printCampostReceipt(' + p.id + ')">🖨️ Reprint</button>'
-                        : '<button class="btn btn-gold btn-sm" onclick="generateCampostReceipt(' + p.id + ')">📄 Generate</button>';
+                    var actionBtn = '';
+                    if (hasReceipt) {
+                        actionBtn = '<button class="btn btn-print btn-sm" onclick="printCampostReceipt(' + p.id + ')">🖨️</button> ' +
+                            '<button class="btn btn-warning btn-sm" onclick="editCampostReceipt(' + p.id + ')">✏️</button> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="deleteCampostReceipt(' + p.id + ')">❌</button>';
+                    } else {
+                        actionBtn = '<button class="btn btn-gold btn-sm" onclick="generateCampostReceipt(' + p.id + ')">📄 Generate</button>';
+                    }
 
                     var receiptDisplay = hasReceipt
                         ? '<span class="badge badge-paid">' + p.receiptNumber + '</span>'

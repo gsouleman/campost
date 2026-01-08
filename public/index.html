@@ -6295,27 +6295,7 @@
         // ==========================================
 
         // Show RE Tab
-        function showRETab(tabId, btn) {
-            document.querySelectorAll('#realestate .tab-content').forEach(function (t) { t.classList.remove('active'); });
-            document.querySelectorAll('#realestate .tab-btn').forEach(function (b) { b.classList.remove('active'); });
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
-
-            // Load data for specific tabs to populate dropdowns
-            if (tabId === 'reBillsTab') {
-                loadREBills();
-            } else if (tabId === 'rePaymentsTab') {
-                loadREPayments();
-            } else if (tabId === 'reExpensesTab') {
-                loadREExpenses();
-            } else if (tabId === 'reInheritanceTab') {
-                loadREInheritance();
-            } else if (tabId === 'reLedgerTab') {
-                loadRELedgerFull();
-            } else if (tabId === 'reSettingsTab') {
-                loadRESettings();
-            }
-        }
+        // Show RE Tab (Deprecated/Duplicate removed)
 
         // Load Real Estate Data
         function loadRealEstate() {

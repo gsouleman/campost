@@ -1306,8 +1306,8 @@
                 <button class="nav-btn" data-page="family-income">💵 Rental Income</button>
                 <button class="nav-btn" data-page="family-bills">📄 Bills</button>
                 <button class="nav-btn" data-page="family-payments">💳 Payments</button>
+                <button class="nav-btn" onclick="showRETab('reReceiptsTab', this)">🧾 Receipts</button>
                 <button class="tab-btn" onclick="showRETab('reExpensesTab', this)">Expenses</button>
-                <button class="tab-btn" onclick="showRETab('reReceiptsTab', this)">Receipts</button>
                 <button class="tab-btn" onclick="showRETab('reInheritanceTab', this)">Inheritance</button>
                 <button class="nav-btn" data-page="family-ledger">📒 Ledger</button>
                 <button class="nav-btn" data-page="family-export">📥 Export</button>
@@ -7962,17 +7962,25 @@
 
         // ========== RE SETTINGS & EXPORT ==========
         // ========== RE TABS LOGIC ==========
+        // ========== RE TABS LOGIC ==========
         function showRETab(tabId, btn) {
-            // Hide all tabs
+            // Hide all pages first (to act like main navigation)
+            var pages = document.querySelectorAll('.page');
+            pages.forEach(function (p) { p.style.display = 'none'; });
+
+            // Hide all tabs just in case (though they are pages now)
             ['reExpensesTab', 'reReceiptsTab', 'reInheritanceTab'].forEach(function (id) {
                 if (document.getElementById(id)) document.getElementById(id).style.display = 'none';
             });
+
             // Show selected
             if (document.getElementById(tabId)) document.getElementById(tabId).style.display = 'block';
 
-            // Update buttons
-            var buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(function (b) { b.classList.remove('active'); });
+            // Update main navigation buttons
+            var navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(function (b) { b.classList.remove('active'); });
+
+            // Update this button
             if (btn) btn.classList.add('active');
 
             // Load specific data

@@ -1152,7 +1152,8 @@ app.get('/api/payments/:id', async (req, res) => {
             id: row.id, billNumber: row.bill_number, amount: row.amount,
             date: row.payment_date, reference: row.reference,
             period: row.period, year: row.year,
-            receiptNumber: row.receipt_number, receiptDate: row.receipt_date
+            receiptNumber: row.receipt_number, receiptDate: row.receipt_date,
+            paymentMethod: row.payment_method
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1162,11 +1163,11 @@ app.get('/api/payments/:id', async (req, res) => {
 app.post('/api/payments', async (req, res) => {
     const client = await pool.connect();
     try {
-        const { billNumber, amount, date, reference } = req.body;
+        const { billNumber, amount, date, reference, paymentMethod } = req.body;
         await client.query('BEGIN');
         const result = await client.query(
-            'INSERT INTO payments (bill_number, amount, payment_date, reference) VALUES ($1, $2, $3, $4) RETURNING id',
-            [billNumber, amount, date, reference || '']
+            'INSERT INTO payments (bill_number, amount, payment_date, reference, payment_method) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [billNumber, amount, date, reference || '', paymentMethod || 'Cash']
         );
         await client.query(
             `UPDATE bills SET paid_amount = paid_amount + $1, outstanding = amount_due - (paid_amount + $1) WHERE bill_number = $2`,
@@ -2105,7 +2106,8 @@ async function ensureCampostReceiptColumns() {
         await pool.query(`
             ALTER TABLE payments 
             ADD COLUMN IF NOT EXISTS receipt_number VARCHAR(50),
-            ADD COLUMN IF NOT EXISTS receipt_date TIMESTAMP
+            ADD COLUMN IF NOT EXISTS receipt_date TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'Cash'
         `);
         console.log('✓ Receipt columns verified in payments (Campost)');
     } catch (err) {

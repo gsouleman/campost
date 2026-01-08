@@ -5733,7 +5733,7 @@
             });
         }
 
-        // Number to Words Utility
+        // Number to Words Utility (Western Style)
         function numberToWords(amount) {
             var words = new Array();
             words[0] = '';
@@ -5770,6 +5770,7 @@
             var number = atemp[0].split(",").join("");
             var n_length = number.length;
             var words_string = "";
+
             if (n_length <= 9) {
                 var n_array = new Array(0, 0, 0, 0, 0, 0, 0, 0, 0);
                 var received_n_array = new Array();
@@ -5798,23 +5799,39 @@
                         words_string += words[value] + " ";
                     }
                     if ((i == 1 && value != 0) || (i == 0 && value != 0 && n_array[i + 1] == 0)) {
-                        words_string += "Crores ";
+                        words_string += "Million ";
                     }
                     if ((i == 3 && value != 0) || (i == 2 && value != 0 && n_array[i + 1] == 0)) {
-                        words_string += "Lakhs ";
+                        words_string += "Hundred "; // Logic adjustment for hundreds of thousands needed, simplified below for cleaner western format
                     }
-                    if ((i == 5 && value != 0) || (i == 4 && value != 0 && n_array[i + 1] == 0)) {
-                        words_string += "Thousand ";
-                    }
-                    if (i == 6 && value != 0 && (n_array[i + 1] != 0 && n_array[i + 2] != 0)) {
-                        words_string += "Hundred and ";
-                    } else if (i == 6 && value != 0) {
-                        words_string += "Hundred ";
-                    }
+                    // Simplified logic for standard millions/thousands
+                    // Better approach for standard western numbering:
                 }
-                words_string = words_string.split("  ").join(" ");
+                // Re-implementation for robust Western numbering
+                var num = parseInt(number);
+                if (num === 0) return "Zero";
+
+                function belowThousand(n) {
+                    if (n === 0) return "";
+                    else if (n < 20) return words[n] + " ";
+                    else if (n < 100) return words[Math.floor(n / 10) * 10] + " " + belowThousand(n % 10);
+                    else return words[Math.floor(n / 100)] + " Hundred " + belowThousand(n % 100);
+                }
+
+                words_string = "";
+                if (Math.floor(num / 1000000) > 0) {
+                    words_string += belowThousand(Math.floor(num / 1000000)) + "Million ";
+                    num %= 1000000;
+                }
+                if (Math.floor(num / 1000) > 0) {
+                    words_string += belowThousand(Math.floor(num / 1000)) + "Thousand ";
+                    num %= 1000;
+                }
+                if (num > 0) {
+                    words_string += belowThousand(num);
+                }
             }
-            return words_string;
+            return words_string.trim();
         }
 
         function printCampostReceipt(paymentId) {
@@ -5871,10 +5888,11 @@
 
                     <!-- Signature -->
                     <div style="margin-top: 50px; text-align: right;">
-                        <img src="images/signature.png" style="height: 60px; margin-bottom: -10px; display: inline-block;" alt="Signature">
-                        <div style="border-top: 1px solid #718096; width: 200px; margin-left: auto; padding-top: 10px;">
-                            <div style="font-weight: bold; color: #2d3748;">GHOUENZEN SOULEMANOU</div>
-                            <div style="font-size: 12px; color: #718096; text-transform: uppercase;">Authorized Signature</div>
+                        <div style="width: 200px; margin-left: auto; text-align: center;">
+                            <img src="images/signature.png" style="height: 60px; margin-bottom: 5px; display: inline-block;" alt="Signature">
+                            <div style="border-top: 1px solid #718096; padding-top: 5px;">
+                                <div style="font-size: 12px; color: #718096; text-transform: uppercase;">Authorized Signature</div>
+                            </div>
                         </div>
                     </div>
 
@@ -5891,6 +5909,78 @@
                 w.document.close();
                 // w.print();
             });
+        }
+
+        // Receipt Management
+        function editCampostReceipt(paymentId) {
+            api('/payments/' + paymentId).then(function (p) {
+                var modal = document.getElementById('receiptEditModal');
+                if (!modal) {
+                    // Create modal if not exists
+                    modal = document.createElement('div');
+                    modal.id = 'receiptEditModal';
+                    modal.className = 'modal';
+                    modal.innerHTML = `
+                        <div class="modal-content" style="max-width: 400px;">
+                            <div class="modal-header"><h3>Edit Receipt</h3><button class="close-btn" onclick="closeReceiptModal()">×</button></div>
+                            <div class="modal-body">
+                                <input type="hidden" id="editReceiptId">
+                                <div class="form-group">
+                                    <label>Receipt Date</label>
+                                    <input type="date" id="editReceiptDate">
+                                </div>
+                                <div class="form-group">
+                                    <label>Payment Method</label>
+                                    <select id="editReceiptMethod">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Mobile Money">Mobile Money</option>
+                                        <option value="Bank Transfer">Bank Transfer</option>
+                                    </select>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-success" onclick="saveCampostReceipt()">💾 Save Changes</button>
+                                </div>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(modal);
+                }
+
+                // Populate
+                document.getElementById('editReceiptId').value = paymentId;
+                document.getElementById('editReceiptDate').value = p.receiptDate ? p.receiptDate.split('T')[0] : p.date.split('T')[0];
+                document.getElementById('editReceiptMethod').value = p.paymentMethod || 'Cash';
+
+                modal.classList.add('active');
+            });
+        }
+
+        function saveCampostReceipt() {
+            var id = document.getElementById('editReceiptId').value;
+            var date = document.getElementById('editReceiptDate').value;
+            var method = document.getElementById('editReceiptMethod').value;
+
+            api('/receipts/' + id, {
+                method: 'PUT',
+                body: JSON.stringify({ date: date, paymentMethod: method })
+            }).then(function () {
+                showAlert('Receipt Updated');
+                closeReceiptModal();
+                loadCampostReceipts();
+            });
+        }
+
+        function deleteCampostReceipt(paymentId) {
+            if (!confirm('Are you sure you want to VOID this receipt? This will remove the receipt number.')) return;
+
+            api('/receipts/' + paymentId, { method: 'DELETE' }).then(function () {
+                showAlert('Receipt Voided');
+                loadCampostReceipts();
+            });
+        }
+
+        function closeReceiptModal() {
+            var modal = document.getElementById('receiptEditModal');
+            if (modal) modal.classList.remove('active');
         }
 
         // Inheritance

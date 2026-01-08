@@ -1139,6 +1139,35 @@ app.post('/api/receipts/generate', async (req, res) => {
     }
 });
 
+// Update receipt details
+app.put('/api/receipts/:id', async (req, res) => {
+    try {
+        const { date, paymentMethod } = req.body;
+        const result = await pool.query(
+            'UPDATE payments SET receipt_date = $1, payment_method = $2 WHERE id = $3 RETURNING *',
+            [date, paymentMethod, req.params.id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Void receipt (delete receipt number)
+app.delete('/api/receipts/:id', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'UPDATE payments SET receipt_number = NULL, receipt_date = NULL WHERE id = $1 RETURNING *',
+            [req.params.id]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
+        res.json({ message: 'Receipt voided', payment: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/payments/:id', async (req, res) => {
     try {
         const result = await pool.query(`

@@ -1151,7 +1151,8 @@ app.get('/api/payments/:id', async (req, res) => {
         res.json({
             id: row.id, billNumber: row.bill_number, amount: row.amount,
             date: row.payment_date, reference: row.reference,
-            period: row.period, year: row.year
+            period: row.period, year: row.year,
+            receiptNumber: row.receipt_number, receiptDate: row.receipt_date
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

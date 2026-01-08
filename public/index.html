@@ -5967,10 +5967,16 @@
             api('/receipts/' + id, {
                 method: 'PUT',
                 body: JSON.stringify({ date: date, paymentMethod: method })
-            }).then(function () {
-                showAlert('Receipt Updated');
-                closeReceiptModal();
-                loadCampostReceipts();
+            }).then(function (res) {
+                if (res.error) {
+                    showAlert(res.error, 'error');
+                } else {
+                    showAlert('Receipt Updated');
+                    closeReceiptModal();
+                    loadCampostReceipts();
+                }
+            }).catch(function (err) {
+                showAlert('Error saving receipt: ' + err, 'error');
             });
         }
 

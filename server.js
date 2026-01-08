@@ -1528,16 +1528,72 @@ app.delete('/api/re/bills/:id', async (req, res) => {
 });
 
 // ============== RE PAYMENTS API ==============
+// Migration: Ensure receipt columns exist
+async function ensureReceiptColumns() {
+    try {
+        await pool.query(`
+            ALTER TABLE re_payments 
+            ADD COLUMN IF NOT EXISTS receipt_number VARCHAR(50),
+            ADD COLUMN IF NOT EXISTS receipt_date TIMESTAMP
+        `);
+        console.log('✓ Receipt columns verified in re_payments');
+    } catch (err) {
+        console.error('Migration Error:', err.message);
+    }
+}
+// Run migration on startup
+ensureReceiptColumns();
+
 app.get('/api/re/payments', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT pay.*, b.tenant_name, p.name as property_name 
+            SELECT pay.*, b.tenant_name, p.name as property_name, pay.receipt_number 
             FROM re_payments pay 
             LEFT JOIN re_bills b ON pay.bill_id = b.id 
             LEFT JOIN properties p ON b.property_id = p.id 
             ORDER BY pay.payment_date DESC
         `);
         res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Generate Receipt Endpoint
+app.post('/api/re/receipts/generate', async (req, res) => {
+    try {
+        const { paymentId, receiptDate } = req.body;
+
+        // 1. Verify Payment
+        const check = await pool.query('SELECT * FROM re_payments WHERE id = $1', [paymentId]);
+        if (check.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
+        if (check.rows[0].receipt_number) return res.status(400).json({ error: 'Receipt already exists' });
+
+        // 2. Generate Receipt Number (Simple Increment for now, can be UUID or Format)
+        // Format: REC-[YEAR]-[0000]
+        const year = new Date().getFullYear();
+        const countRes = await pool.query('SELECT COUNT(*) FROM re_payments WHERE receipt_number IS NOT NULL');
+        const nextNum = parseInt(countRes.rows[0].count) + 1;
+        const receiptNumber = `REC-${year}-${String(nextNum).padStart(4, '0')}`;
+        const actualDate = receiptDate || new Date();
+
+        // 3. Update Payment
+        const result = await pool.query(
+            'UPDATE re_payments SET receipt_number = $1, receipt_date = $2 WHERE id = $3 RETURNING *',
+            [receiptNumber, actualDate, paymentId]
+        );
+
+        // Fetch full details for return
+        const fullDetails = await pool.query(`
+            SELECT pay.*, b.tenant_name, p.name as property_name, p.location as property_location, 
+                   b.period, b.year 
+            FROM re_payments pay 
+            LEFT JOIN re_bills b ON pay.bill_id = b.id 
+            LEFT JOIN properties p ON b.property_id = p.id 
+            WHERE pay.id = $1
+        `, [paymentId]);
+
+        res.json(fullDetails.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

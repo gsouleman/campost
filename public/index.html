@@ -5924,10 +5924,10 @@
                     // Create modal if not exists
                     modal = document.createElement('div');
                     modal.id = 'receiptEditModal';
-                    modal.className = 'modal';
+                    modal.className = 'modal-overlay';
                     modal.innerHTML = `
-                        <div class="modal-content" style="max-width: 400px;">
-                            <div class="modal-header"><h3>Edit Receipt</h3><button class="close-btn" onclick="closeReceiptModal()">×</button></div>
+                        <div class="modal" style="max-width: 400px;">
+                            <div class="modal-header"><h3>Edit Receipt</h3><button class="modal-close" onclick="closeReceiptModal()">×</button></div>
                             <div class="modal-body">
                                 <input type="hidden" id="editReceiptId">
                                 <div class="form-group">

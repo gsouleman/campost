@@ -6580,22 +6580,81 @@
         function printElement(sourceId) {
             var content = document.getElementById(sourceId).innerHTML;
 
+            // Extract the amount to distribute if present
+            var amountDistHeader = '';
+            var amountEl = document.getElementById('inhAmt');
+            if (amountEl && sourceId === 'campost-heir-shares-card') {
+                // We already have the highlight-box in the content now due to previous step, 
+                // but let's make sure it looks good in print or add a specific header if needed.
+            }
+
             // Create a clean print window
             var w = window.open('', '_blank');
-            w.document.write('<html><head><title>Print Summary</title>');
+            w.document.write('<!DOCTYPE html><html><head><title>Print Summary</title>');
             w.document.write('<style>');
-            w.document.write('body { font-family: Arial, sans-serif; padding: 20px; color: black; background: white; }');
-            w.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; }');
-            w.document.write('th, td { border: 1px solid #ddd; padding: 8px; text-align: left; color: black !important; }');
-            w.document.write('th { background-color: #f2f2f2; font-weight: bold; }');
-            w.document.write('.card-header { display: none; }'); // Hide header buttons in print
-            w.document.write('.no-print { display: none !important; }'); // Hide buttons from content
-            w.document.write('h2, h3, h4, span { color: black !important; }');
+            w.document.write('@import url("https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap");');
+            w.document.write('body { font-family: "Segoe UI", Arial, sans-serif; padding: 40px; color: #333; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+
+            // Header Styles
+            w.document.write('.print-header { border-bottom: 2px solid #2c5282; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }');
+            w.document.write('.logo-area h1 { margin: 0; font-size: 24px; color: #2c5282; text-transform: uppercase; letter-spacing: 1px; }');
+            w.document.write('.logo-area p { margin: 5px 0 0; font-size: 13px; color: #718096; }');
+            w.document.write('.doc-title { text-align: right; }');
+            w.document.write('.doc-title h2 { margin: 0; font-size: 28px; color: #d69e2e; font-weight: 700; }');
+            w.document.write('.doc-title p { margin: 0; font-size: 14px; color: #a0aec0; }');
+
+            // Table Styles
+            w.document.write('table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 12px; border: 1px solid #e2e8f0; }');
+            w.document.write('thead { background-color: #2c5282; color: white; }');
+            w.document.write('th { padding: 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #2a4365; }');
+            w.document.write('td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; color: #4a5568; }');
+            w.document.write('tr:nth-child(even) { background-color: #f7fafc; }');
+            w.document.write('tr:hover { background-color: #ebf8ff; }');
+
+            // Amount Box in Print
+            w.document.write('.highlight-box { background: #fffaf0; border-left: 4px solid #d69e2e; padding: 15px; margin-bottom: 25px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }');
+            w.document.write('.highlight-box p { margin: 0 0 5px; font-size: 12px; color: #744210; text-transform: uppercase; font-weight: 600; }');
+            w.document.write('.highlight-box h3 { margin: 0; font-size: 20px; color: #975a16; }');
+
+            // Utility
+            w.document.write('.card-header { display: none; }'); // Hide default card header
+            w.document.write('.no-print { display: none !important; }');
+            w.document.write('.admin-only { display: none !important; }'); // Ensure admin columns are hidden
+
+            // Footer
+            w.document.write('.print-footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: space-between; font-size: 10px; color: #a0aec0; }');
+            w.document.write('.signature-area { margin-top: 60px; display: flex; justify-content: flex-end; gap: 40px; }');
+            w.document.write('.sig-line { width: 200px; border-top: 1px solid #cbd5e0; padding-top: 10px; text-align: center; color: #4a5568; font-size: 11px; font-weight: 600; }');
+
             w.document.write('</style>');
             w.document.write('</head><body>');
 
+            // Header Section
+            w.document.write('<div class="print-header">');
+            w.document.write('<div class="logo-area">');
+            w.document.write('<h1>Campost Mankon</h1>');
+            w.document.write('<p>B.P 36 Mankon-Bamenda | Tel: 675299868</p>');
+            w.document.write('<p>Estate Administrator: GHOUENZEN Soulemanou</p>');
+            w.document.write('</div>');
+            w.document.write('<div class="doc-title">');
+            w.document.write('<h2>HEIR SHARES</h2>');
+            w.document.write('<p>Beneficiaries Distribution Summary</p>');
+            w.document.write('</div>');
+            w.document.write('</div>');
+
             w.document.write('<div class="print-container">');
             w.document.write(content);
+            w.document.write('</div>');
+
+            // Signatures
+            w.document.write('<div class="signature-area">');
+            w.document.write('<div><div style="height:40px;"></div><div class="sig-line">Administrator Signature</div></div>');
+            w.document.write('</div>');
+
+            // Footer Section
+            w.document.write('<div class="print-footer">');
+            w.document.write('<div>Generated on: ' + new Date().toLocaleString() + '</div>');
+            w.document.write('<div>Campost Estate Management System</div>');
             w.document.write('</div>');
 
             w.document.write('</body></html>');

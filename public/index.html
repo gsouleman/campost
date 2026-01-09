@@ -2165,6 +2165,10 @@
                     Print
                     Summary</button></div>
             <div class="card-body">
+                <div class="highlight-box" style="margin-bottom: 15px;">
+                    <p>Amount to Distribute (from Inheritance Share expenses)</p>
+                    <h3 id="inhAmtTable">0 XAF</h3>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -6005,6 +6009,7 @@
                     // Get inheritance calculation from backend (which now handles filtering)
                     api('/inheritance/calculate').then(function (d) {
                         document.getElementById('inhAmt').textContent = fmt(d.inheritanceAmount) + ' XAF';
+                        if (document.getElementById('inhAmtTable')) document.getElementById('inhAmtTable').textContent = fmt(d.inheritanceAmount) + ' XAF';
                         document.getElementById('inhPaid').textContent = fmt(d.totalBillsPaid);
                         document.getElementById('inhExp').textContent = fmt(d.totalExpenses);
                         document.getElementById('inhRes').textContent = fmt(d.reserveFunds);

@@ -586,51 +586,45 @@ async function initializeDefaultData() {
         }
     }
 
-}
-
-
-// Initialize default users - only if table is empty, otherwise ensure admin exists
-const userResult = await pool.query('SELECT COUNT(*) FROM app_users');
-if (parseInt(userResult.rows[0].count) === 0) {
-    // Admin user - must change password on first login
-    await pool.query(
-        'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        ['admin', 'admin', 'Administrator', 'admin@example.com', 'admin', true, true]
-    );
-    // Standard user - must change password on first login
-    await pool.query(
-        'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        ['user', '1234', 'Standard User', 'user@example.com', 'user', true, true]
-    );
-    // Guest user - must change password on first login
-    await pool.query(
-        'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        ['guest', '1234', 'Guest User', 'guest@example.com', 'guest', true, true]
-    );
-} else {
-    // Ensure admin user exists (in case it was deleted)
-    const adminExists = await pool.query("SELECT id FROM app_users WHERE username = 'admin'");
-    if (adminExists.rows.length === 0) {
+    // Initialize default users - only if table is empty, otherwise ensure admin exists
+    const userResult = await pool.query('SELECT COUNT(*) FROM app_users');
+    if (parseInt(userResult.rows[0].count) === 0) {
+        // Admin user - must change password on first login
         await pool.query(
             'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
             ['admin', 'admin', 'Administrator', 'admin@example.com', 'admin', true, true]
         );
+        // Standard user - must change password on first login
+        await pool.query(
+            'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            ['user', '1234', 'Standard User', 'user@example.com', 'user', true, true]
+        );
+        // Guest user - must change password on first login
+        await pool.query(
+            'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            ['guest', '1234', 'Guest User', 'guest@example.com', 'guest', true, true]
+        );
+    } else {
+        // Ensure admin user exists (in case it was deleted)
+        const adminExists = await pool.query("SELECT id FROM app_users WHERE username = 'admin'");
+        if (adminExists.rows.length === 0) {
+            await pool.query(
+                'INSERT INTO app_users (username, password, full_name, email, role, active, must_change_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                ['admin', 'admin', 'Administrator', 'admin@example.com', 'admin', true, true]
+            );
+        }
     }
-}
 
+    const campostSettingsResult = await pool.query('SELECT COUNT(*) FROM campost_settings');
+    if (parseInt(campostSettingsResult.rows[0].count) === 0) {
+        await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('currency', 'XAF') ON CONFLICT (setting_key) DO NOTHING");
+        await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('reservedFundsPercent', '10') ON CONFLICT (setting_key) DO NOTHING");
     }
 
-
-const campostSettingsResult = await pool.query('SELECT COUNT(*) FROM campost_settings');
-if (parseInt(campostSettingsResult.rows[0].count) === 0) {
-    await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('currency', 'XAF') ON CONFLICT (setting_key) DO NOTHING");
-    await pool.query("INSERT INTO campost_settings (setting_key, setting_value) VALUES ('reservedFundsPercent', '10') ON CONFLICT (setting_key) DO NOTHING");
-}
-
-const billResult = await pool.query('SELECT COUNT(*) FROM bills');
-if (parseInt(billResult.rows[0].count) === 0) {
-    await initializeDefaultBills();
-}
+    const billResult = await pool.query('SELECT COUNT(*) FROM bills');
+    if (parseInt(billResult.rows[0].count) === 0) {
+        await initializeDefaultBills();
+    }
 }
 
 async function initializeDefaultBills() {

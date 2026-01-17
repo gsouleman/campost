@@ -3326,25 +3326,57 @@
 
         // Check for existing session on page load
         function checkExistingSession() {
-            initializeUsers();
+            try {
+                initializeUsers();
+            } catch (e) {
+                console.error('Error initializing users:', e);
+            }
 
-            var session = JSON.parse(localStorage.getItem('currentSession') || 'null');
+            var session = null;
+            try {
+                var sessionStr = localStorage.getItem('currentSession');
+                if (sessionStr && sessionStr !== 'undefined') {
+                    session = JSON.parse(sessionStr);
+                }
+            } catch (e) {
+                console.error('Error parsing session:', e);
+                localStorage.removeItem('currentSession');
+            }
+
             if (session && session.userId) {
                 // Verify session with API - fetch user details
+                // Set a timeout to show login if API takes too long
+                var loginTimeout = setTimeout(function () {
+                    document.getElementById('loginContainer').classList.add('active');
+                }, 5000);
+
                 api('/users').then(function (users) {
-                    var user = users.find(function (u) { return u.id === session.userId && u.active; });
-                    if (user) {
-                        currentUser = user;
-                        enterMainApp();
-                    } else {
-                        // Invalid session, clear it
-                        localStorage.removeItem('currentSession');
+                    clearTimeout(loginTimeout);
+                    try {
+                        var user = users.find(function (u) { return u.id === session.userId && u.active; });
+                        if (user) {
+                            currentUser = user;
+                            enterMainApp();
+                        } else {
+                            // Invalid session, clear it
+                            localStorage.removeItem('currentSession');
+                            document.getElementById('loginContainer').classList.add('active');
+                        }
+                    } catch (err) {
+                        console.error('Error processing user data:', err);
                         document.getElementById('loginContainer').classList.add('active');
                     }
-                }).catch(function () {
+                }).catch(function (err) {
+                    clearTimeout(loginTimeout);
+                    console.error('Session check API error:', err);
                     // API error, show login
-                    localStorage.removeItem('currentSession');
+                    // Don't auto-clear session on network error, but show login for now
+                    // localStorage.removeItem('currentSession'); 
                     document.getElementById('loginContainer').classList.add('active');
+                    if (document.getElementById('loginError')) {
+                        document.getElementById('loginError').textContent = 'Connection to server failed. Please try again.';
+                        document.getElementById('loginError').classList.add('show');
+                    }
                 });
                 return;
             }
@@ -5363,11 +5395,24 @@
 
             // Initialize - check for existing session or show login
             function init() {
-                // Hide main app initially
-                document.getElementById('mainApp').style.display = 'none';
+                try {
+                    // Hide main app initially
+                    var app = document.getElementById('mainApp');
+                    if (app) app.style.display = 'none';
 
-                // Check for existing session
-                checkExistingSession();
+                    // Check for existing session
+                    if (typeof checkExistingSession === 'function') {
+                        checkExistingSession();
+                    } else {
+                        console.error('checkExistingSession not defined');
+                        var login = document.getElementById('loginContainer');
+                        if (login) login.classList.add('active');
+                    }
+                } catch (e) {
+                    console.error('Init error:', e);
+                    var login = document.getElementById('loginContainer');
+                    if (login) login.classList.add('active');
+                }
             }
 
             init();

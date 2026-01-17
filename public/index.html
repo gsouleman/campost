@@ -3345,9 +3345,9 @@
 
             if (session && session.userId) {
                 // Verify session with API - fetch user details
-                // Set a timeout to show login if API takes too long
                 var loginTimeout = setTimeout(function () {
-                    document.getElementById('loginContainer').classList.add('active');
+                    var el = document.getElementById('loginContainer');
+                    if (el) el.classList.add('active');
                 }, 5000);
 
                 api('/users').then(function (users) {
@@ -3358,30 +3358,31 @@
                             currentUser = user;
                             enterMainApp();
                         } else {
-                            // Invalid session, clear it
                             localStorage.removeItem('currentSession');
-                            document.getElementById('loginContainer').classList.add('active');
+                            var el = document.getElementById('loginContainer');
+                            if (el) el.classList.add('active');
                         }
                     } catch (err) {
-                        console.error('Error processing user data:', err);
-                        document.getElementById('loginContainer').classList.add('active');
+                        console.error('Session processing error:', err);
+                        var el = document.getElementById('loginContainer');
+                        if (el) el.classList.add('active');
                     }
                 }).catch(function (err) {
                     clearTimeout(loginTimeout);
-                    console.error('Session check API error:', err);
-                    // API error, show login
-                    // Don't auto-clear session on network error, but show login for now
-                    // localStorage.removeItem('currentSession'); 
-                    document.getElementById('loginContainer').classList.add('active');
-                    if (document.getElementById('loginError')) {
-                        document.getElementById('loginError').textContent = 'Connection to server failed. Please try again.';
-                        document.getElementById('loginError').classList.add('show');
+                    console.error('Session API error:', err);
+                    var el = document.getElementById('loginContainer');
+                    if (el) el.classList.add('active');
+                    var errEl = document.getElementById('loginError');
+                    if (errEl) {
+                        errEl.textContent = 'Connection to server failed.';
+                        errEl.classList.add('show');
                     }
                 });
                 return;
             }
             // No valid session, show login
-            document.getElementById('loginContainer').classList.add('active');
+            var el = document.getElementById('loginContainer');
+            if (el) el.classList.add('active');
         }
 
         // ==================== END AUTHENTICATION SYSTEM ====================
@@ -5223,199 +5224,200 @@
                 });
 
             }
+        }
 
-            function exportAllPDF() {
-                var jsPDF = window.jspdf.jsPDF;
-                var doc = new jsPDF();
-                Promise.all([api('/export/all'), api('/inheritance/calculate')]).then(function (results) {
-                    var all = results[0];
-                    var inh = results[1];
-                    doc.setFontSize(18);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('CAMPOST MANKON', 105, 15, { align: 'center' });
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868', 105, 22, { align: 'center' });
-                    doc.line(20, 25, 190, 25);
-                    doc.setFontSize(11);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('FINANCIAL SUMMARY', 20, 33);
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text('Bills Paid: ' + fmt(all.summary.totalBillsPaid) + ' | Expenses: ' + fmt(all.summary.totalExpenses) + ' | Reserve: ' + fmt(all.summary.reserveFunds), 20, 40);
-                    doc.text('BILLS', 20, 50);
-                    doc.autoTable({ startY: 53, head: [['Bill #', 'Period', 'Year', 'Due', 'Paid', 'Outstanding']], body: all.bills.map(function (b) { return [b.bill_number, b.period, b.year, fmt(b.amount_due), fmt(b.paid_amount), fmt(b.outstanding)]; }), styles: { fontSize: 7 } });
-                    doc.addPage();
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('PAYMENTS', 20, 15);
-                    doc.autoTable({ startY: 18, head: [['Date', 'Bill', 'Amount', 'Reference']], body: all.payments.map(function (p) { return [p.payment_date ? p.payment_date.split('T')[0] : '', p.bill_number, fmt(p.amount), p.reference || '']; }), styles: { fontSize: 7 } });
-                    var y = doc.lastAutoTable.finalY + 10;
-                    doc.text('EXPENSES', 20, y);
-                    doc.autoTable({ startY: y + 3, head: [['Date', 'Description', 'Category', 'Amount']], body: all.expenses.map(function (e) { return [e.expense_date ? e.expense_date.split('T')[0] : '', e.description ? e.description.substring(0, 25) : '', e.category_name || '', fmt(e.amount)]; }), styles: { fontSize: 7 } });
-                    doc.addPage();
-                    doc.text('INHERITANCE (' + fmt(inh.inheritanceAmount) + ' XAF)', 20, 15);
-                    doc.autoTable({ startY: 20, head: [['Name', 'Relationship', 'Group', 'Share (%)', 'Amount']], body: inh.heirs.map(function (h) { return [h.name, h.relationship, h.heir_group, (h.sharePercentage || 0) + '%', fmt(Math.round(h.shareAmount))]; }), styles: { fontSize: 7 } });
-                    doc.save('campost_complete_report.pdf');
-                    showAlert('Complete PDF exported!');
-                });
+        function exportAllPDF() {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            Promise.all([api('/export/all'), api('/inheritance/calculate')]).then(function (results) {
+                var all = results[0];
+                var inh = results[1];
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.text('CAMPOST MANKON', 105, 15, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('GHOUENZEN Soulemanou | B.P 36 Mankon-Bamenda | Tel: 675299868', 105, 22, { align: 'center' });
+                doc.line(20, 25, 190, 25);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.text('FINANCIAL SUMMARY', 20, 33);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Bills Paid: ' + fmt(all.summary.totalBillsPaid) + ' | Expenses: ' + fmt(all.summary.totalExpenses) + ' | Reserve: ' + fmt(all.summary.reserveFunds), 20, 40);
+                doc.text('BILLS', 20, 50);
+                doc.autoTable({ startY: 53, head: [['Bill #', 'Period', 'Year', 'Due', 'Paid', 'Outstanding']], body: all.bills.map(function (b) { return [b.bill_number, b.period, b.year, fmt(b.amount_due), fmt(b.paid_amount), fmt(b.outstanding)]; }), styles: { fontSize: 7 } });
+                doc.addPage();
+                doc.setFont('helvetica', 'bold');
+                doc.text('PAYMENTS', 20, 15);
+                doc.autoTable({ startY: 18, head: [['Date', 'Bill', 'Amount', 'Reference']], body: all.payments.map(function (p) { return [p.payment_date ? p.payment_date.split('T')[0] : '', p.bill_number, fmt(p.amount), p.reference || '']; }), styles: { fontSize: 7 } });
+                var y = doc.lastAutoTable.finalY + 10;
+                doc.text('EXPENSES', 20, y);
+                doc.autoTable({ startY: y + 3, head: [['Date', 'Description', 'Category', 'Amount']], body: all.expenses.map(function (e) { return [e.expense_date ? e.expense_date.split('T')[0] : '', e.description ? e.description.substring(0, 25) : '', e.category_name || '', fmt(e.amount)]; }), styles: { fontSize: 7 } });
+                doc.addPage();
+                doc.text('INHERITANCE (' + fmt(inh.inheritanceAmount) + ' XAF)', 20, 15);
+                doc.autoTable({ startY: 20, head: [['Name', 'Relationship', 'Group', 'Share (%)', 'Amount']], body: inh.heirs.map(function (h) { return [h.name, h.relationship, h.heir_group, (h.sharePercentage || 0) + '%', fmt(Math.round(h.shareAmount))]; }), styles: { fontSize: 7 } });
+                doc.save('campost_complete_report.pdf');
+                showAlert('Complete PDF exported!');
+            });
+        }
+
+        function download(content, filename) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([content], { type: 'text/csv' }));
+            a.download = filename;
+            a.click();
+            showAlert('Exported!');
+        }
+
+        // Print specific element by cloning to temp page
+        // Print specific element by opening a new window with clean styles
+        function printElement(sourceId) {
+            var content = document.getElementById(sourceId).innerHTML;
+
+            // Extract the amount to distribute if present
+            var amountDistHeader = '';
+            var amountEl = document.getElementById('inhAmt');
+            if (amountEl && sourceId === 'campost-heir-shares-card') {
+                // We already have the highlight-box in the content now due to previous step, 
+                // but let's make sure it looks good in print or add a specific header if needed.
             }
 
-            function download(content, filename) {
-                var a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([content], { type: 'text/csv' }));
-                a.download = filename;
-                a.click();
-                showAlert('Exported!');
-            }
+            // Create a clean print window
+            var w = window.open('', '_blank');
+            w.document.write('<!DOCTYPE html><html><head><title>Print Summary</title>');
+            w.document.write('<style>');
+            w.document.write('@import url("https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap");');
+            w.document.write('body { font-family: "Segoe UI", Arial, sans-serif; padding: 40px; color: #333; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
 
-            // Print specific element by cloning to temp page
-            // Print specific element by opening a new window with clean styles
-            function printElement(sourceId) {
-                var content = document.getElementById(sourceId).innerHTML;
+            // Header Styles
+            w.document.write('.print-header { border-bottom: 2px solid #2c5282; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }');
+            w.document.write('.logo-area h1 { margin: 0; font-size: 24px; color: #2c5282; text-transform: uppercase; letter-spacing: 1px; }');
+            w.document.write('.logo-area p { margin: 5px 0 0; font-size: 13px; color: #718096; }');
+            w.document.write('.doc-title { text-align: right; }');
+            w.document.write('.doc-title h2 { margin: 0; font-size: 28px; color: #d69e2e; font-weight: 700; }');
+            w.document.write('.doc-title p { margin: 0; font-size: 14px; color: #a0aec0; }');
 
-                // Extract the amount to distribute if present
-                var amountDistHeader = '';
-                var amountEl = document.getElementById('inhAmt');
-                if (amountEl && sourceId === 'campost-heir-shares-card') {
-                    // We already have the highlight-box in the content now due to previous step, 
-                    // but let's make sure it looks good in print or add a specific header if needed.
-                }
+            // Table Styles
+            w.document.write('table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 12px; border: 1px solid #e2e8f0; }');
+            w.document.write('thead { background-color: #2c5282; color: white; }');
+            w.document.write('th { padding: 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #2a4365; }');
+            w.document.write('td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; color: #4a5568; }');
+            w.document.write('tr:nth-child(even) { background-color: #f7fafc; }');
+            w.document.write('tr:hover { background-color: #ebf8ff; }');
 
-                // Create a clean print window
-                var w = window.open('', '_blank');
-                w.document.write('<!DOCTYPE html><html><head><title>Print Summary</title>');
-                w.document.write('<style>');
-                w.document.write('@import url("https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap");');
-                w.document.write('body { font-family: "Segoe UI", Arial, sans-serif; padding: 40px; color: #333; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+            // Amount Box in Print
+            w.document.write('.highlight-box { background: #fffaf0; border-left: 4px solid #d69e2e; padding: 15px; margin-bottom: 25px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }');
+            w.document.write('.highlight-box p { margin: 0 0 5px; font-size: 12px; color: #744210; text-transform: uppercase; font-weight: 600; }');
+            w.document.write('.highlight-box h3 { margin: 0; font-size: 20px; color: #975a16; }');
 
-                // Header Styles
-                w.document.write('.print-header { border-bottom: 2px solid #2c5282; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }');
-                w.document.write('.logo-area h1 { margin: 0; font-size: 24px; color: #2c5282; text-transform: uppercase; letter-spacing: 1px; }');
-                w.document.write('.logo-area p { margin: 5px 0 0; font-size: 13px; color: #718096; }');
-                w.document.write('.doc-title { text-align: right; }');
-                w.document.write('.doc-title h2 { margin: 0; font-size: 28px; color: #d69e2e; font-weight: 700; }');
-                w.document.write('.doc-title p { margin: 0; font-size: 14px; color: #a0aec0; }');
+            // Utility
+            w.document.write('.card-header { display: none; }'); // Hide default card header
+            w.document.write('.no-print { display: none !important; }');
+            w.document.write('.admin-only { display: none !important; }'); // Ensure admin columns are hidden
 
-                // Table Styles
-                w.document.write('table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 12px; border: 1px solid #e2e8f0; }');
-                w.document.write('thead { background-color: #2c5282; color: white; }');
-                w.document.write('th { padding: 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #2a4365; }');
-                w.document.write('td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; color: #4a5568; }');
-                w.document.write('tr:nth-child(even) { background-color: #f7fafc; }');
-                w.document.write('tr:hover { background-color: #ebf8ff; }');
+            // Footer
+            w.document.write('.print-footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: space-between; font-size: 10px; color: #a0aec0; }');
+            w.document.write('.signature-area { margin-top: 60px; display: flex; justify-content: flex-end; gap: 40px; }');
+            w.document.write('.sig-line { width: 200px; border-top: 1px solid #cbd5e0; padding-top: 10px; text-align: center; color: #4a5568; font-size: 11px; font-weight: 600; }');
 
-                // Amount Box in Print
-                w.document.write('.highlight-box { background: #fffaf0; border-left: 4px solid #d69e2e; padding: 15px; margin-bottom: 25px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }');
-                w.document.write('.highlight-box p { margin: 0 0 5px; font-size: 12px; color: #744210; text-transform: uppercase; font-weight: 600; }');
-                w.document.write('.highlight-box h3 { margin: 0; font-size: 20px; color: #975a16; }');
+            w.document.write('</style>');
+            w.document.write('</head><body>');
 
-                // Utility
-                w.document.write('.card-header { display: none; }'); // Hide default card header
-                w.document.write('.no-print { display: none !important; }');
-                w.document.write('.admin-only { display: none !important; }'); // Ensure admin columns are hidden
+            // Header Section
+            w.document.write('<div class="print-header">');
+            w.document.write('<div class="logo-area">');
+            w.document.write('<h1>Campost Mankon</h1>');
+            w.document.write('<p>B.P 36 Mankon-Bamenda | Tel: 675299868</p>');
+            w.document.write('<p>Estate Administrator: GHOUENZEN Soulemanou</p>');
+            w.document.write('</div>');
+            w.document.write('<div class="doc-title">');
+            w.document.write('<h2>HEIR SHARES</h2>');
+            w.document.write('<p>Beneficiaries Distribution Summary</p>');
+            w.document.write('</div>');
+            w.document.write('</div>');
 
-                // Footer
-                w.document.write('.print-footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: space-between; font-size: 10px; color: #a0aec0; }');
-                w.document.write('.signature-area { margin-top: 60px; display: flex; justify-content: flex-end; gap: 40px; }');
-                w.document.write('.sig-line { width: 200px; border-top: 1px solid #cbd5e0; padding-top: 10px; text-align: center; color: #4a5568; font-size: 11px; font-weight: 600; }');
+            w.document.write('<div class="print-container">');
+            w.document.write(content);
+            w.document.write('</div>');
 
-                w.document.write('</style>');
-                w.document.write('</head><body>');
+            // Signatures
+            w.document.write('<div class="signature-area">');
+            w.document.write('<div><div style="height:40px;"></div><div class="sig-line">Administrator Signature</div></div>');
+            w.document.write('</div>');
 
-                // Header Section
-                w.document.write('<div class="print-header">');
-                w.document.write('<div class="logo-area">');
-                w.document.write('<h1>Campost Mankon</h1>');
-                w.document.write('<p>B.P 36 Mankon-Bamenda | Tel: 675299868</p>');
-                w.document.write('<p>Estate Administrator: GHOUENZEN Soulemanou</p>');
-                w.document.write('</div>');
-                w.document.write('<div class="doc-title">');
-                w.document.write('<h2>HEIR SHARES</h2>');
-                w.document.write('<p>Beneficiaries Distribution Summary</p>');
-                w.document.write('</div>');
-                w.document.write('</div>');
+            // Footer Section
+            w.document.write('<div class="print-footer">');
+            w.document.write('<div>Generated on: ' + new Date().toLocaleString() + '</div>');
+            w.document.write('<div>Campost Estate Management System</div>');
+            w.document.write('</div>');
 
-                w.document.write('<div class="print-container">');
-                w.document.write(content);
-                w.document.write('</div>');
+            w.document.write('</body></html>');
+            w.document.close();
 
-                // Signatures
-                w.document.write('<div class="signature-area">');
-                w.document.write('<div><div style="height:40px;"></div><div class="sig-line">Administrator Signature</div></div>');
-                w.document.write('</div>');
+            // Wait for content to load then print
+            setTimeout(function () {
+                w.focus();
+                w.print();
+            }, 500);
+        }
 
-                // Footer Section
-                w.document.write('<div class="print-footer">');
-                w.document.write('<div>Generated on: ' + new Date().toLocaleString() + '</div>');
-                w.document.write('<div>Campost Estate Management System</div>');
-                w.document.write('</div>');
-
-                w.document.write('</body></html>');
-                w.document.close();
-
-                // Wait for content to load then print
+        function printPage(pageId) {
+            document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('printing'); });
+            var p = document.getElementById(pageId);
+            if (p) {
+                p.classList.add('printing');
+                // Small delay to allow CSS classes to apply
                 setTimeout(function () {
-                    w.focus();
-                    w.print();
-                }, 500);
+                    window.print();
+                }, 200);
             }
+        }
 
-            function printPage(pageId) {
-                document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('printing'); });
-                var p = document.getElementById(pageId);
-                if (p) {
-                    p.classList.add('printing');
-                    // Small delay to allow CSS classes to apply
-                    setTimeout(function () {
-                        window.print();
-                    }, 200);
-                }
-            }
+        // Settings
+        function checkDb() {
+            api('/status').then(function (s) {
+                document.getElementById('dbStatus').textContent = s.connected ? '✓ Connected' : '✗ Offline';
+                document.getElementById('dbStatus').className = 'db-status ' + (s.connected ? 'connected' : 'disconnected');
+                document.getElementById('settingsAlert').className = 'alert alert-' + (s.connected ? 'success' : 'error');
+                document.getElementById('settingsAlert').innerHTML = s.connected ? '✓ PostgreSQL Connected' : '✗ Offline';
+            }).catch(function () {
+                document.getElementById('dbStatus').textContent = '✗ Offline';
+                document.getElementById('dbStatus').className = 'db-status disconnected';
+            });
+        }
 
-            // Settings
-            function checkDb() {
-                api('/status').then(function (s) {
-                    document.getElementById('dbStatus').textContent = s.connected ? '✓ Connected' : '✗ Offline';
-                    document.getElementById('dbStatus').className = 'db-status ' + (s.connected ? 'connected' : 'disconnected');
-                    document.getElementById('settingsAlert').className = 'alert alert-' + (s.connected ? 'success' : 'error');
-                    document.getElementById('settingsAlert').innerHTML = s.connected ? '✓ PostgreSQL Connected' : '✗ Offline';
-                }).catch(function () {
-                    document.getElementById('dbStatus').textContent = '✗ Offline';
-                    document.getElementById('dbStatus').className = 'db-status disconnected';
-                });
-            }
+        function resetAll() {
+            if (!confirm('RESET ALL DATA?')) return;
+            api('/reset', { method: 'POST' }).then(function () {
+                showAlert('Data reset!');
+                loadDashboard();
+            });
+        }
 
-            function resetAll() {
-                if (!confirm('RESET ALL DATA?')) return;
-                api('/reset', { method: 'POST' }).then(function () {
-                    showAlert('Data reset!');
-                    loadDashboard();
-                });
-            }
+        // Initialize - check for existing session or show login
+        function init() {
+            try {
+                // Hide main app initially
+                var app = document.getElementById('mainApp');
+                if (app) app.style.display = 'none';
 
-            // Initialize - check for existing session or show login
-            function init() {
-                try {
-                    // Hide main app initially
-                    var app = document.getElementById('mainApp');
-                    if (app) app.style.display = 'none';
-
-                    // Check for existing session
-                    if (typeof checkExistingSession === 'function') {
-                        checkExistingSession();
-                    } else {
-                        console.error('checkExistingSession not defined');
-                        var login = document.getElementById('loginContainer');
-                        if (login) login.classList.add('active');
-                    }
-                } catch (e) {
-                    console.error('Init error:', e);
+                // Check for existing session
+                if (typeof checkExistingSession === 'function') {
+                    checkExistingSession();
+                } else {
+                    console.error('checkExistingSession not defined');
                     var login = document.getElementById('loginContainer');
                     if (login) login.classList.add('active');
                 }
+            } catch (e) {
+                console.error('Init error:', e);
+                var login = document.getElementById('loginContainer');
+                if (login) login.classList.add('active');
             }
+        }
 
-            init();
+        init();
     </script>
 </body>
 

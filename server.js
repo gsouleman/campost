@@ -523,10 +523,34 @@ async function initializeDefaultData() {
     const catResult = await pool.query('SELECT COUNT(*) FROM categories');
     if (parseInt(catResult.rows[0].count) === 0) {
         const categories = [
+            ['Property Maintenance & Repairs', 'expense'],
+            ['Utilities & Services', 'expense'],
+            ['Administrative & Professional Fees', 'expense'],
+            ['Taxes, Levies & Regulatory Costs', 'expense'],
+            ['Capital Improvements & Renovations', 'expense'],
+            ['Security & Safety', 'expense'],
+            ['Insurance', 'expense'],
+            ['Miscellaneous/Other Operating Expenses', 'expense'],
             ['Agent Fees', 'expense'],
-            ['Maintenance', 'expense'],
             ['Transportation', 'expense'],
-            ['Others', 'expense'],
+            ['Inheritance Share', 'expense']
+        ];
+        for (const [name, type] of categories) {
+            await pool.query('INSERT INTO categories (name, type) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING', [name, type]);
+        }
+    } else {
+        // Ensure new categories exist even if table is not empty (Update for existing deployments)
+        const categories = [
+            ['Property Maintenance & Repairs', 'expense'],
+            ['Utilities & Services', 'expense'],
+            ['Administrative & Professional Fees', 'expense'],
+            ['Taxes, Levies & Regulatory Costs', 'expense'],
+            ['Capital Improvements & Renovations', 'expense'],
+            ['Security & Safety', 'expense'],
+            ['Insurance', 'expense'],
+            ['Miscellaneous/Other Operating Expenses', 'expense'],
+            ['Agent Fees', 'expense'],
+            ['Transportation', 'expense'],
             ['Inheritance Share', 'expense']
         ];
         for (const [name, type] of categories) {
